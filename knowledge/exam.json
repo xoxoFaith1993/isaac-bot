@@ -1,0 +1,201 @@
+{
+  "about": "Isaac Bot brain exam. Multiple choice with facts, the way the new brain sees decisions. Each question comes from a real moment in the bot's runs (2026-11-25) or a rule the author gave. 'answer' is the best option; 'ok' lists acceptable second choices (half marks).",
+  "questions": [
+    {
+      "id": "spikes_coin_low_hp",
+      "situation": "Room cleared. Isaac has 1 red heart left (of 3), no soul hearts. A single penny lies on the far side of a row of floor spikes; the only path to it crosses 2 spike tiles (each step on spikes = half a heart of damage). The exit door is open.",
+      "options": {"A": "Walk over the spikes to get the penny", "B": "Skip the penny and go to the next room", "C": "Bomb the spikes first", "D": "Wait in the room for the spikes to go away"},
+      "answer": "B", "ok": [],
+      "why": "A penny is worth almost nothing; at 1 heart, a full heart of spike damage kills you. Spikes can't be bombed away."
+    },
+    {
+      "id": "spikes_coin_full_hp",
+      "situation": "Room cleared. Isaac has 6 red hearts (full) and 2 soul hearts. A penny lies behind 1 spike tile (half a heart of damage to reach it). Coins: 2. The shop on this floor sells a 15-coin item.",
+      "options": {"A": "Take half a heart of damage for the penny", "B": "Skip the penny", "C": "Bomb the spike", "D": "Use the only bomb on the wall next to it"},
+      "answer": "B", "ok": ["A"],
+      "why": "Even at full health, half a heart for 1 coin is a poor trade; acceptable only because health is plentiful."
+    },
+    {
+      "id": "poop_plugs_ring",
+      "situation": "Fight. Four Gapers (walking enemies) are trapped inside a ring of rocks. The ring's only gap, on the left side, is plugged by one poop. Isaac is outside the ring, top side. Bombs: 2.",
+      "options": {"A": "Bomb a rock in the ring", "B": "Walk to the left side, line up with the poop and shoot it to open the gap, then shoot through the gap", "C": "Leave the room", "D": "Stand still and keep shooting at the rocks"},
+      "answer": "B", "ok": [],
+      "why": "Tears break poop; bombs are scarce. Opening the gap gives a shooting lane for free."
+    },
+    {
+      "id": "horf_pocket",
+      "situation": "Fight. A Horf (a floating head that does not move and spits a tear when Isaac is in line with it) sits in a one-square pocket in a wall of rocks. The only square with a clear straight line to it is directly below it, 3 squares down. Isaac is 2 squares to the right of that square.",
+      "options": {"A": "Shoot diagonally from where he stands", "B": "Bomb the rocks around the Horf", "C": "Step into the clear column below it, shoot up, and sidestep when it spits", "D": "Ignore it and leave"},
+      "answer": "C", "ok": [],
+      "why": "Tears go in straight lines and rocks block them; stand in the one open lane, dodge its slow shots."
+    },
+    {
+      "id": "eternal_fly_poop",
+      "situation": "Fight. The only enemy left is an Eternal Fly (300 hp, cannot be damaged) that sits on top of a poop and does not move away from it. The room's doors are still closed.",
+      "options": {"A": "Shoot the fly until it dies", "B": "Shoot the poop it is attached to", "C": "Use a bomb on the fly", "D": "Leave through a door"},
+      "answer": "B", "ok": [],
+      "why": "It can't be hurt; it's tied to the poop. Break the poop (the author's tip). Doors are closed, so leaving is impossible."
+    },
+    {
+      "id": "spiked_block_cleared",
+      "situation": "The room's doors are OPEN (room counts as cleared). A red spiked block (shows 100 hp) sits still near the middle; it slides when Isaac lines up with it and hurts on touch. Nothing else is in the room. The boss room door is on the opposite side.",
+      "options": {"A": "Keep shooting the block until it dies", "B": "Walk to the boss door, keeping out of the block's row and column", "C": "Bomb the block", "D": "Stand still"},
+      "answer": "B", "ok": [],
+      "why": "It can't be killed and doesn't need to be: the room is already cleared. Avoid its lines and move on."
+    },
+    {
+      "id": "flies_knockback",
+      "situation": "Fight. Three Attack Flies (very light, 5 hp each, fly straight at Isaac, hurt on touch) are coming from the right. Isaac's tears push light enemies back when they hit. There is open floor on all sides.",
+      "options": {"A": "Run away from the flies to the far corner", "B": "Face them and shoot right: each hit knocks them back and they die in two shots", "C": "Place a bomb", "D": "Leave the room"},
+      "answer": "B", "ok": [],
+      "why": "Flies are light (mass 3): tears knock them back, so holding ground and shooting is safe and fast. Running to a corner is how you get trapped."
+    },
+    {
+      "id": "brown_chest_bomb",
+      "situation": "Room cleared. A plain brown chest is walled in by rocks (no path). Isaac has 2 bombs and 0 keys. The next floor's boss is soon.",
+      "options": {"A": "Use a bomb to reach the chest", "B": "Skip the chest", "C": "Use both bombs", "D": "Shoot the rocks"},
+      "answer": "B", "ok": [],
+      "why": "A brown chest is usually a few coins or hearts: not worth one of only 2 bombs (budget: 5+ bombs for small loot). Tears don't break rocks."
+    },
+    {
+      "id": "item_behind_rocks",
+      "situation": "Room cleared. A free item on a pedestal is walled in by rocks (no path). Isaac has 1 bomb.",
+      "options": {"A": "Bomb the rocks and take the item", "B": "Skip it to save the bomb", "C": "Shoot the rocks", "D": "Leave and come back later"},
+      "answer": "A", "ok": [],
+      "why": "Items are the most valuable thing in a run: worth even the last bomb."
+    },
+    {
+      "id": "secret_room_guess",
+      "situation": "Floor fully explored except the boss. On Isaac's own map there is one empty square that touches 3 rooms he has visited, and it is not next to the boss room. Isaac has 4 bombs and full health.",
+      "options": {"A": "Bomb the wall of one of the visited rooms facing that empty square", "B": "Go straight to the boss", "C": "Bomb random walls in the current room", "D": "Bomb the boss room door"},
+      "answer": "A", "ok": ["B"],
+      "why": "An empty square touching 3+ rooms (never the boss room) is the classic secret room spot; with 4 bombs it's worth one."
+    },
+    {
+      "id": "secret_room_weak_low_bombs",
+      "situation": "Floor explored. The only empty square touches just 2 known rooms. Isaac has 2 bombs.",
+      "options": {"A": "Bomb a wall facing it", "B": "Go to the boss and keep the bombs", "C": "Use both bombs on two walls", "D": "Go back to the start room"},
+      "answer": "B", "ok": [],
+      "why": "A 2-neighbour guess is weak; with only 2 bombs, save them (budget: 6+ bombs for weak guesses)."
+    },
+    {
+      "id": "curse_room_route",
+      "situation": "Room cleared, 2 red hearts left. The only unexplored door leads to a Curse Room (a door with spikes: walking through it costs half a heart each way). The boss room is reachable another way.",
+      "options": {"A": "Go through the curse room door", "B": "Head to the boss instead", "C": "Bomb the curse door", "D": "Wait"},
+      "answer": "B", "ok": [],
+      "why": "Curse rooms cost health going in and out; at 2 hearts with the boss next, skip it."
+    },
+    {
+      "id": "pill_swap",
+      "situation": "Room cleared. Isaac already holds a pill in his pocket slot. Another pill lies on the floor. Walking over it swaps them (the old one drops).",
+      "options": {"A": "Walk over the new pill", "B": "Leave it and move on", "C": "Bomb it", "D": "Shoot it"},
+      "answer": "B", "ok": [],
+      "why": "With the slot full, picking it up only swaps them; the bot looped forever doing that once."
+    },
+    {
+      "id": "fires_in_path",
+      "situation": "Room cleared. Two lit fireplaces stand between Isaac and the exit door; there is a path around them that is 3 squares longer. Touching a fire hurts.",
+      "options": {"A": "Walk straight through the fires", "B": "Take the longer path around the fires", "C": "Bomb the fires", "D": "Wait for them to go out"},
+      "answer": "B", "ok": [],
+      "why": "Fires hurt on touch (the batch review found 3 hits from them); a slightly longer path is free."
+    },
+    {
+      "id": "creep_puddle",
+      "situation": "Fight. A Clotty left a red creep puddle on the floor between Isaac and the best firing spot. Standing in creep hurts. A slightly longer route around the puddle exists.",
+      "options": {"A": "Walk through the creep", "B": "Go around the creep", "C": "Stand still in the creep and shoot", "D": "Bomb the creep"},
+      "answer": "B", "ok": [],
+      "why": "Creep deals damage over time; never stand in it when a route around exists."
+    },
+    {
+      "id": "gaper_chaser_spot",
+      "situation": "Fight. A Gaper (walks straight at Isaac, hurts on touch, normal weight) is chasing him. A 'firing spot' computed half a second ago is now right where the Gaper stands.",
+      "options": {"A": "Walk to the firing spot anyway", "B": "Keep distance, line up with the Gaper and shoot while backing away into open space", "C": "Stand still", "D": "Bomb at his feet"},
+      "answer": "B", "ok": [],
+      "why": "Chasers make planned spots stale; kiting in open space is the safe way (walking into the stale spot caused 3 hits)."
+    },
+    {
+      "id": "own_bomb",
+      "situation": "Isaac just dropped a bomb next to a rock to open a path. The bomb explodes in about 1.5 seconds with a blast about 2 squares wide.",
+      "options": {"A": "Stay next to the bomb to see if it worked", "B": "Move at least 3 squares away until it explodes", "C": "Push the bomb", "D": "Shoot the bomb"},
+      "answer": "B", "ok": [],
+      "why": "Your own bomb hurts you; the bot once stood next to its own bomb."
+    },
+    {
+      "id": "boss_or_explore",
+      "situation": "Basement I. Explored: start room, 3 normal rooms. Unexplored: a door marked as a treasure room (free item) and the boss room door. Health full.",
+      "options": {"A": "Go to the boss now", "B": "Go to the treasure room first, then the boss", "C": "Leave the floor", "D": "Bomb walls for secrets first"},
+      "answer": "B", "ok": [],
+      "why": "Treasure rooms give a free item; always take it before the boss."
+    },
+    {
+      "id": "hard_unknown_pill_low",
+      "situation": "Room cleared, about to enter the boss room. Isaac has half a red heart left, no soul hearts. He holds one pill he has never used before (its effect is unknown: some pills heal or raise stats, some hurt, e.g. 'Bad Trip' deals a full heart of damage if you have more than one heart, otherwise it heals). Coins 0.",
+      "options": {"A": "Take the unknown pill now, it might heal", "B": "Keep the pill and fight the boss as is", "C": "Take the pill in the middle of the boss fight", "D": "Drop the pill"},
+      "answer": "A", "ok": ["B"],
+      "why": "At half a heart, Bad Trip turns into a heal, and most other bad pills don't kill; the upside (healing/stat pills) beats the small risk. Keeping it is acceptable but wastes a chance."
+    },
+    {
+      "id": "hard_tinted_rock",
+      "situation": "Room cleared. A tinted rock (a rock with a faint X mark) sits in a corner; tinted rocks usually drop soul hearts or other loot when bombed. Isaac has 4 bombs and 2 of 3 red hearts.",
+      "options": {"A": "Bomb the tinted rock", "B": "Ignore it", "C": "Shoot it until it breaks", "D": "Bomb a normal rock next to it"},
+      "answer": "A", "ok": [],
+      "why": "Tinted rocks are reliable loot (often soul hearts); with 4 bombs one is well spent. Tears don't break rocks."
+    },
+    {
+      "id": "hard_shop_choice_low_hp",
+      "situation": "In the shop with 15 coins. 1 red heart left of 3, next is the boss. For sale: a full red heart (3 coins), a key (5 coins), a bomb (5 coins), and a passive item that gives +0.5 damage (15 coins).",
+      "options": {"A": "Buy the +0.5 damage item", "B": "Buy the heart, then the key and the bomb", "C": "Buy the heart only and save the rest", "D": "Buy the key and the bomb"},
+      "answer": "B", "ok": ["C"],
+      "why": "At 1 heart before a boss, healing comes first; a key and a bomb are flexible value. +0.5 damage doesn't help if you die."
+    },
+    {
+      "id": "hard_devil_deal",
+      "situation": "A devil room appeared after the boss. Isaac has 4 red heart containers (all full) and 1 soul heart. On offer: Brimstone (a top-tier laser that replaces tears) for 2 red heart containers; or leave.",
+      "options": {"A": "Take Brimstone for 2 heart containers", "B": "Leave it, keep the health", "C": "Take it only if he had 6 containers", "D": "Bomb the devil statue"},
+      "answer": "A", "ok": [],
+      "why": "Brimstone is one of the strongest items in the game; with 4 containers, trading 2 still leaves a workable run. Bombing the statue spawns a fight."
+    },
+    {
+      "id": "hard_monstro_jump",
+      "situation": "Boss fight against Monstro (a big blob that leaps into the air and lands on where Isaac was, or hops and sprays a fan of tears). His shadow just appeared under Isaac: he is about to land there.",
+      "options": {"A": "Keep shooting from the same spot", "B": "Move out from under the shadow right away, sideways, then shoot him when he lands", "C": "Run to the corner", "D": "Place a bomb on the shadow"},
+      "answer": "B", "ok": [],
+      "why": "The shadow marks the landing spot: move off it immediately; corners trap you against his tear fan."
+    },
+    {
+      "id": "hard_two_items_choice",
+      "situation": "Boss item room with two pedestals; taking one makes the other vanish. Option 1: 'Cricket's Head' (+0.5 damage and a big x1.5 damage multiplier). Option 2: 'Breakfast' (+1 red heart container). Isaac has 3 hearts, low damage.",
+      "options": {"A": "Take Cricket's Head", "B": "Take Breakfast", "C": "Take neither", "D": "Take whichever is closer"},
+      "answer": "A", "ok": [],
+      "why": "A damage multiplier is among the best upgrades for a weak run; one heart container is minor by comparison."
+    },
+    {
+      "id": "hard_spikes_soul_heart",
+      "situation": "Room cleared. Isaac has 1 red heart left. A SOUL heart (adds a whole extra heart of protection) lies behind one spike tile (half a heart of damage to cross, once each way if there is no other way back).",
+      "options": {"A": "Cross the spikes to get the soul heart", "B": "Skip it", "C": "Bomb the spikes", "D": "Cross only if there is a way back without spikes"},
+      "answer": "D", "ok": ["B"],
+      "why": "In and out costs a full heart = death at 1 heart; one way only (half a heart) for a full soul heart is a net gain. Skipping is safe."
+    },
+    {
+      "id": "hard_curse_room_heart",
+      "situation": "Isaac has 5 of 6 red hearts. A Curse Room (half a heart to enter, half a heart to leave) is next to him; it often holds a chest or pickups. No other rooms left except the boss.",
+      "options": {"A": "Visit the curse room", "B": "Skip it and go to the boss", "C": "Bomb the curse room door", "D": "Wait in place"},
+      "answer": "A", "ok": ["B"],
+      "why": "With nearly full health a full heart for a chest/pickups is a fair trade; skipping is also fine."
+    },
+    {
+      "id": "hard_flies_vs_shooter",
+      "situation": "Fight. A Horf (stands still, spits a tear when lined up with Isaac) is in the open on the left; three Attack Flies (light, fly at Isaac, die in 2 hits, get knocked back by tears) are coming from the right.",
+      "options": {"A": "Kill the Horf first while the flies chase", "B": "Turn and kill the flies first (they knock back and die fast), then the Horf", "C": "Run around the room", "D": "Bomb the Horf"},
+      "answer": "B", "ok": [],
+      "why": "The fast chasers are the immediate threat and die in seconds; the Horf stays put and only fires when lined up."
+    },
+    {
+      "id": "hard_last_key_locked",
+      "situation": "Isaac has exactly 1 key. Two locked things on the floor: a locked treasure room door (free item inside) and a golden chest in the current room (random pickups, sometimes an item).",
+      "options": {"A": "Open the golden chest", "B": "Save the key for the treasure room", "C": "Use the key on whichever is closer", "D": "Bomb the chest"},
+      "answer": "B", "ok": [],
+      "why": "A guaranteed item beats a chest that only sometimes has one."
+    }
+  ]
+}

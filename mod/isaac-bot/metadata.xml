@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+    <name>Isaac Bot</name>
+    <directory>isaac-bot</directory>
+    <description>An AI player for The Binding of Isaac: Repentance+ (needs REPENTOGON). Local mod, not on the Workshop.</description>
+    <version>0.0.1</version>
+    <visibility>Private</visibility>
+</metadata>

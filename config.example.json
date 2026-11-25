@@ -1,0 +1,10 @@
+{
+  "_comment": "Copy this file to config.json (never committed) and fill in your paths. Empty values use the defaults in brain/botconfig.py and tools/config.ps1. Use double backslashes in Windows paths.",
+  "game_dir": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\The Binding of Isaac Rebirth",
+  "steam_userdata": "",
+  "ffmpeg": "ffmpeg",
+  "python": "python",
+  "repentogon_launcher": "C:\\path\\to\\REPENTOGONLauncher\\REPENTOGONLauncher.exe",
+  "repentogon_ini": "",
+  "bot_dir": ""
+}

@@ -1,0 +1,19 @@
+# local settings and per-PC state
+config.json
+tools/*_window.json
+
+# run output (logs, hits, frames) and files the helper writes at run time
+runs/
+knowledge/gamedata.json
+knowledge/telegraphs.txt
+knowledge/bench_rooms.json
+
+# Python / backups
+__pycache__/
+*.pyc
+*.bak*
+
+# never commit the game's own (unpacked) resources
+resources/
+resources-dlc3/
+*.anm2

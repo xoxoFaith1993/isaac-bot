@@ -1,0 +1,14 @@
+{
+ "touch_margin": 14,
+ "hit_margin": 10,
+ "crowd_r": 110,
+ "crowd_w": 2.0,
+ "orbit_w": 45,
+ "tele_w": 260,
+ "pref_dist": 150,
+ "escape_w": 22,
+ "stand_safe_r": 150,
+ "shooter_line_w": 70,
+ "calm_commit": 4,
+ "horizon": 12
+}
