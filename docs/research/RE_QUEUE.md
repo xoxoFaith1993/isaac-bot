@@ -30,10 +30,10 @@ the author can move an item up.
 
 | Batch | Item | Type | Hits (all-time) | Why / what to find | Status |
 |---|---|---|---|---|---|
-| E1 | **Gurglings, full AI** | 237.0/237.1 | 33-37 | the chase line, the creep trail, how tear knockback bends a charge | [ ] |
-| E1 | **Gurdy**, Gurdy Jr. | 36.0, 99.0 | 7 shot hits + 4 | the best run's hits; Gurdy Jr.'s charge | [ ] |
-| E1 | **The Duke of Flies** (+ its flies), the Husk | 67.0/67.1 | few | swarm movement, release timing, corner lock | [ ] |
-| E1 | **Gaping Maw** (+ Broken Gaping Maw) | 235.0, 236.0 | 0 logged | **killed the furthest run**: suction strength and range as a force on Isaac | [ ] |
+| E1 | **Gurglings, full AI** | 237.0/237.1 | 33-37 | the chase line, the creep trail, how tear knockback bends a charge | [x] f0406fe |
+| E1 | **Gurdy**, Gurdy Jr. | 36.0, 99.0 | 7 shot hits + 4 | the best run's hits; Gurdy Jr.'s charge | [x] f0406fe |
+| E1 | **The Duke of Flies** (+ its flies), the Husk | 67.0/67.1 | few | swarm movement, release timing, corner lock | [x] f0406fe |
+| E1 | **Gaping Maw** (+ Broken Gaping Maw) | 235.0, 236.0 | 0 logged | **killed the furthest run**: suction strength and range as a force on Isaac | [x] f0406fe |
 | E2 | **Spikes, retracting spikes** | grid 8/9 ("0.8" source) | **43** | timing, damage (2), i-frame interaction | [ ] |
 | E2 | Unknown source "0.0" | 0.0 | 28 | find what deals damage with no entity (pits? explosions?) | [ ] |
 | E2 | **Bombs / TNT** blast radius and damage to Isaac | 4.x, TNT grid | 19 | the bot keeps bombing itself | [ ] |
@@ -63,3 +63,4 @@ the author can move an item up.
 ## Log
 - 2026-11-26: queue made, from the main session's list, reordered by hit counts. "0.8" = grid type 8 (spikes):
   likely, since every such hit did 2 damage. E1 sent to the Ghidra session.
+- 2026-11-26: E1 done (f0406fe). Checked: the Gurgling charge peaks at 12-12.7 px/update (code: 12-13) and drops red creep while charging; all 7 Gurdy shot hits were at 12.0-12.2 (the five-spread with the x1.2 tail). The Maw, Gurdy Jr. and Duke aren't recorded yet. E2 next.
