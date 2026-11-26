@@ -238,3 +238,75 @@ entity code. Then grep of our Lua and tools, and our hit logs.
 netlesha/isaac-bot, 404-Wont-Fix/GhostStep (auto-dodge), jcmno/AI-Isaac (RL interface), ly4aznik/isaac-bot,
 dmosley2/TBOI_AI (design docs only), Monster7704/isaac-rl-agent (stub). GhostStep is the only one worth comparing
 our dodging against.
+---
+
+## 2026-11-26: ChatGPT research pass (first reply to our handoff)
+
+**What it is:** ChatGPT's answer to the source-finding handoff, written back as a handoff for Claude. It found three
+pages about Dingle and two research papers on bullet-hell bots, then listed seven gaps it couldn't fill. It said
+plainly that it could see only search-engine snippets of the Dingle pages, not the pages themselves.
+
+**Verdict:** honest about how sure it was, but thin. The Dingle facts were already in our `boss_tactics.json`
+(made 2026-11-25 from the same wiki and the same guide). One fact was wrong (the champions are swapped). One gap
+it reported was already filled, by the decompiled projectile rule found earlier today. It didn't read the repo's
+guide files.
+
+**How it was checked:** a research agent opened each link. Then `knowledge/boss_tactics.json`, `BOSSES.md`,
+`ENEMIES.md` and the Dingle animations in `knowledge/bestiary_game.json`.
+
+**Claim table:**
+
+| ChatGPT said | Checked against | Verdict |
+|---|---|---|
+| Dingle dashes 3 times (wiki.gg) | the wiki page; `boss_tactics.json` already has "dash x3" | confirmed, already known |
+| The **Black** champion does 4 shorter, slower dashes | the wiki page and our `boss_tactics.json`: that's the **Red** champion; Black does one very fast dash, an 8-shot ring and Spiders | **wrong** (swapped) |
+| StrategyWiki: 3 dashes, and "use Monstro's shadow to avoid a landing" | the page was blocked (403); Dingle doesn't jump, so the Monstro line likely merges two bosses' sections | unverified, probably a merge |
+| Bamboo Gaming: 3 dashes, a pause, a stationary triple shot | blocked for the agent (429); our `BOSSES.md` already used this guide, read in a real browser on 2026-11-25 | already known |
+| A bachelor thesis abstract: influence map + Q-learning (DCI/ICI) for a bullet-hell game | the PDF: real, a 4-page Japanese abstract; a home-made Touhou-style clone; ICI won 76%/62% against two bosses and about 0-6% against two others; no code | confirmed, weak evidence |
+| PIFE (IEEE CoG 2022): order-insensitive features for danmaku games, environment via game memory | DOI record + the lab page: real (Waseda); Touhou 9; the environment *reads* game memory; no code listed | mostly confirmed |
+| Gap: no source for the numerical projectile update rules | the community decompilation (previous section) has the fall and hit-height rule | already filled |
+| Gap: no frame data or internal state for the hit-heavy bosses | the game files give animation lengths and event frames (Dingle: Spit 16 f, shot at frame 3; BeforeSlide 21 f; Slide 22 f); for the Haunt, see below | partly filled |
+
+**Found while checking: per-enemy AI in the decompilation.**
+- The community decompilation ([Isaac.LuaDecomps](https://github.com/Guantol-Lemat/Isaac.LuaDecomps), Unlicense)
+  recreates some enemies' AI in Lua:
+  - **the Haunt** (`_Legacy/Actor/Boss/Haunt.lua`, about 600 lines; on our hit list);
+  - Gurdy, Widow and Wormwood;
+  - Gaper, Lust and Cultist;
+  - the shared AI helpers (`NpcAi.lua`, `AiUtils.lua`, `Pathfinder.lua`).
+- For the Haunt it names what the fields hold:
+  - `I1` is the Lil' Haunt count;
+  - `TargetPosition` is reused as its wall-slide velocity;
+  - `V2.X` is the pink champion's shot angle;
+  - it stays invulnerable in MOVE and SPECIAL, and goes IDLE (where it side-dashes and attacks) after the
+    Lil' Haunts die.
+- It's unofficial, so it's a hypothesis until the recorder confirms it. But it's the first per-enemy source for
+  `State`/`I1`/`V2`.
+- **Apply later:** use it to label the Haunt's recorder profile and check it against the recording. Dingle, Gemini,
+  Sloth, Monstro and Pin aren't in it yet.
+
+**Usable now:** nothing new. Dingle's entry already holds this.
+
+**Worth learning from:**
+- **Its method advice is right and matches ours:** treat wiki and video behaviour as hypotheses, measure them with
+  the recorder (`State`, `StateFrame`, animation and frame, hits), and ask every claim for a file, line, section or
+  timestamp.
+- **Influence maps** (a danger value per cell around the player) are the same family as our danger costs in
+  `mover.lua`. The thesis's weak results against two of four bosses back what we found: the learning part isn't
+  where the gains are.
+- **Order-insensitive handling of shots** (PIFE): our mover already sums costs over all shots, so their order
+  doesn't matter. Nothing to change.
+
+**Apply later:** nothing new. The `PLAN.md` line for recorder-dependent work covers measuring Dingle's dashes and
+wind-ups.
+
+**Strongly avoid:**
+- Champion facts from search snippets. Our `boss_tactics.json` (from the full wiki page) is the record.
+- Both papers' learning setups (Q-learning, learned features from memory-read environments). They don't fit a bot
+  that reads the real state and has no fast simulator.
+
+**Sources:** [Dingle, wiki.gg](https://bindingofisaacrebirth.wiki.gg/wiki/Dingle);
+[StrategyWiki bosses](https://strategywiki.org/wiki/The_Binding_of_Isaac:_Repentance/Bosses) (blocked);
+[Bamboo Gaming, Dingle](https://www.bamboogaming.net/the-binding-of-isaac/bosses/dingle);
+[the thesis abstract](https://hosobe.cis.k.hosei.ac.jp/lab/wp-content/uploads/2019/05/t_suga-bthesis-abstract.pdf);
+[PIFE](https://doi.org/10.1109/COG51982.2022.9893649).
