@@ -1242,3 +1242,148 @@ gave them back. Shared facts:
   - the horse lanes.
 - **Pestilence:** the 230 px attack range; the summon types.
 - **War:** the 8-ring at 10; the jump bomb count (5); the 138-update airtime; the dash entry side.
+
+## Batch E4 (2026-11-26): Big Spider, Fatty, Round Worm, Wall Hugger, Boom Fly, Pooter, Horf, Maggot, Hopper; Fat Bat, Tumor, Mega Maw
+
+**Reading:**
+- One Haiku reader for the plain enemies. It flagged new logic in five (Round Worm, Wall Hugger, Boom Fly, Fat Bat,
+  Tumor), so those got a second reader (Sonnet).
+- Horf stayed at one reader.
+- Mega Maw is a boss: two readers.
+
+**Already decoded** (their functions were read in earlier batches; tags only, no re-reading):
+- **Big Spider (94.0):** `ai_spider` `0x530540`. The Spiders section: spider movement; splits into 85.0 spiders on
+  death. `[move · B 0x530540 · 2 readers]`
+- **Fatty (208.x):** `ai_gaper` `0x50f730`. The Gapers section: path chase at 0.3. `[move · B 0x50f730 · 2 readers]`
+- **Pooter (14.x):** the fly AI `0x50d3c0`. The Attack Fly section: cooldown 35, can-shoot range **200 px**.
+  `[attack · worst-8 0x50d3c0 · 2 readers]`
+- **Maggot (21.0):** `ai_charger` `0x534300`, in its non-charging group (`RE_CORE.md` charge trigger).
+  `[move · L1 0x534300 · 2 readers]`
+- **Hopper (29.0):** `0x52cd30`. The Trite section. `[move · worst-8 0x52cd30 · 2 readers]`
+
+### Round Worm (244.0), `0x544cd0` (shared with 244.1-3, 255 Night Crawler, 276, 289)
+- **The cycle:** "DigIn" → hidden (State 4) → "DigOut" with one shot → "DigIn". `[timing · E4 0x544cd0 · 2 readers]`
+  - **Hidden:** collision class 0 and invisible, so **it can't be hit or touch Isaac**. `[body · E4 0x544cd0 · 2 readers]`
+  - When the dig-in ends it hides only if an unnamed threshold (`+0x14`) is below its health; otherwise it re-emerges
+    at once.
+- **The teleport while hidden:** `[move · E4 0x544cd0 · 2 readers]`
+  - each update, a 50% chance to jump to the **room centre + 60-310 px in a random direction** (clamped, a free spot);
+  - **only if that spot is 100-1000 px from Isaac** (a squared compare; both readers agree).
+  - The exit from hiding goes through a helper whose argument was lost, so **the hide duration is unresolved**.
+- **The shot:** on the DigOut "Shoot" event (anim-timed), **one shot at 10 px/update**, mode 0. It needs line of sight.
+  `[attack · E4 0x544cd0 · 2 readers]`
+  - **Aim: Isaac's position + 10 × his velocity**, cut short where a wall would stop him (a laser-style ray), clamped
+    20 px inside the room.
+  - **It leads his movement.**
+- Emerged: collision class 4.
+
+### Wall Hugger (218.0), `0x51bbb0` (shared with type 40 and 862)
+- **Invulnerable**, set at spawn and never cleared in this function. `[body · E4 0x51bbb0 · 2 readers]`
+- **Movement:** `[move · E4 0x51bbb0 · 2 readers]`
+  - it moves one 40 px grid cell at a time, with push 3.0 and friction × 0.6, so a **steady ≈ 7.5 px/update**;
+  - it's snapped onto the grid line;
+  - **at a blocked cell it turns a quarter (the side is kept by a flag)**;
+  - it turns back toward the wall when the wall side opens. It never looks at Isaac.
+  - It starts toward the first blocked neighbour.
+  - A target it can't reach (< 2 px of progress) is dropped after ≈ 8 updates.
+- **The spikes:** no contact damage for the first **30 updates after spawning** ("No-Spikes"); then contact damage
+  from its config (sound 0xcd). `[timing · E4 0x51bbb0 · 2 readers]`
+  - In a room with a flag bit set (likely cleared), or with trinket 151, it shows "No-Spikes" with no damage, and
+    coasts.
+
+### Boom Fly (25.x), `0x515a80`
+- **Movement:** `[move · E4 0x515a80 · 2 readers]`
+  - **no chase:** a diagonal bounce, push 0.45 per axis in the sign of its velocity, friction × 0.9, so **≈ 4.5 px/update
+    per axis (≈ 6.4 diagonal)**;
+  - Red Boom Fly (25.2) 0.4;
+  - 0.25 when anyone holds collectible 9.
+- **When feared:** it pushes away from Isaac, full within 70 px, none beyond 120.
+  - *Settled:* one reader read this as a squared distance. The hidden sqrt is there, so it's the real distance.
+- **Death effects:** `[attack · E4 0x515a80 · 2 readers]`
+  - **25.0: an explosion, damage 40.** By `RE_CORE.md` E2, that's radius 75 and **half a heart to Isaac** (< 85).
+  - **25.2:** the same explosion, plus a mode-6 burst at 8 (10 in hard mode), and a 1/3 chance of a Charger 23.1 at
+    half HP.
+  - **25.3:** one stationary shot.
+  - **25.4:** a 3-shot ring (mode 9) at 9 (10 in hard mode), aimed by axis. 25.4 also shoots while alive: when Isaac is
+    lined up within 20 px of its row or column, closer than 200 px (with a 0-16 update lead) and on a clear line, a
+    single shot at 10.
+  - **25.5:** explosion 40, a 6-ring at 10, and 8 drifting effects (1000.141).
+  - **25.6:** a delayed blast. It goes **invulnerable** (collision 0) during "Explode", then explodes with damage 80 and
+    radius × 1.5 (≈ 112 px).
+    - *Settled:* one reader read 85.0. The constant is 80.0.
+  - **Other variants:** a 6-ring at 8 (10 in hard mode).
+
+### Horf (12.0), `0x519880` (1 reader)
+- **Stationary turret** (friction only). `[move · E4 0x519880 · 1 reader]`
+- **The shot:** `[attack · E4 0x519880 · 1 reader]`
+  - **trigger:** cooldown ≤ 0 and the can-shoot check passes (range in a register, unreadable);
+  - **cooldown 28 updates** (14 in hard mode);
+  - **tell:** "Attack";
+  - on its "Shoot" event, **one shot aimed at Isaac's position at 7 px/update** (10 in hard mode), mode 0.
+  - The reader's velocity-pointer slip is a decompiler alias; the aim vector is built at lines 108-116.
+
+### Fat Bat (258.0), `0x546d20`
+- **Flies 30 px up** (a sprite offset).
+- **Movement:** `[move · E4 0x546d20 · 2 readers]`
+  - **chase toward Isaac's nearest row or column** (only 20% of the way along the main axis): push 0.45, applied
+    before friction × 0.8, so **≈ 1.8 px/update**;
+  - **it dodges sideways** (perpendicular) from up to 4 nearby things moving toward it within 100 px. What those
+    "things" are is unresolved, likely tears.
+- **The shot:** `[attack · E4 0x546d20 · 2 readers]`
+  - **trigger:** cooldown 0, a 1/15 roll, **within 40 px of Isaac's row or column**, Isaac within 750 px;
+  - "Shooting", then on its event **one aimed shot at 10**;
+  - cooldown 30. No dive.
+
+### Tumor (229.0, 229.1), `0x51f6e0` (shared with 91, 230, 253)
+- **Movement:** `[move · E4 0x51f6e0 · 2 readers]`
+  - **no chase:** a diagonal bounce (as the Boom Fly), push 0.45 (229.1: 0.81), friction × 0.77 × 0.9;
+  - **≈ 1.5 per axis** (229.1: ≈ 2.6);
+  - it nearly stops during "ShootDown".
+- **229.0:** a 1/100 roll per update (not while confused or feared) → "ShootDown" or "ShootUp" toward Isaac's side. On
+  its event, a **6-ring at 10**. `[attack · E4 0x51f6e0 · 2 readers]`
+- **229.1:** "Shoot" spawns **1-2 orbiting shots at 8** (they circle it for up to 80 updates). "Blow" **releases every
+  orbiting shot at 10** along its path. `[attack · E4 0x51f6e0 · 2 readers]`
+  - "Blow" is picked once 3+ shots orbit (random) or 6+ (always).
+  - Its orbiting shots are released when it dies.
+
+### Mega Maw (262.0), `0x462df0` (boss, 2 readers)
+- **A turret:** it's pulled back to its spawn point every update; it spawns 60 px higher. `[move · E4 0x462df0 · 2 readers]`
+- **It decides every 20 updates** (10 below 30% HP). `[timing · E4 0x462df0 · 2 readers]`
+  - **25%, only when Isaac is more than 40 px below it:** a **15-shot boss burst at Isaac** (aim dropped to Isaac.y + 100
+    when he's level with or above it).
+  - otherwise **1/3: "FireRing":** `[attack · E4 0x462df0 · 2 readers]`
+    - 9 shots at 10, or 5 at 10 + 5 at 7;
+    - VelocityMulti 1.05;
+    - orbit/curve flags 0x800 / 0x1000.
+  - **Summon:** on every 2nd tick, 50%, when there are 4 or fewer enemies: **one Hopper (29.0) thrown 150 px below it**.
+    `[attack · E4 0x462df0 · 2 readers]`
+- **Subtype 1** fires rings back to back: 9 at 15; 4 × 10 at 12, 10, 8, 6; 7 × 10 at 4-10 in a cone toward Isaac; or
+  4 × 10 curving.
+- **Subtype 2** throws 1-2 spiders near Isaac instead of summoning.
+- *Settled:* one reader called the damage-7.0 switch a 50% coin. It's a flag check (`0x418940(0, 0x10000000)`), not
+  random.
+
+### Bot meaning (E4)
+- **Round Worm:** untouchable while hidden. **It aims where Isaac will be in 10 updates**, so change direction when it
+  surfaces.
+- **Wall Hugger:** invulnerable; don't shoot it. It runs along walls and rocks at ≈ 7.5. Keep off the room edges and
+  rock edges in its path. Its spikes are harmless only for its first 1 s.
+- **Boom Fly:** **don't kill it at point blank.**
+  - The blast is radius 75 (half a heart); 25.6 is ≈ 112 px after a delay.
+  - 25.2, 25.4 and 25.5 add shot rings.
+- **Horf:** a single shot at 7 about every 28 updates. Sidestep.
+- **Fat Bat:** it lines up with Isaac's row or column (within 40 px), then shoots. Stay diagonal to it.
+- **Tumor 229.1:** shots orbit it, then fly out at 10 when it "Blows". Don't stand next to it.
+- **Mega Maw:** stand level with or above it (no 15-shot burst). Clear Hoppers to keep summons going instead of shots.
+
+### Record to confirm (E4)
+- Round Worm: hide duration; shot lead (10 updates); 100-1000 px teleport range.
+- Wall Hugger: ≈ 7.5 px/update; spikes off for 30 updates.
+- Boom Fly: blast radius 75 and half-heart damage; 25.6 delay and radius.
+- Horf: 28-update cooldown and 7 px/update shot.
+- Fat Bat: the 40 px line-up trigger; 1.8 px/update chase; what it dodges.
+- Tumor: 6-ring at 10; orbit then release at 10.
+- Mega Maw: the 15-shot burst only when Isaac is below; ring speeds 10 and 7.
+
+(Also from this batch: **tears run at × 0.75 while Death's hourglass timer runs**. The tear update `0x66dc80`
+multiplies a tear scale by 0.75 when `room+0x7244 > 0`. `[move · F1 0x66dc80 · 1 reader (write-up session)]`)
