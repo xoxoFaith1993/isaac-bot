@@ -7,9 +7,9 @@
 local R = include("rules")
 local Danger = { static = {}, dynamic = {}, builtAt = -1 }
 
+-- creep that HURTS (white/black only slow, slippery brown only slides: not damage; see reflex.lua, 2026-11-26)
 local CREEP = {}
-for _, n in ipairs({ "CREEP_RED", "CREEP_GREEN", "CREEP_YELLOW", "CREEP_WHITE", "CREEP_BLACK",
-                     "CREEP_SLIPPERY_BROWN", "CREEP_STATIC", "CREEP_LIQUID_POOP" }) do
+for _, n in ipairs({ "CREEP_RED", "CREEP_GREEN", "CREEP_YELLOW", "CREEP_STATIC", "CREEP_LIQUID_POOP" }) do
   if EffectVariant[n] then CREEP[EffectVariant[n]] = true end
 end
 
@@ -121,7 +121,14 @@ function Danger.cost(p, dmg)
   local perHit = R.risk.per_hit or 0
   local Risk = IsaacBotRisk
   if Risk then perHit = Risk.atStake and perHit * 2 or perHit * math.max(0.2, 1 - Risk.level) end
-  return dmg * R.risk.half_heart * R.risk.full_hp / (hp - dmg) + dmg * perHit
+  -- Losing the floor's deal is a price of its own: when this damage lands on red hearts (atStake), or uses up the
+  -- LAST of the protection in front of them (the next hit would then cost the deal). Soul hearts in front used to
+  -- make a hit "cheap", and it spent its only soul heart on floor 2 for an item (the author, 2026-11-26).
+  local dealCost = 0
+  if Risk and Risk.dealLive and (Risk.atStake or (Risk.buffer and dmg >= Risk.buffer)) then
+    dealCost = R.risk.deal_value or 0
+  end
+  return dmg * R.risk.half_heart * R.risk.full_hp / (hp - dmg) + dmg * perHit + dealCost
 end
 
 -- Damage taken walking a path (list of squares): each hurting square counts once.

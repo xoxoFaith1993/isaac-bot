@@ -1870,7 +1870,7 @@
    "kind": "miniboss",
    "hp": "80-220 by stage",
    "pref_dist": 170,
-   "avoid_row_col": true,
+   "avoid_row_col": false,
    "room_zone": "open",
    "attack_windows": [
     "always"
@@ -1878,12 +1878,17 @@
    "dodge": [
     {
      "attack": "belly Brimstone",
-     "tell": "Isaac on a cardinal line",
-     "tell_anim": null,
-     "fires": null,
+     "tell": "Attack01/02/03 (Horiz/Up/Down) starts: the laser fires 18-30 frames later",
+     "tell_anim": [
+      "Attack01Horiz", "Attack01Up", "Attack01Down",
+      "Attack02Horiz", "Attack02Up", "Attack02Down",
+      "Attack03Horiz", "Attack03Up", "Attack03Down"
+     ],
+     "fires": "Attack01Horiz",
+     "shots_at_frame": 18,
      "shots": "laser",
-     "how": "diagonal",
-     "notes": ""
+     "how": "sideways",
+     "notes": "The author, 2026-11-26: 'it gets too scared of standing in front of him... take advantage of the windows'. Isaac only shoots in 4 directions, so stand in his row/column and shoot, and step out sideways when an Attack animation starts (0.6-1 s warning, from the game's animation events). avoid_row_col was true: it hovered and hardly attacked, and stood still in his row when it did (4 of 4 hits)."
     },
     {
      "attack": "8-way shots",

@@ -23,7 +23,7 @@ local Options = include("options")
 -- handed to the watchdog so it can build the brain's multiple-choice menu
 local MODS = { Reflex = Reflex, Nav = Nav, Danger = Danger, Options = Options, Rescue = Rescue, json = json }
 
-local VERSION = "1.2.30"
+local VERSION = "1.2.40"
 Reflex.status.mode = "full" -- fight + walk + explore (Stage 3); "combat" = fights only, "off" = hands off
 local TAG = "IBOT|"
 local BOT_SLOT = 2
@@ -67,6 +67,9 @@ local function send(kind, body)
   if IsaacBotOut then IsaacBotOut.push(line) end -- the outbox mod may load after us; it's there by run time
 end
 Nav.onNote = function(text) send("nav", text) end -- doors given up on, bounce breaks: into the log
+-- enemy behaviour recorder (off until "record|1"; tools/recorder.py): AI state, spawns, projectile arcs
+local Recorder = include("recorder")
+Recorder.init(mod, send)
 
 -- The title, save and game-over screens don't read buttons through MC_MENU_INPUT_ACTION (only restart
 -- and fullscreen go through it), so the helper sends a real Enter key to the game window instead.
@@ -393,6 +396,10 @@ local function handle(seq, cmd, payload)
   elseif cmd == "map" then
     local ok, rep = pcall(Nav.mapReport)
     send("map", tostring(rep))
+  elseif cmd == "record" then
+    -- enemy behaviour recorder on/off ("record|1" / "record|0"); read-only
+    Recorder.on = (payload ~= "0")
+    send("recorder", Recorder.on and "on" or "off")
   elseif cmd == "ents" then
     -- everything in the room the bot might count, for diagnosing (2026-11-25: Gemini's cord balls were counted as
     -- 18 enemies): type.variant, collision class, has a parent, hurtable, hp, counted as an enemy by the bot
@@ -577,6 +584,13 @@ mod:AddCallback(ModCallbacks.MC_POST_UPDATE, function()
       walledFrames = 0
       ok, move, shoot, bomb = pcall(Nav.update, p)
     end
+    -- Dodge-only (a cleared room with unkillable movers: Wall Huggers, Eternal Flies) still has somewhere to GO. The
+    -- walker didn't run while dodging, so its heading went stale after 1.5 s and the bot dodged with no goal until the
+    -- stuck-rescue walked it out (the author, 2026-11-26, a room of four Wall Huggers: "it is confused... it can just
+    -- leave. This is a recurring pattern"). Keep the walker's goal fresh; the dodging still decides the move.
+    if ok and Reflex.status.active and Reflex.status.dodgeOnly and Reflex.status.mode == "full" and not p:IsDead() then
+      pcall(Nav.update, p)
+    end
     -- the rescue ladder watches for any lack of progress and can take over for a "shake"
     if ok and Reflex.status.mode == "full" then
       local ok3, m3, s3 = pcall(Rescue.update, p, Nav, Reflex.status.active, send, Reflex, MODS)
@@ -611,6 +625,7 @@ mod:AddCallback(ModCallbacks.MC_POST_UPDATE, function()
         if Rules.active.aimed and Rules.active.aimed[id] then armed = { f = f, dir = shoot } end
       end
       ctl.shoot = aimedFire(p, ctl.shoot)
+      ctl.shoot = Reflex.chargeFire(p, ctl.shoot) -- charge weapons: hold, then let go to fire (rules.lua R.charge)
       -- Level 3: cards and pills (strategy.lua wantPocket; needs knowledge/consumable_ratings.json)
       ctl.pocket = false
       if Reflex.status.mode == "full" and not ctl.item then

@@ -12,6 +12,8 @@ knowledge/telegraphs.txt
 knowledge/bench_rooms.json
 # benchmark suites are frozen on each PC from its own logs (tools/bench.py freeze); room names come from the game
 knowledge/bench_suite_*.json
+# measured enemy behaviour (tools/recorder.py): game-derived
+knowledge/behaviour_profiles.json
 
 # Python / backups
 __pycache__/

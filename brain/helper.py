@@ -286,6 +286,9 @@ PLAYBOOK_TAGS = {"charges_on_line", "dashes_at_isaac", "knocked_back_by_tears", 
                  "invulnerable_until", "invulnerable", "spawns_enemies", "explodes_on_death", "explodes_on_contact",
                  "leaves_creep", "shoots_single", "shoots_spread", "shoots_ring", "shoots_burst", "lobbed", "laser",
                  "stomp", "hops", "erratic", "splits", "heavy", "tethered",
+                 # stop-and-go movers: "bursts" (spiders) never reached the mod, so they looked like wanderers and
+                 # firing spots were planned 30 px from them between hops (2026-11-26, Widow fight)
+                 "bursts", "bounces",
                  # movement kinds the movement core reads (chasers home in; stationary turrets fire along lines)
                  "chases", "wanders", "stationary", "orbits"}
 
@@ -405,7 +408,9 @@ def capture_hit_frames(body):
     if time.time() - _last_capture[0] < 5:  # hits in quick succession share one capture
         return
     _last_capture[0] = time.time()
-    stamp = time.strftime("%H%M%S")
+    # date in the name and newest-by-file-time below: named "HHMMSS" and sorted by name, captures after midnight
+    # ("003315") sorted before the evening's ("235913") and were deleted straight away (2026-11-26, Haunt spikes)
+    stamp = time.strftime("%Y%m%d-%H%M%S")
     cause = re.sub(r"[^0-9A-Za-z.]", "", body.split("|")[0])
 
     def work():
@@ -415,7 +420,7 @@ def capture_hit_frames(body):
             import subprocess
             subprocess.run([sys.executable, str(Path(__file__).resolve().parent.parent / "tools" / "look.py"),
                             "6", "3", str(out)], capture_output=True, timeout=30)
-            folders = sorted((p for p in HITFRAMES.iterdir() if p.is_dir()), key=lambda p: p.name)
+            folders = sorted((p for p in HITFRAMES.iterdir() if p.is_dir()), key=lambda p: p.stat().st_mtime)
             for old in folders[:-HITFRAMES_KEEP]:
                 for f in old.iterdir():
                     f.unlink()

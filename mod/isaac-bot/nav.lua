@@ -407,8 +407,14 @@ local function findPath(room, startIdx, goalIdx, canFly, allowRocks)
             if nx >= 0 and nx < w and ni >= 0 and ni < size and not done[ni] then
               local c = cellCost(room, ni, goalIdx, canFly, allowRocks)
               if c and dx ~= 0 and dy ~= 0 then -- no cutting rock corners
-                if not cellCost(room, cx + dx + cy * w, goalIdx, canFly, false)
-                   or not cellCost(room, cx + (cy + dy) * w, goalIdx, canFly, false) then c = nil end
+                local sa, sb = cx + dx + cy * w, cx + (cy + dy) * w
+                if not cellCost(room, sa, goalIdx, canFly, false)
+                   or not cellCost(room, sb, goalIdx, canFly, false) then c = nil end
+                -- ...nor corners next to spikes/creep/fire: Isaac's body is wider than the corner and clips them (the
+                -- author, 2026-11-26: "it still walked over the spike!" - a diagonal last step to an item cut past the
+                -- spike beside it, while the path itself counted 0 damage). Through the tile itself is still allowed
+                -- and counted honestly by pathDamage.
+                if c and not canFly and (Danger.staticCell(sa) > 0 or Danger.staticCell(sb) > 0) then c = nil end
                 if c then c = c * 1.41 end
               end
               if c then
@@ -673,8 +679,11 @@ local function chooseGoal(p, room)
           local standIdx = room:GetGridIndex(stand)
           -- the spot in front of that wall must be floor we can walk to (2026-11-25: pits in front of the wall,
           -- it re-picked the same unreachable guess for 15 minutes)
-          if room:GetGridCollision(standIdx) == GridCollisionClass.COLLISION_NONE
-             and findPath(room, start, standIdx, p.CanFly, false) then
+          -- ...and the way there must not hurt: a GUESSED secret room is never worth a hit (2026-11-26: it walked over
+          -- spikes to a secret-wall bomb spot on floor 2 and lost its soul heart; the author: "not worth it")
+          local sPath = room:GetGridCollision(standIdx) == GridCollisionClass.COLLISION_NONE
+                        and findPath(room, start, standIdx, p.CanFly, false)
+          if sPath and Danger.pathDamage(sPath) == 0 then
             return { kind = "bomb wall: secret room? (" .. guess.score .. " rooms around)", key = "s" .. guess.cell,
                      bomb = true, idx = standIdx, pos = stand, secret = guess }
           end

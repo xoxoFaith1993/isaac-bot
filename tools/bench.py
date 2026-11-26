@@ -87,7 +87,27 @@ def bot_version():
         m = re.search(r" start +([\d.]+)\|", l)
         if m:
             return m.group(1)
-    return "?"
+    # (a helper restart starts a fresh live.log with no "start" line yet: read the mod's own VERSION)
+    try:
+        m = re.search(r'VERSION = "([\d.]+)"', (ROOT / "mod" / "isaac-bot" / "main.lua").read_text(encoding="utf-8"))
+        return m.group(1) if m else "?"
+    except OSError:
+        return "?"
+
+
+def game_speed():
+    """The Cheat Engine speedhack speed (D:\\...\\ce-bridge heartbeat), so 2x runs are never mixed up with 1x ones.
+    1.0 when Cheat Engine isn't running or isn't attached."""
+    try:
+        cfg = json.loads((ROOT / "config.json").read_text(encoding="utf-8"))
+        alive = Path(cfg.get("ce_bridge_dir") or (ROOT.parent / "ce-bridge")) / "outbox" / "alive.txt"
+        if alive.exists() and time.time() - alive.stat().st_mtime < 10:
+            vals = dict(l.split("=", 1) for l in alive.read_text(encoding="utf-8").splitlines() if "=" in l)
+            if vals.get("pid", "0") != "0":
+                return float(vals.get("speed", "1") or 1)
+    except (OSError, ValueError):
+        pass
+    return 1.0
 
 
 def apply_arm(settings):
@@ -95,15 +115,40 @@ def apply_arm(settings):
         rooms.send(f"set|{kv.strip()}")
 
 
+def items_now(since):
+    """Item ids the bot holds, from the newest "power ... items ..." line after `since` (None = no line yet)."""
+    for l in reversed(rooms.lines()[since:]):
+        m = re.search(r" power  .*\|items ?([\d, ]*)\s*$", l)
+        if m:
+            return re.findall(r"\d+", m.group(1))
+    return None
+
+
+def fresh_run(tries=6):
+    """A new run that really is item-free. 2026-11-26: 6 s after "newrun" the bot held Cupid's Arrow (item 48,
+    piercing) and a whole benchmark half was played with it - an unfair A vs B. Restart until it holds nothing."""
+    for k in range(tries):
+        start = len(rooms.lines())
+        # fight-only BEFORE the run starts: the autopilot had ~20 s after "newrun" to walk into a treasure room next
+        # to the start (the author watched it grab Cupid's Arrow). Set again after, in case a new run resets it.
+        rooms.send("bot|combat")
+        rooms.send("newrun")
+        rooms.wait_for(r" start  ", start, 30)
+        rooms.send("bot|combat")
+        rooms.send("set|learn=0")
+        time.sleep(8)
+        held = items_now(start)
+        if not held:
+            return True
+        print(f"  fresh run holds items {held}: restarting ({k + 1}/{tries})", flush=True)
+    return False
+
+
 def setup_run():
     PAUSE.parent.mkdir(parents=True, exist_ok=True)
     PAUSE.write_text("benchmark running", encoding="utf-8")
-    start = len(rooms.lines())
-    rooms.send("newrun")
-    rooms.wait_for(r" start  ", start, 30)
-    rooms.send("bot|combat")
-    rooms.send("set|learn=0")
-    time.sleep(2)
+    if not fresh_run():
+        sys.exit("couldn't get an item-free run")
 
 
 def finish_run():
@@ -124,6 +169,9 @@ def play(item, arm_settings, state):
         time.sleep(3)
         state["stage"] = item["stage"]
     apply_arm(arm_settings)
+    # full health before EVERY play: health carried over, so B always started with A's damage, the risk layer played
+    # it more carefully, and the first A-vs-A baseline (1.2.30) called identical bots "WORSE" (clear rate -14%)
+    rooms.send("heal")
     start = len(rooms.lines())
     rooms.send(f"goroom|{item['kind']}|{item['variant']}")
     m = rooms.wait_for(r" bench  (cleared|died|timeout|failed)\|?([\d.]*)\|?(\d*)", start, 120)
@@ -137,12 +185,15 @@ def play(item, arm_settings, state):
     res = m.group(1) if m else "no answer"
     secs = float(m.group(2)) if m and m.group(2) else None
     hits = int(m.group(3)) if m and m.group(3) else sum(causes.values())
-    if res == "died":  # a new run starts: put the bench state back
+    if res == "died":  # a new run starts: put the bench state back, item-free
         s2 = len(rooms.lines())
         rooms.wait_for(r" start  ", s2, 60)
         time.sleep(4)
         rooms.send("bot|combat")
         rooms.send("set|learn=0")
+        time.sleep(4)
+        if items_now(s2):
+            fresh_run()
         state["stage"] = None
     time.sleep(2)
     return res, secs, hits, causes
@@ -163,9 +214,9 @@ def run(label, suite_name, reps, arms, only):
         sys.exit(f"{label}.jsonl exists: pick a new --label (results are never mixed)")
     out = OUT / f"{label}.jsonl"
     meta = {"label": label, "suite": suite["name"], "suite_hash": suite["hash"], "version": bot_version(),
-            "commit": git_commit()}
+            "commit": git_commit(), "speed": game_speed()}
     print(f"== bench {label}: suite {suite['name']} ({len(items)} rooms) x {reps} reps x {len(arms)} arm(s), "
-          f"bot {meta['version']} @ {meta['commit']}", flush=True)
+          f"bot {meta['version']} @ {meta['commit']}, game speed {meta['speed']}x", flush=True)
     setup_run()
     state = {}
     try:
@@ -174,8 +225,9 @@ def run(label, suite_name, reps, arms, only):
             order = items[:]
             random.Random(1000 + rep).shuffle(order)
             order.sort(key=lambda i: i["stage"])  # fewer stage switches; the shuffle still decides order within a stage
-            for item in order:
-                arm_order = arms if (rep % 2 == 0) else list(reversed(arms))
+            for idx, item in enumerate(order):
+                # who goes first swaps room by room (and rep by rep): with one rep, A always went first before
+                arm_order = arms if ((rep + idx) % 2 == 0) else list(reversed(arms))
                 for arm_name, arm_settings in arm_order:
                     res, secs, hits, causes = play(item, arm_settings, state)
                     row = dict(meta, arm=arm_name, settings=arm_settings, rep=rep, item=item["id"], name=item["name"],

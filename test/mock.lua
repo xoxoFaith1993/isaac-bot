@@ -178,7 +178,7 @@ function Ent:ToLaser() return nil end
 function Ent:IsShopItem() return false end
 function Ent:GetSprite()
   local e = self
-  return { GetAnimation = function() return e._anim end, GetFrame = function() return 0 end,
+  return { GetAnimation = function() return e._anim end, GetFrame = function() return e._frame or 0 end,
            IsPlaying = function(_, a) return e._anim == a end, IsFinished = function() return false end }
 end
 
@@ -333,6 +333,7 @@ end
 function Mock.pickup(v, sub, pos) return entity(EntityType.ENTITY_PICKUP, v, pos, { sub = sub }) end
 function Mock.shot(pos, vel) return entity(EntityType.ENTITY_PROJECTILE, 0, pos, { vel = vel, size = 7 }) end
 -- a lit fireplace (an entity in the real game, type 33; HitPoints > 1 = burning)
+function Mock.creep(variant, pos, size) return entity(EntityType.ENTITY_EFFECT, variant, pos, { size = size or 20 }) end
 function Mock.fire(pos) return entity(EntityType.ENTITY_FIREPLACE, 0, pos, { hp = 5, size = 13 }) end
 
 -- A floor of several 1x1 rooms on the game's 13-wide map (84 = the start room, 85 = right of it, 71 = above...).

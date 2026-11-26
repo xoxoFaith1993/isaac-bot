@@ -80,7 +80,8 @@ R.pickups = {
 ---------------------------------------------------------------- danger map: what hurts, in half hearts
 -- One map of the room that walking, fighting and the brain all read (danger.lua). A new hazard goes here once.
 R.danger = {
-  spikes = 1,   -- stepping on active floor spikes
+  spikes = 2,   -- stepping on active floor spikes: a FULL heart (the game's hit lines say "|2"; it said 1 until
+                -- 2026-11-26, when the bot walked over spikes to dodge Lil' Haunts and died: 3 of 4 hits were spikes)
   creep = 1,    -- standing in an enemy's creep puddle
   fire = 1,     -- touching a lit fireplace
   touch = 1,    -- touching an enemy body
@@ -88,6 +89,25 @@ R.danger = {
   bomb_radius = 95,
   tnt = 1,      -- next to TNT (fixed or pushable): it explodes like a bomb when any tear or shot hits it
   tnt_radius = 85,
+}
+-- Shots that BURST when they land: extra danger radius (px) around them, by the shooter's entity type.
+-- Sloth (46): the author, 2026-11-26, "sloth's tears have an explosion radius". The log agreed: both hits of a death
+-- came from a big, slow Sloth shot 30 and 55 px away, lying on the ground (height -1/-3), with the damage credited to
+-- Sloth - the bot planned around a 5 px tear. Add more shooters here as they show up (hit lines: "shot ... from=<type>").
+R.shot_blast = { [46] = 55 }
+
+-- AI states (NpcState) in which an enemy takes NO damage, by "type.variant". Confirmed by the decompiled AI AND the
+-- recorder (2026-11-26, docs/research/RE_PILOT.md "Recording check"): the Haunt lost 0 HP in 1,124 samples of state 4
+-- (phase 1, while his Lil' Haunts took 56 hits) and is shielded in 16 (Peel); Lil' Haunts orbiting him (state 3)
+-- took no damage either - only the ones that break off and chase can be killed. Tears at these are wasted.
+-- How far a charger's row/column trigger reaches (px), by "type.variant": it charges when Isaac is in its 40 px tile
+-- row or column within this distance, with no wind-up (decompiled AI + recorder: 24/24 Charger and 18/18 Gurgling
+-- charges fit, 2026-11-26). Beyond it the row/column is safe to stand in; the bot used to avoid it out to 420 px.
+R.charge_reach = { ["23.0"] = 200, ["237.0"] = 200, ["237.1"] = 200, ["237.2"] = 200 }
+
+R.no_damage_states = {
+  ["260.0"] = { [4] = true, [16] = true },
+  ["260.10"] = { [3] = true },
 }
 
 ---------------------------------------------------------------- worth it? reward vs risk, scaled by health
@@ -97,7 +117,11 @@ R.danger = {
 -- So half a heart costs ~6 points at full health and ~70 on the last heart. Do it only if value > cost.
 -- Plus a fixed price per HIT, whatever the health: taking damage lowers the floor's devil/angel deal chance
 -- (the author, 2026-11-25: "the goal is to just not get hit at all"). A curse room (hit in + hit out) now costs ~50+.
-R.risk = { half_heart = 6, full_hp = 12, per_hit = 25 }
+R.risk = { half_heart = 6, full_hp = 12, per_hit = 25,
+  -- what losing the floor's devil/angel deal is worth (in the same points as item values): charged once when a hit
+  -- would cost it, or would use up the last soul/bone heart or mantle protecting it (the author, 2026-11-26: spending
+  -- the only soul heart on floor 2 for an item "isn't worth it"). Above most items, below the best ones.
+  deal_value = 150 }
 
 ---------------------------------------------------------------- Level 3: buying (strategy.lua buyValue)
 -- Devil deals: pay hearts only for a strong item for THIS run, and never below 2 heart containers / 2 hearts after.
@@ -144,6 +168,19 @@ R.active = {
     479, 536, 628,           -- Smelter, Sacrificial Altar, Death Certificate
     290, 263,                -- The Jar, Clear Rune (situational)
   },
+}
+
+-- Charge-shot weapons: hold fire to charge, LET GO to shoot. The bot held fire the whole time it aimed, so with
+-- Chocolate Milk it charged forever and never fired ("walking around with his mouth full", the author, 2026-11-26).
+-- Value = how long to hold, in multiples of the tear delay (MaxFireDelay); then it lets go for 2 updates.
+-- Brimstone-type weapons fire nothing unless fully charged (hold longer); Chocolate Milk fires at any charge.
+R.charge = {
+  [69] = 1.6,   -- Chocolate Milk
+  [118] = 3.3,  -- Brimstone
+  [229] = 3.3,  -- Monstro's Lung
+  [316] = 3.3,  -- Cursed Eye
+  [395] = 2.0,  -- Tech X
+  [114] = 2.0,  -- Mom's Knife (throw)
 }
 
 R.stuck = {

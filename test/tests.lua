@@ -63,6 +63,13 @@ end
 local function run(name, fn)
   if ONLY and ONLY ~= "" and not name:find(ONLY, 1, true) then return end
   Reflex.v2err = nil
+  -- every test starts from the same state: the lap direction, last move and plan carried over between tests and
+  -- made results depend on which tests ran before (2026-11-26: an unrelated setting moved the ring-kite result)
+  Reflex.ringDir = 1
+  Reflex.mover.lastDir, Reflex.mover.lastMove, Reflex.mover.lastFrame = nil, nil, nil
+  Reflex.plan.at, Reflex.plan.target, Reflex.plan.cell, Reflex.plan.cellPos, Reflex.plan.path = -999, nil, nil, nil, nil
+  Reflex.plan.banned, Reflex.plan.forced, Reflex.plan.forcedTarget = {}, nil, nil
+  Reflex.lastFrameSeen = nil
   local ok, err = xpcall(fn, debug.traceback)
   if not ok then results[#results + 1] = "FAIL " .. name .. "  (crashed: " .. tostring(err) .. ")" end
   -- the movement core errored (it's run under pcall and silently falls back to the old core): a test can then pass or
@@ -515,6 +522,10 @@ end)
 run("ring-kites a chasing boss round the room", function()
   local S = Reflex.S
   local function fight(ringOn)
+    -- (a clean start: the lap direction and last move carried over from earlier tests changed this result - 2026-11-26
+    -- the Host bait distance, an unrelated setting, moved it from 1.5 to 1.4 rad)
+    Reflex.ringDir = 1
+    Reflex.mover.lastDir, Reflex.mover.lastMove = nil, nil
     Reflex.loadPlaybook("46.0=chases,k2,d3")
     local oldW, oldF = S.ring_w, S.ring_flow
     if not ringOn then S.ring_w, S.ring_flow = 0, 0 end
@@ -800,6 +811,313 @@ run("re-plans after a new run restarts the frame counter", function()
             t == boss and "the boss" or (t == old and "the OLD room's enemy" or tostring(t))))
 end)
 
+-- 49. 1.2.31 (the author: "sloth's tears have an explosion radius"): a Sloth shot lying 45 px away bursts; the bot
+-- must get out of the blast, while a plain shot that close but moving away is no reason to run
+run("steps out of a Sloth shot's blast", function()
+  -- the danger the movement core sees where Isaac stands, from shots (the "danger here" breakdown)
+  local function shotDanger(spawner)
+    Mock.room(nil, { clear = false, player = Mock.tile(7, 4) })
+    Mock.enemy(46, 0, Mock.tile(1, 1), { hp = 300 })
+    local s = Mock.shot(Mock.tile(7, 4) + Vector(50, 0), Vector(0, 0))
+    s.SpawnerType = spawner
+    Reflex.update(Isaac.GetPlayer())
+    return tonumber(tostring(Reflex.mover.debug):match("shots (%d+)") or "0")
+  end
+  local sloth, plain = shotDanger(46), shotDanger(0)
+  check("steps out of a Sloth shot's blast", sloth > 0 and plain == 0,
+        fmt("shot danger where Isaac stands: Sloth shot 50 px away %d, plain shot %d", sloth, plain))
+end)
+
+-- 50. 1.2.31 (the author, Haunt room: "had no idea what to do and killed itself walking over the spikes trying to kill
+-- the mini haunts"; 3 of 4 hits were spikes, a FULL heart each). Spikes are sure damage, an enemy's circle only a
+-- maybe: inside a ring of spikes with a chaser, it dodges inside the ring instead of crossing the spikes.
+run("doesn't walk over spikes to dodge a chaser", function()
+  local rows = {
+    "WWWWWWWDWWWWWWW",
+    "W.............W",
+    "W..^^^^^^^^^..W",
+    "W..^.......^..W",
+    "D..^.......^..D",
+    "W..^.......^..W",
+    "W..^^^^^^^^^..W",
+    "W.............W",
+    "WWWWWWWDWWWWWWW",
+  }
+  Mock.room(rows, { clear = false, player = Mock.tile(8, 4) })
+  -- fast flyers like Lil' Haunts (260.10), two of them
+  Mock.enemy(260, 10, Mock.tile(4, 3), { hp = 300, chase = 2.2 })
+  Mock.enemy(260, 10, Mock.tile(4, 5), { hp = 300, chase = 2.2 })
+  local p = Isaac.GetPlayer()
+  local onSpikes = 0
+  for _ = 1, 150 do
+    local move = Reflex.update(p)
+    Mock.step(move)
+    local col = math.floor((p.Position.X - 20) / 40) + 1
+    local row = math.floor((p.Position.Y - 100) / 40) + 1
+    local line = rows[row]
+    if line and line:sub(col, col) == "^" then onSpikes = onSpikes + 1 end
+  end
+  check("doesn't walk over spikes to dodge a chaser", onSpikes == 0,
+        fmt("%d of 150 updates on spikes", onSpikes))
+end)
+
+-- 51. 1.2.31 (the author: the Squirt "should be dead within the first few seconds of the room, but he is
+-- struggling"): a stop-and-go dasher is led by what it does NOW: not at all once it stops, at full speed mid-dash
+run("leads a Squirt by what it does now, not its average", function()
+  Reflex.loadPlaybook("220.0=dashes_at_isaac,wanders,k2,d3")
+  Mock.room(nil, { clear = false, player = Mock.tile(11, 4) })
+  local sq = Mock.enemy(220, 0, Mock.tile(3, 4), { hp = 20 })
+  local p = Isaac.GetPlayer()
+  sq.Velocity = Vector(9, 0)
+  for _ = 1, 12 do Reflex.trackSpeeds({ sq }, p) end
+  local midDash = Reflex.leadVel(sq)
+  sq.Velocity = Vector(0, 0) -- the dash ends
+  Reflex.trackSpeeds({ sq }, p)
+  local stopped = Reflex.leadVel(sq)
+  Reflex.playbook = {}
+  check("leads a Squirt by what it does now, not its average", stopped:Length() < 0.1 and midDash.X > 8.5,
+        fmt("lead mid-dash %.1f px/update (moving 9), just stopped %.1f", midDash.X, stopped:Length()))
+end)
+
+-- 52. 1.2.31 (the author, Widow: "gets a little too carried away... no regard for his surroundings"): a spider sitting
+-- still between hops is no "stands still" enemy: firing spots keep the full gap from it
+run("keeps the full gap from a spider between hops", function()
+  Reflex.loadPlaybook("85.0=bursts,k1,d2")
+  Mock.room(nil, { clear = false, player = Mock.tile(6, 2) })
+  Mock.enemy(EntityType.ENTITY_GAPER, 0, Mock.tile(11, 4), { hp = 30 })
+  local spider = Mock.enemy(85, 0, Mock.tile(6, 4), { hp = 10 })
+  Reflex.plan.at = -999
+  Reflex.update(Isaac.GetPlayer())
+  local cp = Reflex.plan.cellPos
+  local d = cp and (cp - spider.Position):Length() or -1
+  Reflex.playbook = {}
+  check("keeps the full gap from a spider between hops", cp ~= nil and d >= Reflex.S.plan_clearance + spider.Size,
+        fmt("firing spot %.0f px from the spider (wanted %d+)", d, Reflex.S.plan_clearance + spider.Size))
+end)
+
+-- 53. 1.2.31 (the author: "the spider creep, the white creep, does not hurt you"): red creep is danger, white isn't
+run("white creep isn't danger, red creep is", function()
+  local function floorDanger(variant)
+    Mock.room(nil, { clear = false, player = Mock.tile(7, 4) })
+    Mock.enemy(EntityType.ENTITY_GAPER, 0, Mock.tile(1, 1), { hp = 30 })
+    Mock.creep(variant, Mock.tile(7, 4), 30)
+    Reflex.update(Isaac.GetPlayer())
+    return tonumber(tostring(Reflex.mover.debug):match("floor (%d+)") or "0")
+  end
+  local red, white = floorDanger(EffectVariant.CREEP_RED), floorDanger(EffectVariant.CREEP_WHITE)
+  check("white creep isn't danger, red creep is", red > 0 and white == 0,
+        fmt("floor danger standing in red creep %d, in white creep %d", red, white))
+end)
+
+-- 54. 1.2.31 (the author, Gluttony: "it gets too scared of standing in front of him... take advantage of the windows
+-- that you got"): a laser shooter with KNOWN wind-ups makes its row/column cost nothing between attacks, and a lot
+-- while a wind-up plays
+run("Gluttony's line is free between attacks, costly during the wind-up", function()
+  Reflex.loadPlaybook("49.0=laser,chases,k2,d4")
+  Reflex.loadBossTactics("49.0=170,,ignore,Attack01Horiz|Attack01Up|Attack01Down,")
+  local function lineCost(anim)
+    Mock.room(nil, { clear = false, player = Mock.tile(10, 4) })
+    Mock.enemy(49, 0, Mock.tile(3, 4), { hp = 200, boss = true, anim = anim })
+    Reflex.update(Isaac.GetPlayer())
+    return tonumber(tostring(Reflex.mover.debug):match("row/col lines (%d+)") or "0")
+  end
+  local calm, winding = lineCost("WalkHori"), lineCost("Attack01Horiz")
+  Reflex.playbook = {}
+  Reflex.loadBossTactics("")
+  check("Gluttony's line is free between attacks, costly during the wind-up", calm == 0 and winding > 0,
+        fmt("standing in his row: line cost %d while he walks, %d during Attack01Horiz", calm, winding))
+end)
+
+-- 55. 1.2.31 (the author, Gemini: "gets tired, starts panting. That's your ticket to put as much damage in him...
+-- Isaac doesn't utilize that"): the lap stops while the chaser pants, and the bot closes in to shoot
+run("stops kiting and closes in while the chaser pants", function()
+  Reflex.loadPlaybook("79.0=chases,k2,d3")
+  Reflex.loadBossTactics("79.0=180,kg,ignore,,Pant")
+  local function fight(anim)
+    Mock.room(nil, { clear = false, player = Mock.tile(11, 4) })
+    local boss = Mock.enemy(79, 0, Mock.tile(4, 4), { hp = 300, boss = true, anim = anim })
+    local p = Isaac.GetPlayer()
+    local d0 = (boss.Position - p.Position):Length()
+    local rings = 0
+    for _ = 1, 45 do
+      local move = Reflex.update(p)
+      if Reflex.status.ring then rings = rings + 1 end
+      Mock.step(move)
+    end
+    return rings, d0 - (boss.Position - p.Position):Length()
+  end
+  local ringsPant, closedPant = fight("Pant")
+  local ringsWalk = fight("WalkHori")
+  Reflex.playbook = {}
+  Reflex.loadBossTactics("")
+  check("stops kiting and closes in while the chaser pants", ringsPant == 0 and ringsWalk > 0 and closedPant > 60,
+        fmt("lap on in %d of 45 updates while panting (%d while walking), closed in %.0f px while panting",
+            ringsPant, ringsWalk, closedPant))
+end)
+
+-- 56. 1.2.31 the enemy behaviour recorder (tools/recorder.py reads these lines): off by default, one line per sample
+-- with every enemy, read-only, and no cord balls
+run("recorder: one compact line per sample, off by default", function()
+  ModCallbacks = ModCallbacks or {}
+  for _, n in ipairs({ "MC_POST_UPDATE", "MC_POST_PROJECTILE_UPDATE", "MC_POST_EFFECT_UPDATE", "MC_POST_NPC_INIT",
+                       "MC_POST_BOMB_INIT" }) do ModCallbacks[n] = ModCallbacks[n] or n end
+  local Recorder = include("recorder")
+  local cbs, lines = {}, {}
+  Recorder.init({ AddCallback = function(_, id, fn) cbs[id] = fn end }, function(k, b) lines[#lines + 1] = k .. "|" .. b end)
+  Mock.room(nil, { clear = false, player = Mock.tile(7, 4) })
+  local boss = Mock.enemy(79, 0, Mock.tile(3, 4), { hp = 200, boss = true, anim = "WalkHori" })
+  Mock.enemy(79, 20, Mock.tile(4, 4), { parent = boss, vulnerable = false, coll = EntityCollisionClass.ENTCOLL_NONE })
+  Mock.enemy(85, 0, Mock.tile(9, 2), { hp = 10 })
+  Mock.setFrame(2000)
+  cbs[ModCallbacks.MC_POST_UPDATE]()
+  local whileOff = #lines
+  Recorder.on = true
+  cbs[ModCallbacks.MC_POST_UPDATE]()
+  local l = lines[#lines] or ""
+  check("recorder: one compact line per sample, off by default", whileOff == 0 and #lines == 1
+        and l:find("79.0,WalkHori", 1, true) ~= nil and l:find(";85.0,", 1, true) ~= nil and not l:find("79.20", 1, true),
+        "lines while off " .. whileOff .. ", line: " .. l:sub(1, 160))
+end)
+
+-- 57. 1.2.32 (the author: with Chocolate Milk "it won't shoot... just walking around with his mouth full"): charge
+-- weapons get a hold-then-let-go rhythm; normal tears keep the button held
+run("charge weapons: holds, then lets go to fire", function()
+  Mock.room(nil, { clear = false, player = Mock.tile(7, 4) })
+  local p = Isaac.GetPlayer()
+  local function pattern(hasMilk)
+    p.HasCollectible = function(_, id) return hasMilk and id == 69 end
+    Reflex.chargeFire(p, nil)
+    local s = ""
+    for _ = 1, 40 do s = s .. (Reflex.chargeFire(p, "left") and "H" or "_") end
+    return s
+  end
+  local milk, plain = pattern(true), pattern(false)
+  p.HasCollectible = nil
+  check("charge weapons: holds, then lets go to fire", milk:find("H_", 1, true) ~= nil and not plain:find("_", 1, true),
+        "Chocolate Milk: " .. milk .. " | plain tears: " .. plain)
+end)
+
+-- 58. 1.2.32 (the author: a Horf, "it was dancing around it for quite a while"): a shot coming from a FAR shooter
+-- draws no pre-fire line (the shot can be dodged once it's fired); a CLOSE one still does
+run("no pre-fire line from a far shooter, still one up close", function()
+  local T = Reflex.tells
+  local old = T.shotComing
+  T.shotComing = function(e) return e.Type == 12 end
+  local function lineCost(dx)
+    Mock.room(nil, { clear = false, player = Mock.tile(7, 4) })
+    Mock.enemy(12, 0, Mock.tile(7, 4) + Vector(dx, 0), { hp = 20 })
+    Reflex.update(Isaac.GetPlayer())
+    return tonumber(tostring(Reflex.mover.debug):match("attack lines (%d+)") or "0")
+  end
+  local ok, far, near = pcall(function() return lineCost(240), lineCost(80) end)
+  T.shotComing = old
+  check("no pre-fire line from a far shooter, still one up close", ok and far == 0 and near > 0,
+        fmt("attack-line cost with a Horf 240 px away %s, 80 px away %s", tostring(far), tostring(near)))
+end)
+
+-- 59. 1.2.33 (the author: "the host will not open up if you are attacking it or shooting near it. You have to wait for
+-- the opening"): no tears at a closed Host while baiting it; fires once it opens
+run("holds fire at a closed Host, fires when it opens", function()
+  local function shots(vulnerable)
+    Mock.room(nil, { player = Mock.tile(2, 4), clear = false })
+    local p = Isaac.GetPlayer()
+    Mock.enemy(EntityType.ENTITY_HOST, 0, Mock.tile(5, 4), { vulnerable = vulnerable })
+    local n = 0
+    for _ = 1, 45 do
+      local move, shoot = Reflex.update(p)
+      if shoot and shoot ~= "" then n = n + 1 end
+      Mock.step(move)
+    end
+    return n
+  end
+  local closed, open = shots(false), shots(true)
+  check("holds fire at a closed Host, fires when it opens", closed == 0 and open > 10,
+        fmt("updates firing at a closed Host %d of 45, at an open one %d", closed, open))
+end)
+
+-- 60. 1.2.34 (recorder + decompiled AI agree: the Haunt takes no damage in state 4, orbiting Lil' Haunts none in
+-- state 3): targets only the chasing Lil' Haunt, and holds fire when only unhurtable ones are left
+run("Haunt phase 1: only the chasing Lil' Haunt is a target", function()
+  local function npc(e, state) e.ToNPC = function(self) return self end; e.State = state; return e end
+  Mock.room(nil, { player = Mock.tile(11, 4), clear = false })
+  local p = Isaac.GetPlayer()
+  npc(Mock.enemy(260, 0, Mock.tile(6, 2), { hp = 300, boss = true }), 4)
+  npc(Mock.enemy(260, 10, Mock.tile(6, 3), { hp = 20 }), 3)
+  local chaser = npc(Mock.enemy(260, 10, Mock.tile(4, 6), { hp = 20 }), 4)
+  Reflex.plan.at = -999
+  Reflex.update(p)
+  local t = Reflex.status.target or Reflex.plan.target
+  -- the chaser dies: nothing hurtable left
+  chaser._alive = false
+  local fired = 0
+  for _ = 1, 30 do
+    local move, shoot = Reflex.update(p)
+    if shoot and shoot ~= "" then fired = fired + 1 end
+    Mock.step(move)
+  end
+  check("Haunt phase 1: only the chasing Lil' Haunt is a target", t == chaser and fired == 0,
+        fmt("target: %s; updates firing with only the shielded ones left: %d of 30",
+            t == chaser and "the chasing Lil' Haunt" or tostring(t and (t.Type .. "." .. t.Variant)), fired))
+end)
+
+-- 61. 1.2.34 (decompiled AI + recorder: a Charger charges when Isaac is in its row/column WITHIN 200 px): its line
+-- costs nothing at 300 px, and a lot at 150 px
+run("Charger's row only matters within 200 px", function()
+  Reflex.loadPlaybook("23.0=charges_on_line,k2,d2")
+  local function lineCost(dx)
+    Mock.room(nil, { clear = false, player = Mock.tile(7, 4) })
+    Mock.enemy(23, 0, Mock.tile(7, 4) + Vector(dx, 0), { hp = 20 })
+    Reflex.update(Isaac.GetPlayer())
+    return tonumber(tostring(Reflex.mover.debug):match("row/col lines (%d+)") or "0")
+  end
+  local far, near = lineCost(-300), lineCost(-150)
+  Reflex.playbook = {}
+  check("Charger's row only matters within 200 px", far == 0 and near > 0,
+        fmt("standing in its row: line cost %d at 300 px, %d at 150 px", far, near))
+end)
+
+-- 62. 1.2.34 (Sloth's lob: a known arc, harmless overhead, a blast where it lands): a lob just launched above Isaac and
+-- flying away is no danger where he stands; the same shot without gravity (a plain shot) is
+run("a lob high overhead is no danger; it lands farther on", function()
+  local function shotDanger(accel)
+    Mock.room(nil, { clear = false, player = Mock.tile(7, 4) })
+    Mock.enemy(46, 0, Mock.tile(1, 1), { hp = 300 })
+    local s = Mock.shot(Mock.tile(7, 4), Vector(8, 0))
+    s.SpawnerType = 46
+    s.Height, s.FallingSpeed, s.FallingAccel = -45, -21.9, accel
+    s.ToProjectile = function(self) return self end
+    Reflex.update(Isaac.GetPlayer())
+    return tonumber(tostring(Reflex.mover.debug):match("shots (%d+)") or "0")
+  end
+  local lob, flat = shotDanger(1.02), shotDanger(0)
+  check("a lob high overhead is no danger; it lands farther on", lob == 0 and flat > 0,
+        fmt("shot danger where Isaac stands: lob just launched over him %d, flat shot %d", lob, flat))
+end)
+
+-- 63. 1.2.35 (the author: "even if there's a pixel peek of space in between rocks... you can't go through it"): the
+-- corner where two rocks meet diagonally is no passage - Isaac's body has to fit, not just his centre
+run("a diagonal gap between two rocks is no passage", function()
+  Mock.room({
+    "WWWWWWWDWWWWWWW",
+    "W.............W",
+    "W.............W",
+    "W.....#.......W",
+    "D......#......D",
+    "W.............W",
+    "W.............W",
+    "W.............W",
+    "WWWWWWWDWWWWWWW",
+  }, { player = Mock.tile(2, 2) })
+  local room = Game():GetRoom()
+  -- just past the shared corner, on the open side of the grid line (the old centre-only check said "open")
+  local corner = Mock.tile(6, 3) + Vector(21, 19)
+  local open = Mock.tile(10, 6)
+  check("a diagonal gap between two rocks is no passage",
+        Reflex.blocked(room, corner, false) > 0 and Reflex.blocked(room, open, false) == 0,
+        fmt("at the rocks' corner: %s, in the open: %s", Reflex.blocked(room, corner, false) > 0 and "blocked" or
+            "OPEN", Reflex.blocked(room, open, false) == 0 and "open" or "blocked"))
+end)
+
 run("doesn't cross spikes for a penny", function()
   Mock.room({
     "WWWWWWWDWWWWWWW",
@@ -1023,6 +1341,148 @@ run("gets clear of a bomb it just placed", function()
   local need = Reflex.S.bomb_r + p.Size
   check("gets clear of a bomb it just placed", clearAt ~= nil and clearAt <= 30 and minAfter >= need,
         fmt("clear (%d px) after %s updates, closest after that %.0f px", need, tostring(clearAt), minAfter))
+end)
+
+-- 64. 1.2.36 (the author: it blew itself up at a secret wall, "it in fact had an escape route. You can go up or
+-- down"): its bomb at its feet in a one-tile strip between pits and the wall - it must run up or down the strip
+run("escapes its own bomb along a narrow strip", function()
+  Mock.room({
+    "WWWWWWWDWWWWWWW",
+    "W.............W",
+    "W.............W",
+    "W..........~~.W",
+    "D..........~~.D",
+    "W..........~~.W",
+    "W.............W",
+    "W.............W",
+    "WWWWWWWDWWWWWWW",
+  }, { clear = true, player = Mock.tile(13, 4) })
+  local p = Isaac.GetPlayer()
+  local bomb = Mock.entity(EntityType.ENTITY_BOMB, 0, p.Position + Mock.vec(4, 0), { size = 10 })
+  local clearAt = nil
+  for i = 1, 40 do
+    local move = Reflex.update(p)
+    Mock.step(move)
+    if not clearAt and (p.Position - bomb.Position):Length() >= Reflex.S.bomb_r + p.Size then clearAt = i end
+  end
+  check("escapes its own bomb along a narrow strip", clearAt ~= nil and clearAt <= 30,
+        fmt("clear of the blast after %s updates (ended %.0f px from it)", tostring(clearAt),
+            (p.Position - bomb.Position):Length()))
+end)
+
+-- 65. 1.2.37 (the author: "it still walked over the spike!" - the last diagonal step to an item cut the corner past
+-- the spike beside it): a path never cuts a corner next to a spike
+run("paths don't cut corners past spikes", function()
+  Mock.room({
+    "WWWWWWWDWWWWWWW",
+    "W.............W",
+    "W.............W",
+    "W.......^.....W",
+    "D.............D",
+    "W.............W",
+    "W.............W",
+    "W.............W",
+    "WWWWWWWDWWWWWWW",
+  }, { clear = true, player = Mock.tile(6, 2) })
+  local room = Game():GetRoom()
+  local w = room:GetGridWidth()
+  local start, goal = room:GetGridIndex(Mock.tile(6, 2)), room:GetGridIndex(Mock.tile(8, 4))
+  local path = Nav.findPath(room, start, goal, false, false) or {}
+  local spike = room:GetGridIndex(Mock.tile(8, 3))
+  local cut, prev = false, start
+  for _, i in ipairs(path) do
+    local dx, dy = i % w - prev % w, i // w - prev // w
+    if dx ~= 0 and dy ~= 0 then
+      local a, b = prev + dx, prev + dy * w
+      if a == spike or b == spike then cut = true end
+    end
+    if i == spike then cut = true end
+    prev = i
+  end
+  check("paths don't cut corners past spikes", #path > 0 and not cut,
+        fmt("%d steps, cuts past or onto the spike: %s", #path, tostring(cut)))
+end)
+
+-- 66. 1.2.39 (the best run died to a Gaping Maw: "he sucks in air and it brings in Isaac" onto the spikes around it):
+-- with a steady pull toward a ring of spikes, the bot measures the push and keeps off the spikes
+run("measures a pull and keeps off the spikes it drags toward", function()
+  local rows = {
+    "WWWWWWWDWWWWWWW",
+    "W.............W",
+    "W.............W",
+    "W.....^^^.....W",
+    "D.....^.^.....D",
+    "W.....^^^.....W",
+    "W.............W",
+    "W.............W",
+    "WWWWWWWDWWWWWWW",
+  }
+  PULL = PULL or 2.2
+  Mock.room(rows, { clear = false, player = Mock.tile(10, 4) })
+  local p = Isaac.GetPlayer()
+  local maw = Mock.tile(7, 4)
+  Mock.enemy(235, 0, maw, { hp = 100, vulnerable = false })
+  Mock.enemy(EntityType.ENTITY_GAPER, 0, Mock.tile(12, 1), { hp = 300, chase = 0.6 })
+  local onSpikes = 0
+  for _ = 1, 150 do
+    local move = Reflex.update(p)
+    Mock.step(move)
+    local to = maw - p.Position
+    local pull = to:Length() > 1 and to:Normalized() * PULL or Vector(0, 0)
+    p.Position = p.Position + pull
+    p.Velocity = p.Velocity + pull
+    local col = math.floor((p.Position.X - 20) / 40) + 1
+    local row = math.floor((p.Position.Y - 100) / 40) + 1
+    if rows[row] and rows[row]:sub(col, col) == "^" then onSpikes = onSpikes + 1 end
+  end
+  check("measures a pull and keeps off the spikes it drags toward", onSpikes == 0,
+        fmt("%d of 150 updates on spikes (pull %.1f px/update toward the Maw)", onSpikes, PULL))
+end)
+
+-- 67. 1.2.40 (the author: it spent "his only soul heart, the only thing that was preventing him from losing the devil
+-- deal" on floor 2 for an item: "I don't think that's worth it"): a hit that uses up the last protection costs the deal
+run("a hit that spends the last soul heart costs the deal", function()
+  Mock.room(nil, { clear = true, player = Mock.tile(7, 4) })
+  local p = Isaac.GetPlayer()
+  local Risk, Danger = Reflex.risk, include("danger")
+  local saved = { Risk.dealLive, Risk.atStake, Risk.buffer, Risk.level }
+  Risk.dealLive, Risk.atStake, Risk.level = true, false, 0.85
+  Risk.buffer = 2 -- one soul heart in front of the red ones
+  local lastBuffer = Danger.cost(p, 2)
+  Risk.buffer = 4 -- two soul hearts: one is left after this hit
+  local spare = Danger.cost(p, 2)
+  Risk.dealLive, Risk.atStake, Risk.buffer, Risk.level = saved[1], saved[2], saved[3], saved[4]
+  check("a hit that spends the last soul heart costs the deal",
+        lastBuffer >= Rules.risk.deal_value and spare < Rules.risk.deal_value,
+        fmt("full-heart hit with 1 soul heart in front: %.0f, with 2: %.0f (deal worth %d)", lastBuffer, spare,
+            Rules.risk.deal_value))
+end)
+
+-- 68. 1.2.41 Dingle predictor, Level 1 (decompiled AI + recordings; the author: "Level 1 first"): winding up for a
+-- dash (BeforeSlide), the bot gets off the line before the aim locks; the learned circle alone gives no reason to
+run("Dingle predictor: off his line before the aim locks", function()
+  local S = Reflex.S
+  local function offLine(known)
+    local saved = S.predict_known
+    S.predict_known = known
+    Mock.room(nil, { clear = false, player = Mock.tile(11, 4) })
+    local p = Isaac.GetPlayer()
+    local d = Mock.enemy(261, 0, Mock.tile(7, 4), { hp = 300, boss = true, anim = "BeforeSlide" })
+    d.ToNPC = function(self) return self end
+    d.State, d.StateFrame = 11, 15
+    local y0 = p.Position.Y
+    for i = 1, 8 do
+      d.StateFrame = 15 + i
+      local move = Reflex.update(p)
+      Mock.step(move)
+    end
+    S.predict_known = saved
+    return math.abs(p.Position.Y - y0)
+  end
+  local withKnown, without = offLine(1), offLine(0)
+  -- (work in progress: predict_known is off by default until this passes - KNOWN, not a failure, 2026-11-26)
+  known("Dingle predictor: off his line before the aim locks", withKnown >= 25 and withKnown > without + 15,
+        fmt("off Dingle's row after 8 updates: %.0f px with the predictor, %.0f px without", withKnown, without))
 end)
 
 -- 34. 1.1.50: poop "gates" only for an enemy that's really walled in. In the Dingle fight the planner had no
@@ -1299,7 +1759,14 @@ run("strategy: deals, shop and risky rooms", function()
   p._soul = 4
   Risk.update(p, {})
   local curseSoul = Risk.allows("curse", p)
-  check("risky rooms: curse room only with soul hearts in front when the deal is at stake", not curseStake and curseSoul)
+  -- (1.2.40, the author: one soul heart is the deal's only protection - the door's hits would spend it)
+  p._soul = 2
+  Risk.update(p, {})
+  local curseOneSoul = Risk.allows("curse", p)
+  check("risky rooms: curse room only with soul hearts in front when the deal is at stake",
+        not curseStake and curseSoul and not curseOneSoul,
+        fmt("red only: %s, two soul hearts: %s, one soul heart: %s", tostring(curseStake), tostring(curseSoul),
+            tostring(curseOneSoul)))
   lvl.stage, p._hearts, p._soul = oldStage, 6, 0
   Risk.pin = 0.25
   Risk.update(p, {})

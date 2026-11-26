@@ -42,6 +42,7 @@ function IsaacBotSolid(e)
   return e.Parent == nil and e:IsVulnerableEnemy()
 end
 
+local Rules = include("rules") -- knowledge as numbers (shot blast radii here)
 local Danger = include("danger")
 local Tells = include("tells")
 local Mover = include("mover") -- movement core v2 (learned reach + deeper search); S.core picks which one drives
@@ -65,10 +66,14 @@ Reflex.S = {
   touch_cost = 700,
   wall_cost = 400,
   spike_cost = 300,    -- (old; spikes now come from the danger map)
-  danger_w = 450,      -- cost per half heart of danger-map damage on a square Isaac would cross
+  danger_w = 1000,     -- cost per half heart of danger-map damage on a square Isaac would cross. = m_hit: floor
+                       -- damage (spikes, creep, fire) is SURE, an enemy's circle only a maybe, so a sure half heart
+                       -- must cost at least a sure hit (was 450: it crossed spikes to dodge Lil' Haunts, 2026-11-26)
   still_tolerance = 120, -- lined up: stand still to shoot straight unless standing costs this much more
   caution_w = 120,      -- cost of ending up on a "caution" square (next to TNT) during a fight
-  bait_dist = 100,      -- shielded targets (Hosts) open when you come close: hold this distance to bait them
+  bait_dist = 210,      -- shielded targets (Hosts) open when you come close: hold this distance to bait them.
+                        -- Game code (2026-11-26): a Host opens with Isaac within 240 px and a clear line, then fires
+                        -- ~24 updates later at 9 px/update. From 100 px (the old value) its shots hit far more often.
   stand_safe_r = 150,   -- only stand still to shoot if no moving enemy is closer than this
   boss_margin = 0,      -- extra px of berth around boss bodies (tried 18 + 1.6x crowd + 190 px: much WORSE,
   boss_crowd = 1.0,     -- 2/8 bosses vs 5/8: keeping farther away in a small room just meant more corners.
@@ -108,6 +113,15 @@ Reflex.S = {
   pb_kill_w = 60,       -- playbook kill priority (0-3) bonus per level for targeting (scaled by low HP)
   m_charge_line = 80,   -- v2: cost per sample of standing in the row/column of an enemy that charges on line
   shot_coming_eta = 8,  -- updates until a 'shot coming' (pre-shooting animation) is assumed to fire
+  body_r = 8,           -- px: walls/rocks are checked out to this far from Isaac's centre (his body must fit)
+  predict_known = 0,    -- 1: Dingle predicted from its real AI state (mover.lua knownZone); 0 = learned circles (A/B)
+                        -- (off until its offline test passes and its own A/B runs)
+  dingle_lock = 5,      -- updates before Dingle's push that his aim locks (recordings: Slide start fits best; A/B-able)
+  lob_overhead = -50,   -- a lobbed shot higher than this (more negative) is overhead: no danger yet (mover.lua).
+                        -- Game code (docs/research/RE_CORE.md): Isaac is hit only by shots at height >= -50 (was -40)
+  explode_blast = 55,   -- px of blast for any shot with the game's EXPLODE flag (Sloth's hits: 30 and 55 px away)
+  aimed_close = 110,    -- px: a shot coming gets a pre-fire "off the line" warning only this close (farther: dodge
+                        -- the shot itself after it's fired); instant attacks (lasers) ignore this (2026-11-26, Horf)
   aim_line_w = 34,      -- v2: px either side of an aimed shot's line that counts as in its way
   m_edge_hit = 0.15,    -- v2: share of the hit cost at the edge of an enemy's 'could be here' circle (graded)
   m_grade_r = 40,       -- v2: px: circles bigger than this are graded (uncertain); smaller ones stay full cost
@@ -222,15 +236,25 @@ function Reflex.set(key, value)
   return false
 end
 
+-- Isaac's BODY has to fit, not just his centre point. The author, 2026-11-26 (a Sack behind rocks): "it's reading in
+-- between the rocks as a way... even if there's a pixel peek of space in between rocks, you can't go through it".
+-- Where two rocks meet at a corner, the centre point could land on the open side of the grid line and the corner
+-- read as a passage. Now the centre and four points out to body_r must all be open.
+local BODY = { { 0, 0 }, { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } }
 local function blocked(room, pos, canFly)
   if not room:IsPositionInRoom(pos, 8) then return Reflex.S.wall_cost end
-  local c = room:GetGridCollisionAtPos(pos)
-  if c == GridCollisionClass.COLLISION_NONE then
-    return 0 -- spikes, creep and fires are priced from the shared danger map instead (see score)
+  local r = Reflex.S.body_r
+  for _, o in ipairs(BODY) do
+    local q = (o[1] == 0 and o[2] == 0) and pos or Vector(pos.X + o[1] * r, pos.Y + o[2] * r)
+    local c = room:GetGridCollisionAtPos(q)
+    -- (COLLISION_NONE: open; spikes, creep and fires are priced from the shared danger map instead, see score)
+    if c ~= GridCollisionClass.COLLISION_NONE and not (canFly and c == GridCollisionClass.COLLISION_PIT) then
+      return Reflex.S.wall_cost
+    end
   end
-  if canFly and c == GridCollisionClass.COLLISION_PIT then return 0 end
-  return Reflex.S.wall_cost
+  return 0
 end
+Reflex.blocked = blocked
 
 -- Line of fire (reading the room): walks the straight line from a to b in 20 px steps.
 --   0 = clear, 1 = soft (poop or a lit fire in the way: our shots break it), 2 = blocked (rock, block, wall)
@@ -473,6 +497,19 @@ local function playbookOf(e)
 end
 Reflex.playbookOf = playbookOf
 
+-- Can tears hurt it RIGHT NOW? The game's own check, plus AI states measured to take no damage (rules.lua
+-- R.no_damage_states: the Haunt in phase 1, orbiting Lil' Haunts). One check for targeting and for firing.
+local function hurtableNow(e)
+  if not (e:IsVulnerableEnemy() and not e:IsInvincible()) then return false end
+  local nd = Rules.no_damage_states and Rules.no_damage_states[e.Type .. "." .. e.Variant]
+  if nd then
+    local n = e.ToNPC and e:ToNPC()
+    if n and nd[n.State] then return false end
+  end
+  return true
+end
+Reflex.hurtableNow = hurtableNow
+
 -- respect carries over between launches too ("type=value,...")
 function Reflex.respectDump()
   local parts = {}
@@ -517,9 +554,38 @@ function Reflex.trackSpeeds(enemies, player)
 end
 function Reflex.leadVel(e)
   if not e or e.kind or not e.Velocity then return Vector(0, 0) end
+  -- Stop-and-go movers (the author, 2026-11-26: the Squirt, Dingle's "mini" version, "should be dead within the first
+  -- few seconds, but he is struggling"): the settled average kept leading a Squirt that had STOPPED by its last dash
+  -- for ~0.5 s, and lagged behind it mid-dash, so the tears passed in front of it or behind it.
+  local v = e.Velocity
+  if v:Length() < 0.5 then return Vector(0, 0) end -- standing still: it's where it is
+  local pb = playbookOf(e)
+  if pb and (pb.tags.dashes_at_isaac or pb.tags.charges_on_line) then return v end -- a dash is straight, at full speed
   return leadAvg[GetPtrHash(e)] or Vector(0, 0)
 end
 function Reflex.homing(e) return homeAvg[GetPtrHash(e)] or 0 end
+
+-- Charge-shot weapons (rules.lua R.charge): hold the fire button long enough to charge, then let go for 2 updates so
+-- the shot goes out, then charge again. Returns the fire direction to press this update (nil = let go).
+local charge = { held = 0, release = 0 }
+function Reflex.chargeFire(player, dir)
+  if not dir then charge.held, charge.release = 0, 0; return nil end
+  local mult = nil
+  for id, m in pairs(Rules.charge or {}) do
+    if player:HasCollectible(id) then mult = math.max(mult or 0, m) end
+  end
+  if not mult then return dir end -- normal tears: just hold
+  if charge.release > 0 then
+    charge.release = charge.release - 1
+    return nil
+  end
+  charge.held = charge.held + 1
+  if charge.held >= math.max(6, math.floor((player.MaxFireDelay or 10) * mult)) then
+    charge.held, charge.release = 0, 2
+    return nil
+  end
+  return dir
+end
 function Reflex.avgSpeed(e)
   if e.kind then return 0 end -- a poop/fire target (a plain table, not an entity): it never moves.
   -- (Before this check the planner crashed on poop targets, so the Eternal-Fly-in-a-pen room never got a plan.)
@@ -578,6 +644,13 @@ local function clearanceFor(e, relax)
   -- fires burn on touch: they NEVER lose their gap (2026-11-25: relaxed to 0, it planned a spot next to a
   -- fire and walked into it)
   if e.Type == EntityType.ENTITY_FIREPLACE then return S.plan_clearance end
+  -- hop-and-stop movers keep the full gap however still they look right now (the author, 2026-11-26, Widow: "gets a
+  -- little too carried away... no regard for his surroundings": between hops a spider's average speed fell under the
+  -- "stands still" line, and firing spots were planned 30 px from spiders about to jump)
+  local pb = playbookOf(e)
+  local t = pb and pb.tags
+  local hopper = t and (t.bursts or t.hops or t.jumps or t.erratic or t.bounces)
+  if hopper then return relax >= 1 and S.plan_clearance * 0.5 or S.plan_clearance end
   if Reflex.avgSpeed(e) < 0.6 then return relax >= 1 and 0 or S.still_clearance end
   return relax >= 1 and S.plan_clearance * 0.5 or S.plan_clearance
 end
@@ -722,9 +795,10 @@ local function segDist(p, a, b)
   return (p - (a + ab * t)):Length()
 end
 
+-- creep that HURTS. White (Widow, spiders) and black creep only slow Isaac (the author, 2026-11-26: "the spider creep,
+-- the white creep, does not hurt you"): with floor damage priced as a sure hit, counting them boxed the bot in.
 local CREEP = {}
-for _, n in ipairs({ "CREEP_RED", "CREEP_GREEN", "CREEP_YELLOW", "CREEP_WHITE", "CREEP_BLACK", "CREEP_STATIC",
-                     "CREEP_LIQUID_POOP" }) do
+for _, n in ipairs({ "CREEP_RED", "CREEP_GREEN", "CREEP_YELLOW", "CREEP_STATIC", "CREEP_LIQUID_POOP" }) do
   if EffectVariant[n] then CREEP[EffectVariant[n]] = true end
 end
 
@@ -827,6 +901,12 @@ function Reflex.ringFor(player, target, w, room)
     for _, e in ipairs(w.enemies) do if chaser(e) then boss = e; break end end
   end
   if not boss then return nil end
+  -- ...not while it RESTS. The author, 2026-11-26, Gemini: "chases you for X amount of time, gets tired, starts
+  -- panting. That's your ticket to put as much damage in him before he wakes up again... Isaac doesn't utilize that.
+  -- It prepares for him to start running again." The lap ran on through every Pant; now it stops, the bot closes in
+  -- (rest windows shrink the boss distance) and fires, and the lap starts again when the chase does.
+  local anim = Tells.animOf(boss)
+  if (anim and REST_ANIM[anim]) or (Risk.window and REST_ANIM[Risk.window]) then return nil end
   target = boss
   local S = Reflex.S
   local tl, br = w.tl or room:GetTopLeftPos(), w.br or room:GetBottomRightPos()
@@ -927,7 +1007,7 @@ local function pickTarget(player, enemies, room)
       if score < bestScore then best, bestScore = e, score end
     elseif e.Type == EntityType.ENTITY_FIREPLACE then
       -- other fires are hazards to avoid, not targets (unless one shields something; see breakables below)
-    elseif bossOn and e:IsVulnerableEnemy() and not e:IsInvincible() then
+    elseif bossOn and hurtableNow(e) then
       local d = (e.Position - player.Position):Length()
       local score
       local policy = addsPolicy(enemies)
@@ -937,7 +1017,7 @@ local function pickTarget(player, enemies, room)
       else score = 150 + d - minionThreat(e, player, crowded) end
       score = score - finishBonus(e, player) -- a nearly dead boss/add, or the one we've been hitting
       if score < bestScore then best, bestScore = e, score end
-    elseif e:IsVulnerableEnemy() and not e:IsInvincible() then
+    elseif hurtableNow(e) then
       local d = (e.Position - player.Position):Length()
       local score = d + (e:IsBoss() and -60 or 0) + math.min(e.HitPoints, 40) * 0.5
       -- most danger per hit point first (see planFire): Sloth's Chargers before Sloth
@@ -1459,6 +1539,8 @@ function Reflex.update(player)
     pcall(Mover.observe, w.enemies, player, Game():GetFrameCount(), w.shots)
     pcall(Mover.observePlayer, player, math.max(2.5, player.MoveSpeed * S.speed_mul)) -- and Isaac's own movement
   end
+  -- outside pushes on Isaac RIGHT NOW (suction, currents): not learning, so measured even in benchmarks
+  pcall(Mover.observeDrift, player, Game():GetFrameCount())
   Tells.frozen = (S.learn == 0)
   local lightNear = 0
   for _, e in ipairs(w.enemies) do
@@ -1484,6 +1566,20 @@ function Reflex.update(player)
     -- Treat it like a shot coming: step off the line in time.
     -- (by RATE, not count: 1.2.22 used "hurt us 2+ times", and Horf hits credited to its everyday Idle gave every Horf
     -- a permanent line - "attack lines 18556" in the why line, the bot circled a room of 4 Horfs scared)
+    -- A plain SHOT coming is aimed at where Isaac is when it's fired, so this line was redrawn through Isaac every
+    -- update: wherever he stepped he was on it again, and against a Horf he sidestepped back and forth for ages and
+    -- hit 16% of his tears (the author, 2026-11-26: "dancing around it for quite a while"). From farther than
+    -- aimed_close the shot can be dodged after it's fired (projectile dodging has the time), so no pre-fire line.
+    -- Instant attacks (the hurtful-animation case below: the Haunt's laser) keep it at any distance.
+    -- (plain shooters only: a dasher's or a tactics boss's wind-up warns of a DASH, which crosses 200 px far faster
+    -- than a tear - the Dingle test caught that)
+    local pbA = playbookOf(e)
+    local dasher = pbA and (pbA.tags.charges_on_line or pbA.tags.dashes_at_isaac)
+    local tacA = Reflex.tacticsOf(e)
+    local known = tacA and tacA.tells and next(tacA.tells) ~= nil
+    if ok3 and coming and not dasher and not known and (e.Position - player.Position):Length() > S.aimed_close then
+      coming = false
+    end
     local okR, rate = pcall(Tells.hurtRateOf, e)
     if not (ok3 and coming) and okR and rate >= 0.2 and e.Velocity:Length() < S.dash_speed then coming = true; ok3 = true end
     if ok3 and coming then
@@ -1566,8 +1662,7 @@ function Reflex.update(player)
   -- targets the planner may choose from: hurtable enemies, nearest first (or what shields them)
   local targets = {}
   for _, e in ipairs(w.enemies) do
-    if (e.Type ~= EntityType.ENTITY_FIREPLACE and e:IsVulnerableEnemy() and not e:IsInvincible())
-       or IsaacBotRedFire(e) then
+    if (e.Type ~= EntityType.ENTITY_FIREPLACE and hurtableNow(e)) or IsaacBotRedFire(e) then
       targets[#targets + 1] = e
     end
   end
@@ -1724,7 +1819,8 @@ function Reflex.update(player)
       spot = (not ring) and (plateSpot or navSpot or (plan.target and plan.cellPos)) or nil, calm = calm, blocked = blocked, creepAt = creepAt,
       bounce = function(pos, r) return bounced(w, pos, r) end, lane = Reflex.lane, segDist = segDist,
       laserEnd = laserEnd, playbookOf = playbookOf, tacticsOf = Reflex.tacticsOf, leadVel = Reflex.leadVel,
-      lessonOf = Reflex.lessonOf, shotPadOf = Reflex.shotPadOf, telling = Reflex.telling })
+      lessonOf = Reflex.lessonOf, shotPadOf = Reflex.shotPadOf, telling = Reflex.telling,
+      shotBlast = Rules.shot_blast, chargeReach = Rules.charge_reach })
     Reflex.prof.move = Reflex.prof.move + (Isaac.GetTime() - tMove0)
     -- standCost from the v2 core too (blind review 2026-11-25: it was only ever set by the old core, so "stand and
     -- shoot straight" / "plant your feet" never fired under v2)
@@ -1787,6 +1883,18 @@ function Reflex.update(player)
       end
     end
     st.target = target
+  end
+
+  -- Never fire at a target that can't be hurt right now (a closed Host): the author, 2026-11-26, "the host will not
+  -- open up if you are attacking it or shooting near it. You have to wait for the opening." Hold fire while baiting
+  -- (prefDist = bait_dist above), and fire the moment it opens. (Red fires and poop/fire targets are hurtable.)
+  local tq = st.target
+  if shoot and tq and not tq.kind and tq.IsVulnerableEnemy and not hurtableNow(tq)
+     and not (IsaacBotRedFire and IsaacBotRedFire(tq)) then
+    shoot = nil
+    st.holdFire = true
+  else
+    st.holdFire = false
   end
 
   -- Would this shot land? Straight (standing still), or curved by the move we're about to make.
@@ -1854,7 +1962,7 @@ function Reflex.update(player)
     local pv = player.Velocity * 0.5 + DIRS[best] * speed * 0.5
     local bestD, pick, pickDir = math.huge, nil, nil
     for _, e in ipairs(w.enemies) do
-      if e.Type == EntityType.ENTITY_FIREPLACE or e:IsVulnerableEnemy() then
+      if e.Type == EntityType.ENTITY_FIREPLACE or hurtableNow(e) then -- (hurtableNow: not the shielded Haunt etc.)
         local dd = (e.Position - player.Position):Length()
         if dd < bestD then
           for _, sd in ipairs({ "left", "right", "up", "down" }) do

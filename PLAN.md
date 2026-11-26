@@ -30,6 +30,10 @@ helper on screen, repo link in the description; failed attempts included). The r
 beat Mom -> Mom's Heart in real runs -> an early Delirium drill on the bench (dropped into his room with set items,
 measured like any other room) -> a full run that ends with Delirium dead.
 
+**The new base (agreed 2026-11-26):** forecast cards per enemy + a few fixed goals + a positioning brain over the
+reflexes, replacing the growing pile of hand weights. Full plan and steps: `docs/FORECAST_PLAN.md`. The author's live
+notes while watching: `docs/LIVE_NOTES.md`.
+
 The sections below are the working history: what was tried, what was measured, and what's next.
 
 ---
@@ -549,6 +553,23 @@ hearts so I don't lose my devil deal chance? Will playing risky kill me? Risky d
 - **Level 2:** pace (a room taking much longer than our damage says -> push harder, inside the caps) and "worth a hit"
   (`Danger.cost`: a hit with soul hearts in front, or no deal to lose, is cheap for good loot).
 - Tests: 9 offline risk checks. `risk|0.25` pins it (A/B), `risk|auto` lets it think.
+
+### Big rooms with many fast enemies: indecision (the author, 2026-11-26)
+"These bigger rooms, especially the 4x4s with many mobs, especially fast moving ones like spiders... how indecisive he
+is from the risk factors. He could be a mile away and be scared... and if you bring a shitty terrain, it is a perfect
+storm for him to just do nothing." Likely cause: the learned "could be here" circles of hop-and-stop movers (spiders)
+grow large over the 1.2 s look-ahead, so many of them cover most of a big room and every option looks equally bad.
+Fix with data, not tuning: the recorder's measured hop range/timing per enemy (behaviour profiles) to size those
+circles, and danger from far enemies that can't reach us within the look-ahead counting less. Measure on big-room
+bench rooms (time spent not shooting, hits).
+
+### Best run so far (2026-11-26, 1.2.38): Depths I, floor 5 - 20 hits
+The author: "note where he took damage on the last 2 floors... that is the best run we've had".
+- **Caves II:** 3 hits, all Gurdy's shots (boss). **Depths I:** 5 hits: a Pooter shot, a trap-room spike, and 3 spikes
+  in a Gaping Maw room - its suction pulled Isaac onto the spikes around it, and that killed the run.
+- **Whole run:** spikes 5 of 20 (trap rooms, the item-on-spikes walk, the Maw), bosses 8 (Gurdy 3, Blighted Ovum 3,
+  Duke's flies 2), then Gapers 2, a spider, shooters 3.
+- Fixes since: no corner-cutting past spikes (1.2.38); outside pushes measured and simulated (suction, currents).
 
 ### Next behaviour change: "future space" (the author, 2026-11-26)
 The author's way of seeing a fight: judge a spot by the space you'll have AFTER the next attack, not the space you

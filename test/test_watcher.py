@@ -64,10 +64,11 @@ for i in range(3):
     w.on_event("hit", "9.0|1|1,1|move 5|via 9.0 d=15 size=5|shot 0 d=15 size=5 from=30")
 w.on_event("room", "99|1|1|11|next")
 w.on_event("hit", "9.0|1|1,1|move 5|via 9.0 d=15 size=5|shot 0 d=15 size=5 from=30")
-for i in range(5):
-    room_with(w, 30 + i, [(30, 0, False)])
-    w.on_event("hit", "9.0|1|1,1|move 5|via 9.0 d=15 size=5|shot 0 d=15 size=5 from=30")
-w.on_event("room", "97|1|1|11|next")
+for rnd in range(2):  # (a borderline first trial gets a second one since 2026-11-26)
+    for i in range(5):
+        room_with(w, 30 + 10 * rnd + i, [(30, 0, False)])
+        w.on_event("hit", "9.0|1|1,1|move 5|via 9.0 d=15 size=5|shot 0 d=15 size=5 from=30")
+    w.on_event("room", f"9{7 - rnd}|1|1|11|next")
 ls = w.lessons.get("shot:30", {})
 q = root / "runs" / "watch" / "queue.jsonl"
 queued = q.exists() and any("shot:30" in json.loads(r)["key"] for r in q.read_text().splitlines())
@@ -100,6 +101,30 @@ for i in range(4):
     w.on_event("hit", "261.0|1|1,1|move 3|via 261.0 d=16 size=13")
 check("paused during a benchmark: no deadhop, no lessons", not any(c in ("deadhop", "lessons") for c, _ in sent)
       and not w.lessons, str(sent))
+
+# 8. ...but it still WRITES what it noticed (the author: "fills out some sort of document"): hits by cause, stalls, and a
+# summary when the benchmark ends - without nudging, queueing or touching the lesson stats
+w.on_state({"e": [], "p": {"x": 300, "y": 300}, "bot": ["combat", 0, 0, ""]})
+w.still_since = time.time() - 25
+w.on_state({"e": [], "p": {"x": 301, "y": 300}, "bot": ["combat", 0, 0, ""]})
+(root / "runs" / "watch" / "PAUSED").unlink()
+w.on_event("ping", "")  # the switch back closes the section with a summary
+notes = (root / "runs" / "watch" / "BENCH_NOTES.md").read_text(encoding="utf-8")
+q = root / "runs" / "watch" / "queue.jsonl"
+check("benchmark notes written, nothing acted on", "hit in" in notes and "stall" in notes and "Summary" in notes
+      and "body:261.0" in notes and not any(c == "rescue" for c, _ in sent) and not q.exists()
+      and w.hits.get("body:261.0", 0) == 0, f"notes {len(notes)} chars, sent {sent}")
+
+# 9. a lesson that helped a little (1.00 -> 0.75, exactly the bar) isn't thrown out: it gets a second trial
+w, sent, notes, root = make()
+w.lessons["body:24.0"] = {"step": 1, "status": "trying", "rate_before": 1.0, "enc_at": 0, "hits_since": 3,
+                          "history": []}
+w.enc["24.0"] = 4
+w._judge_lessons()
+ls = w.lessons["body:24.0"]
+q = root / "runs" / "watch" / "queue.jsonl"
+check("a borderline lesson gets a second trial, not the queue", ls["status"] == "trying" and ls.get("extended")
+      and ls["step"] == 1 and not q.exists(), str(ls))
 
 print("\n".join(results))
 fails = sum(r.startswith("FAIL") for r in results)

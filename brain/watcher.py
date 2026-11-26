@@ -122,13 +122,72 @@ class Watcher:
         so A and B play with the same settings."""
         return (self.dir / "PAUSED").exists()
 
+    # ------------------------------------------------------------------ observe mode (benchmarks)
+    # The author, 2026-11-26: keep the watcher on during benchmarks, but instead of acting, have it "fill out some sort
+    # of document of everything that it noticed" - tonight's bench lost its stuck checks and hit causes while paused.
+    # So while PAUSED exists it only WRITES: runs/watch/BENCH_NOTES.md (hits by cause and room, stalls, fight stalls).
+    # It never sends a nudge or lesson, never queues, and doesn't touch the lesson stats (bench replays would skew them).
+    def _bench_note(self, text):
+        with open(self.dir / "BENCH_NOTES.md", "a", encoding="utf-8") as fh:
+            fh.write(f"- {time.strftime('%H:%M:%S')} {text}\n")
+
+    def _observe_start(self):
+        self.bench_hits = collections.Counter()
+        self.bench_room_hits = collections.Counter()
+        self.bench_room_name = "?"
+        try:
+            what = (self.dir / "PAUSED").read_text(encoding="utf-8").strip()
+        except OSError:
+            what = ""
+        with open(self.dir / "BENCH_NOTES.md", "a", encoding="utf-8") as fh:
+            fh.write(f"\n## Benchmark {time.strftime('%Y-%m-%d %H:%M')} ({what})\n")
+
+    def _observe_end(self):
+        lines = [f"**Summary:** {sum(self.bench_hits.values())} hits."]
+        if self.bench_hits:
+            lines.append("By cause: " + ", ".join(f"{k} {v}" for k, v in self.bench_hits.most_common(12)) + ".")
+        if self.bench_room_hits:
+            lines.append("By room: " + ", ".join(f"{k} {v}" for k, v in self.bench_room_hits.most_common(12)) + ".")
+        with open(self.dir / "BENCH_NOTES.md", "a", encoding="utf-8") as fh:
+            fh.write("\n" + "\n".join(lines) + "\n")
+
+    def _observing(self):
+        """True while a benchmark runs; opens/closes its section of BENCH_NOTES.md on the switch."""
+        now_paused = self.paused()
+        was = getattr(self, "observing", False)
+        if now_paused and not was:
+            self._observe_start()
+        elif was and not now_paused:
+            self._observe_end()
+        self.observing = now_paused
+        return now_paused
+
+    def _observe_event(self, kind, body):
+        if kind == "room":
+            parts = body.split("|")
+            self.room_now = parts[0]
+            self.bench_room_name = parts[-1] if len(parts) > 4 else "?"
+            self.fight_hp, self.fight_since = None, None
+            self.still_since, self.still_pos = None, None
+        elif kind == "hit":
+            k, ekey = hit_cause(body)
+            cause = f"{k}:{ekey}"
+            self.bench_hits[cause] += 1
+            self.bench_room_hits[self.bench_room_name] += 1
+            self._bench_note(f"hit in {self.bench_room_name}: {cause} ({body[:120]})")
+        elif kind == "bench":
+            self._bench_note(f"bench {body[:120]}")
+        elif kind == "why":
+            self.last_why = body
+
     def on_event(self, kind, body):
         now = time.time()
-        if self.paused():
+        if self._observing():
             if kind == "start":
-                self.send_lessons()
+                self.send_lessons()  # the mod forgets them on a new run; the SAME lessons for A and B
+            self._observe_event(kind, body)
             return
-        if kind not in ("ping", "pong", "eyes"):
+        if kind not in ("ping", "pong", "eyes") and not kind.startswith("rec"):  # (recorder lines: not evidence)
             self.recent.append(f"{time.strftime('%H:%M:%S')} {kind} {body[:220]}")
         if kind == "why":
             self.last_why = body
@@ -150,7 +209,15 @@ class Watcher:
 
     def on_state(self, state):
         now = time.time()
-        if self.paused():
+        if self._observing():
+            try:  # stalls and fight stalls are still noticed; _loop only writes them down
+                p = state["p"]
+                bot = state.get("bot") or []
+                fighting = bool(len(bot) > 1 and bot[1])
+                self._stall((p["x"], p["y"]), fighting, now)
+                self._fight_stall(state, fighting, now)
+            except (KeyError, TypeError, IndexError):
+                pass
             return
         try:
             for e in state.get("e", []):
@@ -194,6 +261,10 @@ class Watcher:
         if now - self.loop_flags.get(key, 0) < 60:
             return
         self.loop_flags[key] = now
+        if getattr(self, "observing", False):  # benchmark: write it down, change nothing
+            self._bench_note(f"{kind} in {getattr(self, 'bench_room_name', '?')}: {detail}"
+                             + (f" | why: {self.last_why[:160]}" if self.last_why else ""))
+            return
         self.loops[kind] += 1
         self.run_loops[key] += 1
         self.note(f"loop: {kind}: {detail}" + (f" -> {nudge[0]}|{nudge[1]}" if nudge else ""))
@@ -293,9 +364,21 @@ class Watcher:
             if n < JUDGE_AFTER_ENC:
                 continue
             new_rate = ls.get("hits_since", 0) / n
-            if new_rate < ls.get("rate_before", 1) * 0.75:
+            before = ls.get("rate_before", 1)
+            if new_rate < before * 0.75:
                 ls["status"] = "kept"
                 self.note(f"lesson kept: {cause} {ls['rate_before']:.2f} -> {new_rate:.2f} per encounter at step {ls['step']}")
+            elif new_rate < before and not ls.get("extended"):
+                # Better, but not by a quarter: with 4 fights, 3 hits instead of 4 is noise either way (2026-11-26:
+                # Dart Fly and Globin lessons were thrown out at exactly 1.00 -> 0.75). Judge again after as many
+                # more fights before calling it.
+                ls["extended"] = True
+                ls["enc_at"] = enc_now
+                ls["hits_since"] = 0
+                ls["rate_before"] = before
+                self.note(f"lesson unclear: {cause} {before:.2f} -> {new_rate:.2f}, trying {JUDGE_AFTER_ENC} more fights")
+                changed = True
+                continue
             else:
                 ls["step"] -= 1
                 ls["status"] = "didn't help"
@@ -320,7 +403,7 @@ class Watcher:
             return
         self.queue_times.append(now)
         self.queue_keys[key] = now
-        frames = sorted((self.root / "runs" / "hitframes").glob("*"), key=lambda p: p.name)[-3:]
+        frames = sorted((self.root / "runs" / "hitframes").glob("*"), key=lambda p: p.stat().st_mtime)[-3:]
         entry = {"id": time.strftime("%Y%m%d-%H%M%S"), "when": time.strftime("%Y-%m-%d %H:%M:%S"), "status": "open",
                  "kind": kind, "key": key, "summary": summary, "tried": tried, "room": self.room_now,
                  "why": self.last_why, "risk": self.last_risk, "evidence": list(self.recent)[-40:],

@@ -212,6 +212,12 @@ function Risk.update(p, enemies)
     Risk.why = "pinned " .. Risk.pin
   end
   Risk.atStake = atStake
+  -- the deal is still alive on this floor, and how much damage the protection in front of the red hearts can take
+  -- (Danger.cost: spending the LAST of it costs the deal - the author, 2026-11-26: it took a hit for an item and lost
+  -- "his only soul heart, the only thing that was preventing him from losing the devil deal. I don't think that's
+  -- worth it.")
+  Risk.dealLive = dealFloor and not redDamagedThisFloor()
+  Risk.buffer = h.soul + h.bone * 2 + (h.mantle and 2 or 0)
   return Risk.level
 end
 
@@ -226,7 +232,14 @@ function Risk.allows(kind, p)
   local hp = h.red + h.soul + h.bone * 2
   local shielded = h.mantle or h.soul > 0 or h.bone > 0
   if kind == "curse" then
-    return hp >= 6 and (shielded or not Risk.atStake)
+    -- With the floor's deal still alive, the door's two hits (in and out) must not use up the protection in front of
+    -- the red hearts: one soul heart isn't enough. The author, 2026-11-26: it walked into a curse room on floor 2 and
+    -- spent "his only soul heart, the only thing that was preventing him from losing the devil deal".
+    if Risk.dealLive then
+      local buffer = h.soul + h.bone * 2 + (h.mantle and 2 or 0)
+      return hp >= 6 and buffer >= 4
+    end
+    return hp >= 6
   end
   if kind == "challenge" then
     local St = IsaacBotStrategy
