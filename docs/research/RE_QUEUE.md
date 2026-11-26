@@ -69,7 +69,7 @@ the author can move an item up.
 | Batch | Item | Status |
 |---|---|---|
 | F1 | Tear physics: range, height, fall, shot speed; the knockback tears give enemies (`AddKnockback` from Tear is known) | [x] 6adb633 |
-| F2 | Item effects coming up soon: Chocolate Milk and other charge weapons, flight (exactly what flying ignores), Cupid's Arrow / piercing | [ ] |
+| F2 | Item effects coming up soon: Chocolate Milk and other charge weapons, flight (exactly what flying ignores), Cupid's Arrow / piercing | [x] f755a66 |
 
 ## Tier 3: floors 3-6 and the bosses to Delirium
 | Batch | Item | Status |
@@ -109,3 +109,4 @@ the author can move an item up.
 - 2026-11-26: E5 done (243fb5d; 2 readers for all but Embryo). Checked: all 40 recorded Leaper shots are 9.0 along
   the 4 axes at BigJumpDown frame 24 (the landing +); 5 Mulliboom 16.2 hits did 1 at 27-50 px (its blast, radius 60);
   3 Mr. Maw head 35.1 contact hits did 1. The rest isn't in the logs yet. F2 is running; G1-G4 after it.
+- 2026-11-26: F2 done (f755a66): charge weapons, tear period fireDelay+1, flight = grid class 0-3, piercing/spectral. Not checked against recordings. G1a is in its second read.
