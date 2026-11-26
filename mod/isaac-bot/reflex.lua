@@ -74,6 +74,7 @@ Reflex.S = {
                        -- must cost at least a sure hit (was 450: it crossed spikes to dodge Lil' Haunts, 2026-11-26)
   still_tolerance = 120, -- lined up: stand still to shoot straight unless standing costs this much more
   caution_w = 120,      -- cost of ending up on a "caution" square (next to TNT) during a fight
+  red_fire_r = 200,     -- a lit red fire counts as a fight only this close with a clear line (it shoots within ~160)
   bait_dist = 210,      -- shielded targets (Hosts) open when you come close: hold this distance to bait them.
                         -- Game code (2026-11-26): a Host opens with Isaac within 240 px and a clear line, then fires
                         -- ~24 updates later at 9 px/update. From 100 px (the old value) its shots hit far more often.
@@ -1643,12 +1644,20 @@ function Reflex.update(player)
   if plateLeft then
     for _, e in ipairs(w.enemies) do if e.Type ~= EntityType.ENTITY_FIREPLACE then nonFire = nonFire + 1 end end
   end
+  -- A red fire only matters when it can hurt Isaac: it shoots only within ~160 px with a clear line (RE batch E2).
+  -- The author, 2026-11-26, Depths I: "Stuck on a red fire that's not in killing distance. It should overall just
+  -- ignore anything that's not gonna hurt it" (a red fire walled in by rocks across a cleared room kept it "fighting").
+  -- Walking closer later makes it a threat again, and its shots are always dodged.
+  local function fireThreat(e)
+    local d = (e.Position - player.Position):Length()
+    return d < S.red_fire_r and Reflex.solidLane(room, e.Position, player.Position) < 2
+  end
   local real, hurtable = 0, 0
   for _, e in ipairs(w.enemies) do
     if e.Type ~= EntityType.ENTITY_FIREPLACE then
       real = real + 1
       if e:IsVulnerableEnemy() and not e:IsInvincible() then hurtable = hurtable + 1 end
-    elseif IsaacBotRedFire(e) and not (plateLeft and nonFire == 0) then
+    elseif IsaacBotRedFire(e) and not (plateLeft and nonFire == 0) and fireThreat(e) then
       -- a lit red fire keeps shooting: put it out, even in a cleared room
       real, hurtable = real + 1, hurtable + 1
     end

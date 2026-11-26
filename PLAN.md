@@ -600,6 +600,15 @@ priority of the core fundamentals." Core = no damage on floors 1-2, natural move
 - **Burrowers:** plan the firing spot on the hole where a burrowed enemy last surfaced (Round Worms; mirror chat).
 - **Play style per item:** like the invincible window, e.g. homing tears = spray freely, flight = ignore pits.
 - **Two-input active items** (Bob's Rotten Head and similar).
+- **Use the "manual" cards smartly** (the author, 2026-11-26, Depths I: "I haven't seen him use one... those cards
+  really do change the game... he dropped a Joker card for a different card, and now he has a Moon card that he won't
+  use"). 23 cards are `use: manual` in `knowledge/consumable_ratings.json`, so they are never used: mostly the
+  teleports (Emperor = boss room, Hermit = shop, Stars = treasure room, Moon = secret room, Joker = devil/angel room)
+  plus Perthro, Chaos Card, Credit Card, ? Card, Dice Shard, Cracked Key, Wild Card, some reversed tarots and Souls.
+  Needs: (1) each card's "when it pays" rule (Joker when a deal is affordable and the deal is still live; Stars on
+  a floor whose treasure room is far or locked; Emperor to skip a long floor when the bot is strong...); (2) the walker
+  handling a teleport (new room, then carry on); (3) the swap rule: Joker and Moon have the same rating (2), so the bot
+  saw an even swap - rate them by what they're worth on THIS floor, and never drop a card for an equal one.
 - **Pre-seed tells from the game's animation events** (bestiary: e.g. Dingle Spit Shoot@3, Haunt LaserNoSkin
   Shoot@17) so the bot knows when each attack fires before it ever gets hit; kept in a gitignored file.
 - **Check the 201 draft playbook entries** (local AI from wiki text) before the helper sends them.

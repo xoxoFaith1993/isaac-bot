@@ -537,7 +537,8 @@ end)
 -- from shooting you"): a lit red fire is a target, even in a cleared room; a plain (orange) fire stays a hazard only
 run("puts out a red fire, leaves a plain fire alone", function()
   Mock.room(nil, { clear = true, player = Mock.tile(2, 4) })
-  local red = Mock.enemy(EntityType.ENTITY_FIREPLACE, 1, Mock.tile(9, 4), { hp = 5, size = 13 })
+  -- (160 px with a clear line: in its firing range. Since 1.2.48 one that can't hit Isaac is ignored, test 41b)
+  local red = Mock.enemy(EntityType.ENTITY_FIREPLACE, 1, Mock.tile(6, 4), { hp = 5, size = 13 })
   red._enemy = false
   local p = Isaac.GetPlayer()
   Reflex.plan.at = -999
@@ -550,6 +551,36 @@ run("puts out a red fire, leaves a plain fire alone", function()
   local plainFight = Reflex.status.active
   check("puts out a red fire, leaves a plain fire alone", redTarget and not plainFight,
         fmt("red fire targeted: %s, plain fire made a fight: %s", tostring(redTarget), tostring(plainFight)))
+end)
+
+-- 41b. 1.2.48 (the author, 2026-11-26, Depths I: "Stuck on a red fire that's not in killing distance. It should overall
+-- just ignore anything that's not gonna hurt it... it's behind two rocks"): a red fire with rocks between it and
+-- Isaac, in a cleared room, is no fight; the same fire in the open next to him still is.
+run("ignores a red fire behind rocks", function()
+  Mock.room({
+    "WWWWWWWDWWWWWWW",
+    "W.............W",
+    "W.............W",
+    "W.##..........W",
+    "D.##..........D",
+    "W.##..........W",
+    "W.............W",
+    "W.............W",
+    "WWWWWWWDWWWWWWW",
+  }, { clear = true, player = Mock.tile(6, 4) })
+  local red = Mock.enemy(EntityType.ENTITY_FIREPLACE, 1, Mock.tile(1, 4), { hp = 5, size = 13 })
+  red._enemy = false
+  Reflex.plan.at = -999
+  Reflex.update(Isaac.GetPlayer())
+  local walledFight = Reflex.status.active
+  Mock.room(nil, { clear = true, player = Mock.tile(6, 4) })
+  local red2 = Mock.enemy(EntityType.ENTITY_FIREPLACE, 1, Mock.tile(3, 4), { hp = 5, size = 13 })
+  red2._enemy = false
+  Reflex.plan.at = -999
+  Reflex.update(Isaac.GetPlayer())
+  local openFight = Reflex.status.active
+  check("ignores a red fire behind rocks", not walledFight and openFight,
+        fmt("behind rocks made a fight: %s, in the open made a fight: %s", tostring(walledFight), tostring(openFight)))
 end)
 
 -- 42. 1.2.18 ring-kite (the author's Gemini rule: "slowly let him chase you, circle the outside of the room so you
@@ -1852,6 +1883,9 @@ run("presses the button instead of fighting fires behind rocks", function()
     local fire = Mock.fire(Mock.tile(tl[1], tl[2]))
     fire.Variant = 1 -- red: it shoots
   end
+  -- (and one in the open, 120 px from Isaac with a clear line: one that CAN hit him - since 1.2.48 the ones behind
+  -- rocks are ignored anyway, so this keeps the plate rule itself under test)
+  Mock.fire(Mock.tile(10, 4)).Variant = 1
   Nav.newRoom()
   local p = Isaac.GetPlayer()
   local move = Reflex.update(p)

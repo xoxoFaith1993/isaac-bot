@@ -235,8 +235,8 @@ return {
     patches = { { file = "reflex", find = "  isaac_steps = 2,", replace = "  isaac_steps = 1," } } },
 
   { test = "presses the button instead of fighting fires behind rocks", why = "red fires count as a fight with a plate left",
-    patches = { { file = "reflex", find = "elseif IsaacBotRedFire(e) and not (plateLeft and nonFire == 0) then",
-                  replace = "elseif IsaacBotRedFire(e) then" } } },
+    patches = { { file = "reflex", find = "and not (plateLeft and nonFire == 0) and fireThreat(e) then",
+                  replace = "and fireThreat(e) then" } } },
 
   { test = "doesn't walk back to a locked door it already saw", why = "locked doors written off only when tried",
     patches = { { file = "nav", find = "if d:IsLocked() and p and p:GetNumKeys() == 0 and not deadEdge",
@@ -250,6 +250,10 @@ return {
                   replace = "local maxD = math.huge" } } },
   { test = "baits a closed Host across a pit instead of waiting far away", why = "straight spot pull through a pit",
     patches = { { file = "reflex", find = "then spotFor = wayPos; break end", replace = "then break end" } } },
+
+  { test = "ignores a red fire behind rocks", why = "every lit red fire is a fight, wherever it is",
+    patches = { { file = "reflex", find = "and not (plateLeft and nonFire == 0) and fireThreat(e) then",
+                  replace = "and not (plateLeft and nonFire == 0) then" } } },
 
   { test = "doesn't swap its card for a pill", why = "pocket slot check for pills/cards",
     patches = { { file = "nav", find = "(p:GetPill(0) == 0 and p:GetCard(0) == 0) and V.pill_card or 0",

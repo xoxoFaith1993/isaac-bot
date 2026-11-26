@@ -35,3 +35,5 @@ A plan then pays for ending where there's little of our floor around it (corners
 a line attack's row or column, for having no room to step out of that line.
 
 | 9 | 2026-11-26 13:40 | 1.2.45 | "right now Isaac is stuck on the host. He is sitting super far away and won't aggro him for him to open." | nav + aim | **fixed** 1.2.47: a shielded target's firing spot within bait distance; the spot pull follows the walking path past pits (test 5b + 2 mutants) |
+| 10 | 2026-11-26 13:58 | 1.2.47 | "Stuck on a red fire that's not in killing distance. It should overall just ignore anything that's not gonna hurt it... it's behind two rocks." | hazard | **fixed** 1.2.48: a lit red fire is a fight only within 200 px with a clear line (it shoots within ~160); test 41b + mutant |
+| 11 | 2026-11-26 14:05 | 1.2.48 | "make a note on making Isaac use the tarot cards he picks up. So far, I haven't seen him use one... he dropped a Joker card for a different card, and now he has a Moon card that he won't use." | items | **parked** (PLAN.md To do later: 23 cards are 'manual' = never used; teleport handling, when-it-pays rules, swap rule) |
