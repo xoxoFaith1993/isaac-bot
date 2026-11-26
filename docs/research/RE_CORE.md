@@ -799,3 +799,54 @@ agree unless noted.
 - Spikes: 2 damage; retracting spikes up and down 60 updates each.
 - Red/purple fires: shots only within 160 px with line of sight; speed 5; purple homes.
 - Stone shooter: fixed direction, about 7.5 speed.
+
+---
+
+## Batch E2c (2026-11-26): the curse-room door ("0.0" source), bomb damage, the devil-deal penalty
+
+Two blind readers (bundle E2c, one on Sonnet); all agree with my reading.
+
+### The curse-room door (`GridEntity_Door::Update` `0x7136e0`, lines 321-376)
+- **For a door with flag bit 0x4** (the spiked curse door), every update, for every player whose centre is inside a
+  box at the doorway (about 58 × 40 px, reaching about 43 px out on one side): **TakeDamage(1.0, flags 0x10010000, 0,
+  an empty source, 30)**.
+- **The empty source is the logged "0.0" source.**
+- **Flying:** the hit needs the player's grid class == 5 (ground) and no minecart. **But inside a curse room (room type
+  10) the class test is skipped, so leaving a curse room hurts even while flying.** (So does a third condition,
+  `local_c1`, not decoded.)
+- It's a per-update position test, not an "enter" event: it hits on the way in and the way out. Isaac's i-frames stop
+  the repeats.
+
+### Bomb damage (`Entity_Bomb::Init` `0x6a8d40`)
+- **100 for normal bombs, troll bombs (variant 3) and mega-troll bombs (variant 4).** So Isaac takes **2** (≥ 85),
+  which matches all 19 logged bomb hits.
+- Variant 15: 20. Giga bombs (17, 20): 300.
+- **Fuse:** 45 updates (1.5 s). Troll-type variants 3, 4, 8 and 18: 45-74 updates.
+
+### The devil-deal "took damage" penalty (`Entity_Player::TakeDamage`, lines 1187-1188, 3845-3858)
+- A hit counts as a **penalty hit** unless its damage flags include **bit 5 (0x20)** or **bit 28 (0x10000000)**:
+  `penalty = (flags & 0x10000020) == 0`.
+- **A penalty hit:**
+  - calls `0x42cbf0(5, 1)` (lines 3845-3851), most likely `Level::SetStateFlag(5, true)`. In the LevelStateFlag order
+    5 is `STATE_DAMAGED`, the "took damage this floor" flag the deal chance reads;
+  - adds to two damage counters (+0x16b0, +0x16b4);
+  - triggers some on-hit item effects.
+- **Exempt (no deal penalty):**
+  - **curse-room door hits** (0x10010000 carries bit 28);
+  - **sacrifice-room spikes** (room type 13 adds 0x10000000 to the spike flags; see E2 spikes);
+  - anything with bit 5 (0x20), most likely self-damage items and blood donation.
+- **Not exempt:** normal spikes (0x80 only), explosions, contact, shots, creep (0x10).
+- **Unresolved:**
+  - what the deal-chance code does with flag 5 (that's level 4; not started);
+  - which item and donation hits use bit 5;
+  - the meaning of bit 16 (probably CURSED_DOOR).
+
+### Bot meaning
+- **Curse-room doors cost half a heart in and half a heart out (even flying on the way out) but don't hurt the devil
+  deal.**
+- **Sacrifice-room spikes don't hurt the deal either.**
+- Every other hit (spikes, bombs, enemies, creep) sets the floor's "damaged" flag.
+
+### Record to confirm
+- Damage 1 at a curse door, with source type 0; while flying, no hit entering but a hit leaving.
+- A devil room still appearing at full chance after only curse-door hits on a floor.
