@@ -685,3 +685,105 @@ pause, 6.0 accel, the 14 px arrival.
 - The dart target vs Isaac's position + 10 × velocity at the pick;
 - no aimed darts beyond 200 px or without line of sight;
 - the pause length between darts.
+
+---
+
+## Batch C (2026-11-26): Dart Fly, Ring Fly, Swarm, Squirt, Globin, Widow
+
+Two blind readers per bundle (C1: the four fliers/Squirt; C2: Globin and Widow), one on Sonnet. My own read of the Dart
+Fly matched both readers. **All agree** unless a line says otherwise.
+
+**Shared fly prologue** (Dart Fly, Ring Fly, Swarm): with collectible 9 (Skatole) held and the fly not friendly, its
+AI is switched off.
+
+### Dart Fly (256.0), `0x5468e0`
+- **Steering, every update** (lines 43-84):
+  - accel = 0.0225 × (13.5 × direction to Isaac's **current position** + a figure-8 wobble of strength 10);
+  - the wobble phase is +0.188 rad per update: a 33-update y cycle and a 67-update x cycle;
+  - **speed cap 8 px/update**, friction × 0.95.
+- **No lead, no line of sight, no pauses, no attack.**
+- **Bot:** it homes at about 0.3 px/update² with a ±0.225 wobble and tops out at 8. A sharp sidestep beats it, because
+  its turn is slow; it never predicts you.
+
+### Ring Fly (222.0), `0x542340`
+- **A group circles one moving centre** (lines 56-203). The first Ring Fly is the leader.
+- **The centre moves toward Isaac at 2 px/update**, no lead.
+- **The radius breathes 40 ↔ 70 px** at 0.5 px/update (about a 4 s cycle).
+- **The ring spins 5.4° per update** (a turn every 2.2 s). The flies are spaced evenly and fly to their slot at
+  6 px/update.
+- It ignores rocks (grid class 0).
+- **Bot:** the danger is the ring's band of 40-70 px around a centre that drifts at you. Stay outside 70 px of the
+  centre (`TargetPosition`), or go through the middle when the radius is near 70.
+
+### Swarm (281.0), `0x547600`
+- **The leader spawns 4 followers** (5 in total) within 10 px (lines 45-84).
+- **The centre moves toward Isaac at 5 px/update** (no lead). Each fly springs to it (0.03 × offset) with a random buzz
+  of up to 0.8, orbiting at 5° per update (half of them each way), friction × 0.8.
+- They repel each other within about 50 px. When the leader dies, a follower takes over.
+- **Bot:** a cloud that follows Isaac's position at 5 px/update. Out-turn it rather than out-run it.
+
+### Squirt (220.0, also type 871), `0x53bae0`
+- **Idle (State 3):** a 1-in-5 roll on every 5th update starts the attack, so on average about 25 updates (0.8 s)
+  between attacks. **No distance or line-of-sight check** (lines 262-306).
+- **Wind-up (State 8):** at its animation's "Slide" event it adds **20 / friction** toward Isaac's **current
+  position** (no lead) (lines 432-492).
+- **The slide:** at least 10 updates with a small forward push, then it brakes. Back to idle when speed < 1.
+- **Variant 1** leaves creep (1000.26) every 3rd update while sliding.
+- **On death:** 2 × Dip 217.0; variant 1 makes 2 × Clot 15.1; 871 makes 2 × type 870.
+- **Bot:** a dash at where you stand when the Slide event fires. Step sideways at that frame. The dash is fast (about
+  20 px/update at the start) and short.
+
+### Globin (24.0 Globin, 24.1 Gazing, 24.2 Dank, 24.3 Cursed; also 278 Black Globin), `0x514cd0`
+- **Chase:** PathChase to Isaac's current position at speed factor **0.75** (Gazing 24.1: **1.1**; Black Globin 0.6).
+  No lead (lines 245-271).
+- **"Dies" into a pile** (lines 347-359): killed while walking (State 4) means **dead is cancelled, health set to 10,
+  "ReGen" plays, State 3**. When the ReGen animation finishes it walks again.
+  - **Killed while it's a pile (State 3), it dies for good.**
+  - **There's no damage blocking**: the pile is fully damageable.
+- **Gazing Globin's pile** slides away from Isaac at 0.5 per update while he's within 200 px (lines 296-316).
+- **Dank Globin** drops black creep (1000.26) on every fall, and a Spider (85.0) on each revive while the room has under
+  7 enemies.
+- **Cursed Globin (24.3)** may split on death; the chance falls with each generation (subtype). The halves are briefly
+  invulnerable (`isInvicible`, `I1` countdown).
+- **Black Globin (278):** throws a spider at the point 75% of the way to Isaac every 5 HP lost; dies into a head
+  (279) and a body (280).
+- **Bot:** after it falls (`State == 3`), **keep shooting the pile**. Finishing it there kills it for good; otherwise
+  it stands up with 10 HP.
+
+### Widow (100.0; 100.1 The Wretched), `0x473b20`
+- **Every update:** collision class 2, grid class 5; friction × 0.8.
+- **Idle (State 4):**
+  - **a 1-in-3 roll with Isaac more than 100 px away → jump;**
+  - otherwise: the Widow (variant 0) jumps if the room has more than 5 enemies, or if she just summoned (`I1` ≥ 1);
+  - failing those, she picks one of idle / State 8 / State 9 (lines 515-633).
+- **Jump (State 6):**
+  - velocity **7 × direction to Isaac's current position, fixed when the jump starts** (no lead);
+  - **airborne (between its two animation events): collision class 0**, so no contact either way;
+  - the landing crushes other NPCs (100 damage), not Isaac (lines 440-513, 617-633).
+- **State 8, Widow (variant 0):** summons a Sack (30.2; 30.0 or 94.0 Big Spider by subtype) **30 px below herself**,
+  if fewer than 3 exist. **The Wretched (variant 1):** an **8-way ring at speed 10** (fire mode 8, fixed angles).
+  Then both spread a **creep ring** outward, 3 px per step (1000.25, slowing; 1000.26 for subtype 1).
+- **State 9:** spiders (1-2 thrown near herself). The Wretched sometimes sends a Trite at Isaac. A Widow subtype sends
+  Attack Flies, or a 6-shot ring at speed 8 (mode 9).
+- **Bot:**
+  - she's **untouchable mid-jump** (class 0);
+  - her jump goes where Isaac was, so move after she leaves the ground;
+  - **expect a jump whenever you're more than 100 px away** (1 in 3 per update);
+  - The Wretched's ring is fixed: stand off its 8 lines;
+  - the creep ring slows you.
+
+**Review:** all agree, except:
+- **the Widow jump rule: settled by C** (lines 519-535). Both readers' phrasings match the code once read together.
+
+**Unresolved:**
+- the creep lifetimes (`+0x45c` = 60 / 210, unconfirmed as timeouts);
+- the Squirt's wind-up length (it's an animation event frame; not in our bestiary extract).
+
+### Record to confirm (Batch C)
+- **Dart Fly:** |velocity| ≤ 8; heading follows Isaac's position, not a lead.
+- **Ring Fly:** centre speed 2, radius 40-70, spin 5.4° per update.
+- **Swarm:** centre speed 5.
+- **Squirt:** the dash at the Slide event toward Isaac's position then; about 25 updates between dashes.
+- **Globin:** dies for good only when hit in State 3; revives with 10 HP.
+- **Widow:** collision class 0 mid-jump; jump direction = Isaac's position at take-off; jumps only on a 1/3 roll when
+  Isaac is beyond 100 px.
