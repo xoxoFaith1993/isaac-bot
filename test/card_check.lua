@@ -33,7 +33,7 @@ for _, path in ipairs(files) do
             local v = {}
             for x in part:gmatch("[^,]+") do v[#v + 1] = x end
             if #v >= 19 then
-              s.e[#s.e + 1] = { key = v[1], state = tonumber(v[4]), x = tonumber(v[6]), y = tonumber(v[7]),
+              s.e[#s.e + 1] = { key = v[1], frame = tonumber(v[3]), state = tonumber(v[4]), x = tonumber(v[6]), y = tonumber(v[7]),
                                 vx = tonumber(v[8]), vy = tonumber(v[9]), tx = tonumber(v[14]), ty = tonumber(v[15]),
                                 size = 13 }
             end

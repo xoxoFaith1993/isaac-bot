@@ -833,7 +833,10 @@
       "kind": "hop",
       "air": 16,
       "updates": 45,
-      "speed": 5.5
+      "speed": 5.6,
+      "friction": 0.84,
+      "land": 22,
+      "after": 0.72
      },
      {
       "state": 7,
@@ -955,9 +958,15 @@
     },
     {
      "cat": "move",
-     "text": "The read hop push (1.2/update over x0.9 = 12 px/update steady) does not match the recorded hop peak (5.6): the push probably applies only part of the airborne frames. Queued as a possible targeted read.",
-     "src": "card check 2026-11-26",
-     "checked": "contradicted"
+     "text": "Hop (state 4, Walk): pushed toward TargetPosition (a free grid cell) every update until the Land frame 22; speed v = 5.6 x (1 - 0.84^frame), levelling at 5.6 px/update; after Land it slows x0.72 per update. No arrival check: a hop covers about 110 px, so far targets are not reached (median 142 px away, landing a median 44 px short). The read \"steady 12\" was wrong: the real damping is about 0.84, not 0.9.",
+     "src": "RE_ENEMIES 0x470020 + recorder (17 hops)",
+     "checked": "recording"
+    },
+    {
+     "cat": "timing",
+     "text": "Hop lands at Walk frame 22 (push from frame ~1).",
+     "src": "RE_ENEMIES 0x470020",
+     "checked": "2 readers"
     }
    ]
   },
@@ -2861,10 +2870,11 @@
    "name": "Dart Fly",
    "move": {
     "kind": "chase",
-    "speed": 8,
+    "speed": 6.1,
     "friction": 0.95,
     "flying": true,
-    "notes": "accel = 0.0225 x (13.5 x direction to Isaac's current position + a figure-8 wobble of strength 10), wobble phase +0.188 rad per update (33-update y cycle, 67-update x cycle); speed cap 8, friction x0.95."
+    "notes": "accel = 0.0225 x (13.5 x direction to Isaac's current position + a figure-8 wobble of strength 10), wobble phase +0.188 rad per update (33-update y cycle, 67-update x cycle); speed cap 8, friction x0.95. | 2026-11-26 card check: speed is the steady chase 0.0225 x 13.5 / (1 - 0.95) = 6.1, not the cap 8; the figure-8 wobble (strength 10, phase unknown to the forecast) is not modelled.",
+    "cap": 8
    },
    "attacks": [],
    "body": {

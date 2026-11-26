@@ -124,7 +124,27 @@ KIND.hop = function(m, s, t, isaac, b)
     -- a phase's own steady speed (fitted from recordings where the read numbers didn't match: Monstro's hop peaks
     -- ~5.6 px/update, its big jump ~13)
     if hopping.speed then
-      local x, y = steer(s, t, tx, ty, hopping.speed, m.friction or 0.9, b, 4)
+      local f = hopping.friction or m.friction or 0.9
+      if hopping.land then
+        -- a fixed-length hop (Monstro, code + 17 recorded hops, 2026-11-26): pushed toward the target until the
+        -- Land frame (v = speed x (1 - f^frame)), then it slows by `after` per update; no arrival check
+        local x, y, vx, vy = s.x, s.y, s.vx, s.vy
+        local a = hopping.speed * (1 - f)
+        local left = hopping.land - (s.frame or 0)
+        for i = 1, t do
+          if i <= left then
+            local dx, dy = tx - x, ty - y
+            local d = sqrt(dx * dx + dy * dy)
+            if d > 4 then vx, vy = vx * f + a * dx / d, vy * f + a * dy / d else vx, vy = vx * f, vy * f end
+          else
+            vx, vy = vx * (hopping.after or 0.72), vy * (hopping.after or 0.72)
+          end
+          x, y = x + vx, y + vy
+        end
+        x, y = clampIn(x, y, b, s.size or 10)
+        return x, y, 1
+      end
+      local x, y = steer(s, t, tx, ty, hopping.speed, f, b, 4)
       return x, y, 1
     end
   end

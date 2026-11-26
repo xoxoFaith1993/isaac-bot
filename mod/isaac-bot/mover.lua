@@ -225,8 +225,9 @@ function Mover.cardZone(e, t, S, ctx)
     local p, v = e.Position, e.Velocity
     local n = e.ToNPC and e:ToNPC()
     local tp = n and n.TargetPosition
+    local okF, fr = pcall(function() return e:GetSprite():GetFrame() end)
     s = { x = p.X, y = p.Y, vx = v.X, vy = v.Y, size = e.Size or 13, state = n and n.State or -1,
-          tx = tp and tp.X or 0, ty = tp and tp.Y or 0 }
+          tx = tp and tp.X or 0, ty = tp and tp.Y or 0, frame = okF and fr or 0 }
     ctx.fcCache[h] = s
   end
   if not ctx.fcIsaac then
