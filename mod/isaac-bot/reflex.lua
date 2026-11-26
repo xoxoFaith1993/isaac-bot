@@ -46,6 +46,8 @@ local Rules = include("rules") -- knowledge as numbers (shot blast radii here)
 local Danger = include("danger")
 local Tells = include("tells")
 local Mover = include("mover") -- movement core v2 (learned reach + deeper search); S.core picks which one drives
+local RoomMap = include("roommap")   -- forecast plan step 3: the room's tiles, who gets where first
+local Position = include("position") -- forecast plan step 3: the positioning brain (home spot)
 local Risk = include("risk")   -- how bold to play right now (hearts, deal at stake, buffer, pace): scales S
 IsaacBotRisk = Risk            -- shared with danger.lua / nav.lua / main.lua
 local Strategy = include("strategy") -- Level 3: the run's profile (strengths, needs) and run-aware item value
@@ -54,6 +56,7 @@ local Reflex = {}
 Reflex.risk = Risk
 Reflex.strategy = Strategy
 Reflex.mover = Mover
+Reflex.position, Reflex.roommap = Position, RoomMap
 Reflex.tells = Tells
 
 Reflex.S = {
@@ -119,6 +122,12 @@ Reflex.S = {
   -- Isaac's moves per update in the planner's sim: recordings say 2 (1 = the old sim). On since 1.2.42: A/B
   -- fc-1.2.41:A vs :C (quick suite x2, 2026-11-26) hits per room -0.94 [-1.31, -0.58], clears +11% [+3%, +20%]
   isaac_steps = 2,
+  -- Positioning brain (forecast plan step 3, position.lua; A/B: 0 = the old firing-spot planner and the pull to the
+  -- middle). Its few numbers: tiles of room that count as a sure way out, the damage goal's worth (in tiles of room),
+  -- how much better a new home must be, the walk's cost per tile.
+  position = 0,
+  pos_every = 15, pos_reach = 90, pos_margin = 6, pos_espeed = 1.0,
+  pos_cap = 41, pos_depth = 4, pos_sure = 28, pos_min = 10, pos_lane = 8, pos_keep = 3, pos_travel = 0.25,
   forecast_kinds = "dart,wall_slide,charge_line,bounce", -- kinds the card check showed better or equal (hop: Monstro worse)
   fc_pad = 8,           -- px added to a card zone's radius
   fc_grow = 0.9,        -- px per update a card zone grows (card check: ~11-24 px median error after 16 updates)
@@ -706,9 +715,14 @@ local function planFire(player, room, w, targets, prefDist)
       local gated = tacd and tacd.tells and next(tacd.tells) ~= nil
       still = gated and t.Velocity and t.Velocity:Length() < 1.5 and not Reflex.telling(t) or false
     end
+    -- a shielded target that opens when you come close (Hosts): its firing spot must be close enough to bait it
+    -- (the author, 2026-11-26, room 56: "He is sitting super far away and won't aggro him for him to open" - with
+    -- range items the planned spot was 280 px out, across a pit, and it waited there for minutes)
+    local shielded = t.IsVulnerableEnemy and not t.kind and not (t:IsVulnerableEnemy() and not t:IsInvincible())
+    local maxD = shielded and (S.bait_dist + 20) or math.huge
     if still and not (hash and plan.banned[hash] and plan.banned[hash] > f) then
       for _, c in ipairs(firingCells(room, t, range, relax >= 1 and 1 or 2)) do
-        local steps = dist[c.idx]
+        local steps = c.dist <= maxD and dist[c.idx] or nil
         if steps then
           -- clearance from every enemy: big for ones that move (chasers), small for ones that stand still
           -- (one big clearance for all made 3 bunched Horfs leave NO valid square: "no firing spot" for 90 s)
@@ -1774,6 +1788,37 @@ function Reflex.update(player)
     prefDist = S.bait_dist
   end
   local wayPos = plan.target and waypoint(room, player) or nil
+  -- Positioning brain (step 3): a home spot from the room map, which replaces the firing spot and the pull to the
+  -- middle. Dodging still decides every move (the mover).
+  local homeSpot = nil
+  if S.position ~= 0 and not st.dodgeOnly then
+    local okP, hs, hw = pcall(function()
+      local roomIdx = Game():GetLevel():GetCurrentRoomIndex()
+      if roomIdx ~= Reflex.posRoom then Position.reset(); Reflex.posRoom = roomIdx end
+      local ks = S.isaac_steps or 1
+      local px = (Mover.top or (S.speed_mul / ks)) * math.max(0.3, player.MoveSpeed) * ks -- px per update, real
+      local map = RoomMap.build(room, player, w.enemies, { speed = px, espeed = S.pos_espeed, margin = S.pos_margin, speedOf = Reflex.avgSpeed })
+      local lines = {}
+      for _, e in ipairs(w.enemies) do
+        local pb = playbookOf(e)
+        if pb and (pb.tags.laser or pb.tags.charges_on_line) then
+          lines[#lines + 1] = { x = e.Position.X, y = e.Position.Y, half = (e.Size or 13) + player.Size + 6 }
+        end
+      end
+      local reacting = #(w.windups or {}) > 0 or #(w.aimed or {}) > 0
+      return Position.update({ S = S, f = Game():GetFrameCount(), room = room, map = map,
+        tp = target and target.Position or nil, prefDist = prefDist, range = math.max(120, player.TearRange * 0.9),
+        lines = lines, solidLane = Reflex.solidLane, reacting = reacting })
+    end)
+    if okP then
+      homeSpot = hs
+      if hs then wayPos = hw or hs end
+      Reflex.posError = nil
+    else
+      Reflex.posError = tostring(hs)
+    end
+  end
+  st.home = homeSpot and Position.why or nil
   -- dodging in a cleared room: keep walking where the walker was going (its next step and goal), not stand around
   local navSpot = nil
   if st.dodgeOnly and IsaacBotNavAim and math.abs(Game():GetFrameCount() - IsaacBotNavAim.f) < 45 then
@@ -1820,6 +1865,19 @@ function Reflex.update(player)
   end
   w.calm = calm
 
+  -- The spot pull is a straight-line distance. With a pit or rocks between Isaac and the spot, the nearest point is
+  -- the obstacle's edge and it stood there (the author, 2026-11-26, room 56: the Host's spot was just past the pit,
+  -- Isaac waited on the near side for minutes). Then the pull goes to the next tile of the walking path instead.
+  local spotFor = (plateSpot or navSpot or homeSpot or (plan.target and plan.cellPos)) or nil
+  if spotFor and wayPos and not player.CanFly then
+    local a, b = player.Position, spotFor
+    local d = (b - a):Length()
+    local n = math.floor(d / 20)
+    for k = 1, n - 1 do
+      local q = a + (b - a) * (k / n)
+      if room:GetGridCollision(room:GetGridIndex(q)) ~= GridCollisionClass.COLLISION_NONE then spotFor = wayPos; break end
+    end
+  end
   local best, bestCost, standCost = 0, math.huge, nil
   local usedV2 = false
   -- the plan looks 1.2 s ahead, so re-thinking every other update is plenty (halves the cost; big rooms lagged)
@@ -1838,7 +1896,8 @@ function Reflex.update(player)
       ring = ring, bossAim = bossAim,
       target = target, prefDist = prefDist, wayPos = wayPos,
       -- (ring-kiting: no fixed firing spot; the lane and the open line behind the boss do that job)
-      spot = (not ring) and (plateSpot or navSpot or (plan.target and plan.cellPos)) or nil, calm = calm, blocked = blocked, creepAt = creepAt,
+      spot = (not ring) and spotFor or nil, calm = calm, blocked = blocked, creepAt = creepAt,
+      commit = homeSpot ~= nil and Position.leave or nil,
       bounce = function(pos, r) return bounced(w, pos, r) end, lane = Reflex.lane, segDist = segDist,
       laserEnd = laserEnd, playbookOf = playbookOf, tacticsOf = Reflex.tacticsOf, leadVel = Reflex.leadVel,
       lessonOf = Reflex.lessonOf, shotPadOf = Reflex.shotPadOf, telling = Reflex.telling,

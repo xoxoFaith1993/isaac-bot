@@ -115,3 +115,10 @@ stays small.
 **Possible direction (main session's call):** make the cost fall off with the distance from the line between the
 two zones, e.g. `m_pincer * closeness * max(0, 1 - perp / pincer_w)`, or use the angle itself (full cost only
 near 180°). Then stepping off the line pays and it steers. Re-check the corner test (#30) after any change.
+## 4. OPEN (1.2.46, forecast plan step 3 in progress): Gluttony's corridor with the positioning brain on
+
+**Test:** "positioning: Gluttony - no home in his row where it can't step out" (KNOWN).
+**What happens:** with `position = 1` the brain picks a good home (the corridor's mouth, tile 5,4, where Isaac can step
+up or down), but the reflexes stop about 55 px short, inside the corridor in Gluttony's row: 60 of the last 60 updates
+there. The shot lane onto the boss outweighs the pull to the home spot; the "commit" signal (Isaac's own tile breaks
+the no-hit goal) didn't change it yet. The brain is off by default (`position = 0`), so play is unaffected.

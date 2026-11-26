@@ -48,6 +48,23 @@ and boss on the road to Delirium. Items, menus and graphics never.
      and three other half-speed spots (top-speed starting guess, drift collision filter, fallback scorer).
 3. **Room map + positioning brain.** Tests from the live notes: Gluttony's rock gap, the corner pin of bench room
    d.410, Gurgling creep, Larry Jr.'s poops, "sure way out = push in and shoot" (no more timeouts). A/B.
+   - *Design (2026-11-26):*
+     - **Room map** (`roommap.lua`, once per update while fighting): for each tile, open or not (rocks, poops, pits
+       closed), a hazard or not (spikes, harmful creep, fires: `danger.lua`), when Isaac can get there (walking
+       distance at his real speed), and when the nearest enemy can (straight line at its speed). A tile is **ours**
+       when Isaac is there clearly first and it's no hazard. **Room to move** from a tile = how many of our tiles can
+       be reached from it, still first.
+     - **Positioning brain** (`position.lua`, twice a second, or at once when the home spot stops being ours): picks
+       a **home spot** with the three goals, in order:
+       1. *no hit*: only tiles that are ours, and not in a line attacker's row or column without a sidestep;
+       2. *way out*: the most room to move, up to "plenty" (a sure way out);
+       3. *damage*: with plenty of room, prefer a tile in line with the target at a good distance ("If you have an
+          escape plan that you know for certain... focus on laying damage down"); with little room, way out wins.
+       The home spot is kept until another is clearly better.
+     - **Reflexes:** unchanged, except that the home spot is their firing spot / walking goal (instead of the middle
+       of the room). Dodging still decides every move.
+     - Switch: `position = 0/1`, A/B on the quick suite. Few numbers on purpose: how much room is "plenty", how much
+       the damage goal is worth, how much better a new spot must be.
 4. **Retire the old weights one at a time** (corner, ways out, crowd, sandwich, ring lane, per-boss tactics, commitment):
    each removal must not be worse on the gate. The list of hand weights should only shrink from here.
 5. **From then on a new enemy = a new card**, plus its recording check. No new weights.

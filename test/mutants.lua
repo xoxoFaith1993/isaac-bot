@@ -245,6 +245,12 @@ return {
   { test = "skips a button sealed in metal and presses the reachable one", why = "unreachable plates never skipped",
     patches = { { file = "nav", find = "      skip[\"plate\" .. plateIdx] = true\n", replace = "" } } },
 
+  { test = "baits a closed Host across a pit instead of waiting far away", why = "no bait limit on a shielded target's spot",
+    patches = { { file = "reflex", find = "local maxD = shielded and (S.bait_dist + 20) or math.huge",
+                  replace = "local maxD = math.huge" } } },
+  { test = "baits a closed Host across a pit instead of waiting far away", why = "straight spot pull through a pit",
+    patches = { { file = "reflex", find = "then spotFor = wayPos; break end", replace = "then break end" } } },
+
   { test = "doesn't swap its card for a pill", why = "pocket slot check for pills/cards",
     patches = { { file = "nav", find = "(p:GetPill(0) == 0 and p:GetCard(0) == 0) and V.pill_card or 0",
                   replace = "V.pill_card" } } },

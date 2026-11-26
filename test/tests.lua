@@ -159,6 +159,37 @@ run("walks up to bait a closed Host", function()
   check("walks up to bait a closed Host", d1 < d0 - 80, fmt("distance %.0f -> %.0f px", d0, d1))
 end)
 
+-- 5b. 1.2.46 (the author, 2026-11-26, room 56: "Isaac is stuck on the host. He is sitting super far away and won't
+-- aggro him for him to open"). A pit between them: tears fly over pits, so the firing-spot planner picked a square in
+-- the Host's row 7 tiles away and stood there. A shielded target's firing spot must be within bait distance.
+run("baits a closed Host across a pit instead of waiting far away", function()
+  Mock.room({
+    "WWWWWWWDWWWWWWW",
+    "W.............W",
+    "W.............W",
+    "W......~......W",
+    "D.....~~~.....D",
+    "W......~......W",
+    "W.............W",
+    "W.............W",
+    "WWWWWWWDWWWWWWW",
+  }, { player = Mock.tile(5, 4), clear = false }) -- (right at the pit's edge, as live)
+  local p = Isaac.GetPlayer()
+  p.TearRange = 420 -- (range items: live, the planned spot was 280 px out; with the short default range it never is)
+  local oldTop, oldAcc = Reflex.mover.top, Reflex.mover.acc -- (learned while it walks: later tests must not inherit it)
+  local host = Mock.enemy(EntityType.ENTITY_HOST, 0, Mock.tile(12, 4), { vulnerable = false })
+  local closest = math.huge
+  for _ = 1, 150 do
+    local move = Reflex.update(p)
+    Mock.step(move)
+    closest = math.min(closest, (host.Position - p.Position):Length())
+  end
+  p.TearRange = 260 -- (the mock player is shared by later tests: back to its default)
+  Reflex.mover.top, Reflex.mover.acc = oldTop, oldAcc
+  check("baits a closed Host across a pit instead of waiting far away", closest <= Reflex.S.bait_dist + 20,
+        fmt("closest %.0f px (bait distance %d)", closest, Reflex.S.bait_dist))
+end)
+
 -- 6. Standing still with nothing to do in a fight must not freeze (tied plans picked at random used to)
 run("moves toward a still target it can't hit yet", function()
   Mock.room(nil, { player = Mock.tile(2, 2), clear = false })
@@ -1877,6 +1908,165 @@ run("skips a button sealed in metal and presses the reachable one", function()
   end
   check("skips a button sealed in metal and presses the reachable one", pressedReachable,
         fmt("ended at %s, goal %s", tostring(p.Position), tostring(Nav.status.goal)))
+end)
+
+------------------------------------------------------------------------ forecast plan step 3: the positioning brain
+-- (position.lua over roommap.lua; docs/FORECAST_PLAN.md step 3). Each test is one of the author's live notes
+-- (docs/LIVE_NOTES.md). The brain is behind S.position (A/B), so each test switches it on itself.
+local Danger = include("danger")
+local function withPosition(fn)
+  local S = Reflex.S
+  local old = S.position
+  S.position = 1
+  Reflex.position.reset()
+  local ok, a, b, c = pcall(fn)
+  S.position = old
+  Reflex.position.reset()
+  if not ok then error(a) end
+  return a, b, c
+end
+
+-- 73. Live note 1 (the author, 2026-11-26: "Isaac just going into the corner of a 4x4 room... When are we gonna fix
+-- this?"). Gate bench d.410, 1.2.30: four hits on one tile by the top wall two tiles from the corner, pinned by Gapers.
+-- A big room, Isaac by the top wall near the top-left corner, five chasers closing from the right and below.
+local function bigRoom()
+  local rows = { string.rep("W", 28) }
+  for _ = 1, 14 do rows[#rows + 1] = "W" .. string.rep(".", 26) .. "W" end
+  rows[#rows + 1] = string.rep("W", 28)
+  return rows
+end
+local function pinnedRun()
+  Mock.room(bigRoom(), { clear = false, player = Mock.tile(4, 2) })
+  local p = Isaac.GetPlayer()
+  for _, xy in ipairs({ { 9, 2 }, { 10, 5 }, { 8, 8 }, { 5, 9 }, { 12, 3 } }) do
+    Mock.enemy(EntityType.ENTITY_GAPER, 1, Mock.tile(xy[1], xy[2]), { chase = 3, hp = 999 })
+  end
+  local tl, br = Mock.vec(60, 140), Mock.vec(40 + 40 * 27 - 20, 120 + 40 * 15 - 20)
+  local corner, touched = 0, 0
+  for _ = 1, 240 do
+    local move = Reflex.update(p)
+    Mock.step(move)
+    local x, y = p.Position.X, p.Position.Y
+    if math.min(x - tl.X, br.X - x) < 80 and math.min(y - tl.Y, br.Y - y) < 80 then corner = corner + 1 end
+    if Mock.touching() then touched = touched + 1 end
+  end
+  return corner, touched
+end
+run("positioning: doesn't get pinned in a corner of a big room", function()
+  local c0, t0 = pinnedRun()
+  local c1, t1 = withPosition(pinnedRun)
+  check("positioning: doesn't get pinned in a corner of a big room", c1 < 20 and t1 <= t0 and t1 == 0,
+        fmt("brain off: %d corner updates, touched %d; on: %d, touched %d (of 240)", c0, t0, c1, t1))
+end)
+
+-- 74. Live note 3 (the author, 2026-11-26, Gluttony 2012: "It is standing in a area where it has no escape route from
+-- the brimstone... You can stand close to him within the gap that allows you to move vertical... But he decides to
+-- stand in the one place where he can't go vertical"). Gluttony at the left; his row runs through a one-tile rock
+-- corridor where Isaac starts. The home spot must not be in his row inside the corridor.
+run("positioning: Gluttony - no home in his row where it can't step out", function()
+  Reflex.loadPlaybook("49.0=laser,chases,k2,d4")
+  Reflex.loadBossTactics("49.0=170,,ignore,Attack01Horiz|Attack01Up|Attack01Down,")
+  local trapped = withPosition(function()
+    Mock.room({
+      "WWWWWWWWWWWWWWW",
+      "W.............W",
+      "W.............W",
+      "W.....###.....W",
+      "W.............W",
+      "W.....###.....W",
+      "W.............W",
+      "W.............W",
+      "WWWWWWWWWWWWWWW",
+    }, { clear = false, player = Mock.tile(7, 4) })
+    local boss = Mock.enemy(49, 0, Mock.tile(2, 4), { hp = 999, boss = true, anim = "WalkHori" })
+    local p = Isaac.GetPlayer()
+    local n = 0
+    for i = 1, 90 do
+      local move = Reflex.update(p)
+      Mock.step(move)
+      boss.Position = Mock.tile(2, 4)
+      local x = p.Position.X
+      local inRow = math.abs(p.Position.Y - boss.Position.Y) < (boss.Size or 13) + 14
+      if i > 30 and inRow and x > 240 and x < 400 then n = n + 1 end
+    end
+    return n
+  end)
+  Reflex.playbook = {}
+  Reflex.loadBossTactics("")
+  -- KNOWN (2026-11-26, step 3 in progress): the home spot is right (the corridor's mouth) but the reflexes stop ~55 px
+  -- short, in his row, even with the commit signal. FOUND_BUGS.md #4.
+  known("positioning: Gluttony - no home in his row where it can't step out", trapped < 6,
+        fmt("%d of the last 60 updates in his row inside the rock corridor", trapped))
+end)
+
+-- 75. Live note 6 (the author, 2026-11-26: "if he were to just learn the terrain, the environment, like the creep from
+-- the gurglings better, and position himself better"). Creep puddles in the middle of the room, a slow chaser at the
+-- right: the home spot is never on creep, and Isaac doesn't stand in it.
+run("positioning: no home on creep", function()
+  local onCreep, homeOnCreep = withPosition(function()
+    Mock.room(nil, { clear = false, player = Mock.tile(4, 4) })
+    for _, xy in ipairs({ { 6, 3 }, { 6, 4 }, { 6, 5 }, { 7, 4 }, { 5, 4 } }) do
+      Mock.creep(EffectVariant.CREEP_RED, Mock.tile(xy[1], xy[2]), 22)
+    end
+    Mock.enemy(EntityType.ENTITY_GAPER, 1, Mock.tile(12, 4), { chase = 1.5, hp = 999 })
+    local p = Isaac.GetPlayer()
+    local n, h = 0, 0
+    for _ = 1, 90 do
+      local move = Reflex.update(p)
+      Mock.step(move)
+      local home = Reflex.position.home
+      if home and Danger.staticAt(home) > 0 then h = h + 1 end
+      if Danger.staticAt(p.Position) > 0 then n = n + 1 end
+    end
+    return n, h
+  end)
+  check("positioning: no home on creep", homeOnCreep == 0 and onCreep <= 3,
+        fmt("home on creep %d updates, Isaac on creep %d of 90", homeOnCreep, onCreep))
+end)
+
+-- 76. Live note 5 (the author, 2026-11-26, Larry Jr.: "when he lays poops down, it can block you... a poop is laid down
+-- that's not broken, that limits your mobility and increases a risk factor"). Isaac in a pocket closed by poops with
+-- one gap, an enemy coming: the home spot is outside the pocket, where the room is.
+run("positioning: leaves a pocket closed by poops", function()
+  local col, row = withPosition(function()
+    Mock.room({
+      "WWWWWWWDWWWWWWW",
+      "W...p.........W",
+      "W...p.........W",
+      "W...p.........W",
+      "Dpp.p.........D",
+      "W.............W",
+      "W.............W",
+      "W.............W",
+      "WWWWWWWDWWWWWWW",
+    }, { clear = false, player = Mock.tile(2, 2) })
+    Mock.enemy(EntityType.ENTITY_GAPER, 1, Mock.tile(11, 6), { chase = 1.5, hp = 999 })
+    Reflex.update(Isaac.GetPlayer())
+    local idx = Reflex.position.idx
+    local gw = Game():GetRoom():GetGridWidth()
+    return idx and (idx % gw) or -1, idx and (idx // gw) or -1
+  end)
+  check("positioning: leaves a pocket closed by poops", col >= 5 or row >= 5,
+        fmt("home column %d, row %d (the pocket is columns 1-3, rows 1-3, its gap at 3,4)", col, row))
+end)
+
+-- 77. Live note 5 again: "If you have an escape plan that you know for certain that you won't get hurt in, then focus
+-- on laying damage down and getting a good angle" (Larry Jr. "timed out" with no hits). A big open room, one slow
+-- enemy: plenty of room everywhere, so the home spot is in line with it, within range.
+run("positioning: with a sure way out, a home in line with the target", function()
+  local lane, d = withPosition(function()
+    Mock.room(nil, { clear = false, player = Mock.tile(2, 7) })
+    local e = Mock.enemy(EntityType.ENTITY_GAPER, 1, Mock.tile(10, 3), { chase = 0.5, hp = 999 })
+    local p = Isaac.GetPlayer()
+    Reflex.update(p)
+    local home = Reflex.position.home
+    if not home then return false, -1 end
+    local rel = home - e.Position
+    local inLine = math.abs(rel.X) < 21 or math.abs(rel.Y) < 21
+    return inLine and rel:Length() < p.TearRange, rel:Length()
+  end)
+  check("positioning: with a sure way out, a home in line with the target", lane,
+        fmt("home %s, %.0f px from the target", lane and "in line" or "NOT in line", d))
 end)
 
 return table.concat(results, "\n")

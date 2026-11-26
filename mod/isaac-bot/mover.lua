@@ -714,7 +714,8 @@ local function total(ctx, plan)
   -- the planner's firing spot. When it's calm (no shots in the air, nothing moving close) COMMIT to it, as the old core
   -- did (calm_commit): v2's gentle pull lost to the spread-out circles of far-off spiders, and the bot stood in the
   -- open for minutes while four Sacks kept spawning, never walking to the square below them (2026-11-25).
-  if ctx.spot then c = c + (plan.p - ctx.spot):Length() * S.m_way * 0.7 * (ctx.calm and S.calm_commit or 1) end
+  -- (commit: the positioning brain says where Isaac stands breaks its "no hit" goal - forecast plan step 3)
+  if ctx.spot then c = c + (plan.p - ctx.spot):Length() * S.m_way * 0.7 * ((ctx.calm or ctx.commit) and S.calm_commit or 1) end
   return c
 end
 

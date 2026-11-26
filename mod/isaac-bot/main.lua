@@ -23,7 +23,7 @@ local Options = include("options")
 -- handed to the watchdog so it can build the brain's multiple-choice menu
 local MODS = { Reflex = Reflex, Nav = Nav, Danger = Danger, Options = Options, Rescue = Rescue, json = json }
 
-local VERSION = "1.2.45"
+local VERSION = "1.2.47"
 Reflex.status.mode = "full" -- fight + walk + explore (Stage 3); "combat" = fights only, "off" = hands off
 local TAG = "IBOT|"
 local BOT_SLOT = 2
@@ -639,7 +639,7 @@ mod:AddCallback(ModCallbacks.MC_POST_UPDATE, function()
         end
       end
       if Reflex.v2err and Reflex.v2err ~= lastV2Err then send("error", "mover: " .. Reflex.v2err) end
-      if f % 30 == 0 and Reflex.status.active and Reflex.mover.debug then send("why", Reflex.mover.debug) end
+      if f % 30 == 0 and Reflex.status.active and Reflex.mover.debug then send("why", Reflex.mover.debug .. (Reflex.status.home and (" | " .. Reflex.status.home) or "") .. (Reflex.posError and (" | position error: " .. Reflex.posError) or "")) end
       -- real accuracy every 20 s of fighting
       if f % 600 == 0 and Reflex.acc and Reflex.acc.fired >= 10 then send("aim", Reflex.accReport()) end
       -- the risk level, whenever it moves by 0.1 or more (and why)
