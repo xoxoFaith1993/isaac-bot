@@ -62,8 +62,14 @@ local function known(name, ok, detail)
 end
 local function run(name, fn)
   if ONLY and ONLY ~= "" and not name:find(ONLY, 1, true) then return end
+  Reflex.v2err = nil
   local ok, err = xpcall(fn, debug.traceback)
   if not ok then results[#results + 1] = "FAIL " .. name .. "  (crashed: " .. tostring(err) .. ")" end
+  -- the movement core errored (it's run under pcall and silently falls back to the old core): a test can then pass or
+  -- fail for the wrong reason (2026-11-25: a missing field made every update fall back, and 3 tests failed for it)
+  if Reflex.v2err then
+    results[#results + 1] = "FAIL " .. name .. "  (movement core errored, fell back: " .. tostring(Reflex.v2err) .. ")"
+  end
 end
 local function fmt(...) return string.format(...) end
 local function rooms(seq) return #seq == 0 and "none" or table.concat(seq, ">") end

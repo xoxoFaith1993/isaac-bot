@@ -727,6 +727,25 @@ function Mover.choose(ctx)
     if c < bestC then best, bestC, bestPl = pl.firstIdx, c, pl end
     if pl.firstIdx == 0 and (not standC or c < standC) then standC = c end
   end
+  -- standing still for the whole plan, scored even when the beam dropped it: the reflexes need it to decide whether to
+  -- stand for a sure shot (blind review 2026-11-25: under this core it was never passed back, so the "stand and shoot
+  -- straight" and "plant your feet" checks could never fire and every tear was fired on the move)
+  -- (ALWAYS the full stand-still plan: the cheapest plan that merely STARTS by standing is "stand now, flee later",
+  -- which looked cheap every update, so it never fled - next to its own bomb, in Dingle's line after the tell)
+  do
+    local zero = ctx.DIRS[0] or Vector(0, 0)
+    local sp = { p = player.Position, v = ctx.vel, c = 0, firstIdx = 0 }
+    local p1 = nil
+    for si = 1, 3 do
+      sp = run(ctx, sp, si, zero)
+      sp.firstIdx = 0
+      p1 = p1 or sp.p
+      sp.p1 = p1 -- (total() reads p1; without it the core errored and the bot fell back to the old core every update)
+    end
+    standC = total(ctx, sp)
+  end
+  Mover.lastStandC = standC
+  Mover.lastHidden = ctx.hidden
   -- why it chose this (for the log): danger part, ways out, total; and the same for standing still
   if bestPl then
     -- what the danger is made of where Isaac stands now (all sample times): which source is driving the choice
@@ -743,7 +762,7 @@ function Mover.choose(ctx)
   Mover.lastMove = best
   Mover.lastDir = ctx.DIRS[best]
   Mover.lastFrame = Game():GetFrameCount()
-  return best, bestC
+  return best, bestC, standC
 end
 
 ----------------------------------------------------------------- memory across restarts

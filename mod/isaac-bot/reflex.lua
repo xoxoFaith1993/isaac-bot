@@ -1681,13 +1681,15 @@ function Reflex.update(player)
   local fNow = Game():GetFrameCount()
   if S.core == 2 and S.m_every > 1 and fNow % S.m_every ~= 0 and Mover.lastMove and Mover.lastFrame
      and fNow - Mover.lastFrame < S.m_every + 1 then
+    -- (no stand decision on these in-between updates: a stale stand cost against a stale best cost said "standing is
+    -- cheap" at the wrong moments - offline tests: it stood in Dingle's line and in front of a chasing boss)
     best, bestCost, usedV2 = Mover.lastMove, 0, true
   elseif S.core == 2 then
     local tMove0 = Isaac.GetTime()
     local ring, bossAim = Reflex.ringFor(player, target, w, room), nil
     if target and not target.kind and target.IsBoss and target:IsBoss() then bossAim = S.boss_aim end
     Reflex.status.ring = ring ~= nil
-    local okM, mi, mc = pcall(Mover.choose, { S = S, w = w, room = room, player = player, speed = speed, DIRS = DIRS,
+    local okM, mi, mc, ms = pcall(Mover.choose, { S = S, w = w, room = room, player = player, speed = speed, DIRS = DIRS,
       ring = ring, bossAim = bossAim,
       target = target, prefDist = prefDist, wayPos = wayPos,
       -- (ring-kiting: no fixed firing spot; the lane and the open line behind the boss do that job)
@@ -1696,7 +1698,9 @@ function Reflex.update(player)
       laserEnd = laserEnd, playbookOf = playbookOf, tacticsOf = Reflex.tacticsOf, leadVel = Reflex.leadVel,
       lessonOf = Reflex.lessonOf, shotPadOf = Reflex.shotPadOf, telling = Reflex.telling })
     Reflex.prof.move = Reflex.prof.move + (Isaac.GetTime() - tMove0)
-    if okM and mi then best, bestCost, usedV2 = mi, mc, true; Reflex.v2err = nil
+    -- standCost from the v2 core too (blind review 2026-11-25: it was only ever set by the old core, so "stand and
+    -- shoot straight" / "plant your feet" never fired under v2)
+    if okM and mi then best, bestCost, usedV2 = mi, mc, true; standCost = ms; Reflex.v2err = nil
     else Reflex.v2err = tostring(mi) end -- falls back to the old core this update; main.lua reports it
   end
   if not usedV2 then
@@ -1776,7 +1780,15 @@ function Reflex.update(player)
     if e.Type ~= EntityType.ENTITY_FIREPLACE and Reflex.avgSpeed(e) > 0.6
        and (e.Position - player.Position):Length() < S.stand_safe_r then moverNear = true; break end
   end
-  if not moverNear and (lands or Reflex.linedUp(player)) and standCost and standCost - bestCost < S.still_tolerance then
+  -- Safe to stand still at all? (Both stand rules below share this. Until the v2 core passed its stand cost back,
+  -- 2026-11-25, the first rule never fired, so it had never been checked against these: a chaser closing in, an
+  -- attack coming (Dingle's tell), shots in the air near us, something underground.)
+  local threatened = (w.aimed and #w.aimed > 0) or ((Mover.lastHidden or 0) > 0)
+  for _, sh in ipairs(w.shots) do
+    if (sh.Position - player.Position):Length() < 200 then threatened = true; break end
+  end
+  local standOk = not moverNear and not threatened and standCost and standCost - bestCost < S.still_tolerance
+  if standOk and (lands or Reflex.linedUp(player)) then
     best = 0
   end
   -- Plant your feet (2026-11-25: "sure" shots hit only 25-52%): "lands" was checked for standing still, but in boss
@@ -1793,13 +1805,9 @@ function Reflex.update(player)
           veryClose = true; break
         end
       end
-      -- never plant into a coming attack or with shots in the air near us (1.2.23 bench: Dingle's spit hit it 6 and
-      -- 4 times; standing up to 2x the tolerance costlier was too generous)
-      local threatened = (w.aimed and #w.aimed > 0)
-      for _, sh in ipairs(w.shots) do
-        if (sh.Position - player.Position):Length() < 200 then threatened = true; break end
-      end
-      if not veryClose and not threatened and standCost and standCost - bestCost < S.still_tolerance then
+      -- never plant into a coming attack, near shots, with a chaser closing or a burrower hidden (standOk above;
+      -- 1.2.23 bench: Dingle's spit hit it 6 and 4 times)
+      if not veryClose and standOk then
         best = 0
       else
         lands = false
