@@ -853,3 +853,86 @@ Two blind readers (bundle E2c, one on Sonnet); all agree with my reading.
 ### Record to confirm
 - Damage 1 at a curse door, with source type 0; while flying, no hit entering but a hit leaving.
 - A devil room still appearing at full chance after only curse-door hits on a floor.
+
+## Batch F1 (2026-11-26): tear physics
+
+Two blind readers (Sonnet, Haiku). The write-up session filled the gaps from annotated assembly (`probe dis:`) and the
+player's tear-params builder `0x7c8250`. Functions:
+- `Entity_Player::FireTear` `0x799750`;
+- `Entity_Tear::Init` `0x66cc50`;
+- the tear update `0x66dc80`: 46 KB, read only as an assembly excerpt;
+- `Entity_Tear::HandleCollision` `0x67a310`;
+- the tear-params builder `0x7c8250`.
+
+**Field-offset warning (affects every Isaac-stat read):** in this build the player's stat block sits **8 bytes after**
+the REPENTOGON field table. Real offsets: `[body · F1 0x799750, 0x7c8250 · 2 readers]`
+- damage **0x1474**;
+- tear height **0x1478**;
+- tear falling speed **0x147c**;
+- falling accel **0x1480**;
+- tear range **0x1484**;
+- recent-movement vector **0x1650**.
+(The table's 0x1470 is a per-player shot counter here. The E2c i-frame field 0x13c0 matches the same +8 shift.) Not
+every field shifts by exactly 8: two readers saw +0xc at 0x1578.
+
+- **Firing** (`FireTear`): `[move · F1 0x799750 · 2 readers]`
+  - **Spawn:** the tear spawns as type 2 one velocity-step ahead of the muzzle, then runs one update and steps back,
+    so it starts at the muzzle with one tick of fall applied.
+  - **Velocity:** **the caller's velocity × the params' velocity multiplier** (`params+0x5c`, 1.0 unless an item
+    changes it).
+  - **When Isaac fires it himself,** his recent-movement vector (`player+0x1650`) is added to the aim vector. That's
+    the movement inheritance; its size is set elsewhere. `[move · F1 0x799750 · 2 readers]`
+  - **Shot speed is applied by the caller** (the weapon code, not decoded). The bot's live tear-speed reading stays the
+    source for it.
+- **Starting values:** `[move · F1 0x799750, 0x7c8250 · 2 readers]`
+  - **height = the player's tear height** (0x1478);
+  - **falling speed = −tearFallingSpeed (0x147c) + uniform 0-0.2** (exact, with no random part, under some tear flags);
+  - **falling accel = 0x1480**;
+  - **range = 0x1484**;
+  - damage = multiplier × player damage (0x1474);
+  - knockback multiplier 1.7;
+  - scale ≥ 0.01.
+  - **Room type 16:** sprite offset −18, height capped at −5.1.
+- **Init defaults** (overwritten by FireTear): `[body · F1 0x66cc50 · 2 readers]`
+  - damage 3.5;
+  - height −23;
+  - falling speed ±0.1;
+  - homing friction 0.85;
+  - knockback multiplier 1.7;
+  - range 260;
+  - grid collision class 4.
+- **Each update** (when not waiting), with speed multiplier m = 1: `[move · F1 0x66dc80 · 2 readers]`
+  - **fallingSpeed = 0.9 × fallingSpeed + 0.1 + fallingAccel** (a pure `fs + accel` for one tear mode);
+  - **height += fallingSpeed**;
+  - **velocity.y += fallingAccel** (when ≥ 0.001), so the ground track bends downward.
+  - So a tear rises, then drops in a parabola. **It dies when height > −5.0** (one tick early under one flag; it
+    bounces with fs × −1.6 under another).
+  - **No plain range countdown was seen:** range is only compared inside flag-gated blocks. The landing height is what
+    ends a normal tear. `[timing · F1 0x66dc80 · 2 readers]`
+- **Death's hourglass:** a tear speed scale × 0.75 while `room+0x7244 > 0`. `[move · F1 0x66dc80 · 1 reader (write-up session)]`
+- **Hitting an enemy** (`HandleCollision`): `[attack · F1 0x67a310 · 2 readers]`
+  - **damage = the tear's collisionDamage**, through the target's TakeDamage (flags 0, countdown 30);
+  - a directional-shield check (`CanBeDamagedFromVelocity`) can block it;
+  - **an ordinary tear dies on its first enemy hit**;
+  - **piercing tears lose damage equal to the enemy's health** and keep going, shrinking with the remaining damage;
+  - more than 15 tears already registered on an enemy blocks further hits;
+  - enemy shots (type 9) hit by a tear are destroyed unless protected.
+- **Knockback on enemies:** not in `HandleCollision`, which never reads the tear's 1.7 multiplier. The flag-specific
+  pushes found are 26 (in `ApplyTearFlagEffects` `0x681de0`) and 18 (in the NPC collision handler).
+  `[attack · F1 0x681de0, 0x6d4ce0 · 1 reader (write-up session)]`
+  - **The ordinary tear's knockback formula is unresolved**, likely inside TakeDamage using the source tear. Measure
+    it from recordings.
+
+### Bot meaning (F1)
+- **The tear arc:** use fallingSpeed = −0x147c (+ 0-0.2), accel = 0x1480, then fs = 0.9 fs + 0.1 + accel; height +=
+  fs; dead at height > −5. That gives each tear's real reach, so the bot can predict which tears land before reaching a
+  target. Feed it Isaac's live stats from the +8 offsets.
+- **A normal tear stops at the first enemy**; piercing tears keep going with less damage.
+- **Shooting while moving** adds Isaac's recent movement to the aim. Lead targets with that in mind.
+
+### Record to confirm (F1)
+- Tear flight time and landing distance against the formula at default stats (height and fall values from the live
+  player at +8 offsets).
+- velocity.y gain of fallingAccel per update.
+- Enemy knockback per tear hit (unresolved).
+- Tears at × 0.75 during Death's hourglass.

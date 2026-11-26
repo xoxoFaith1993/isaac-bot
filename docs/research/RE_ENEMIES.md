@@ -1353,8 +1353,11 @@ gave them back. Shared facts:
     when he's level with or above it).
   - otherwise **1/3: "FireRing":** `[attack · E4 0x462df0 · 2 readers]`
     - 9 shots at 10, or 5 at 10 + 5 at 7;
-    - VelocityMulti 1.05;
+    - **projectile variant 2**, height 18.5, **VelocityMulti 1.05, so the real speeds are 10.5 and 7.35**;
     - orbit/curve flags 0x800 / 0x1000.
+    - These are the 9.2 shots at 10.5 in the hit log. `[attack · E4 0x462df0 · recording]`
+  - The 15-shot burst is plain `FireBossProjectiles`: projectile variant 0, lobbed, speed 3.5-10.5. It matches the
+    lobbed 9.0 shot at 7.7 in the hit log. `[attack · E4 0x462df0 · recording]`
   - **Summon:** on every 2nd tick, 50%, when there are 4 or fewer enemies: **one Hopper (29.0) thrown 150 px below it**.
     `[attack · E4 0x462df0 · 2 readers]`
 - **Subtype 1** fires rings back to back: 9 at 15; 4 × 10 at 12, 10, 8, 6; 7 × 10 at 4-10 in a cone toward Isaac; or
