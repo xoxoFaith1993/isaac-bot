@@ -18,6 +18,12 @@ Same build and pipeline as `RE_PILOT.md`; per-enemy tables are in `RE_ENEMIES.md
 **Conventions:** 30 updates per second; y grows downward; angles 0° = right, 90° = down. Addresses are for the
 2026-11-26 build (SHA-256 in `RE_PILOT.md`).
 
+**A decompiler trap (found 2026-11-26 from a recording contradiction):** `0x439c90` is `sqrt`.
+- It takes and returns its value in a register, so Ghidra shows the variable **unchanged** after the call.
+- So **any value computed right before a `FUN_00439c90()` call has really been square-rooted.** Usually that's a
+  squared distance (fine), but Isaac's friction factors were square-rooted too.
+- Before trusting a constant, check the disassembly at such calls.
+
 **Two warnings about REPENTOGON's tables in this build** (both settled by C):
 - **Some function signatures now match a different function.** `Entity_NPC::CalcTargetPosition`'s signature lands
   on `0x7817c0`, which reads the controller's movement input. Treat any zhl name as a hint until the body agrees.
@@ -258,22 +264,30 @@ Then:
 
 ### Isaac's movement, `0x781fc0` (called from the player's Update, `0x78b2b0` line 1558; input from `0x7817c0`)
 
-Each update, on a normal floor (field 0x1660 = 0, no special effect), with input direction u (|u| ≤ 1, analog):
+Each call, on a normal floor (field 0x1660 = 0, no special effect), with input direction u (|u| ≤ 1, analog):
 1. **Scale:** k = **0.75 + 0.25 × MoveSpeed** (speed stat 1.0 gives k = 1). The input is u × k (lines 165-167).
-2. **Sideways damping:** the part of velocity across the input direction × **0.8**; the part along it is kept (lines
-   235-245).
-3. **Accel:** velocity += u × k × 0.5 × a, with a = 1.2 (slightly more when reversing), so **+0.6 × k per update**
+2. **Sideways damping:** the part of velocity across the input direction × **√0.8 ≈ 0.894**; the part along it is
+   kept (lines 235-245; the square root is the same lost call as in step 4, see line 243).
+3. **Accel:** velocity += u × k × 0.5 × a, with a = 1.2 (slightly more when reversing), so **+0.6 × k per call**
    (lines 252-277).
-4. **Friction: velocity × 0.775**, with or without input (lines 297-300).
+4. **Friction: velocity × √0.775 ≈ 0.880 per call**, with or without input (lines 297-300).
+   - The C shows 0.775, but the machine code **takes its square root** first: at `0x782711` the friction value goes
+     into `sqrt` (`0x439c90`), the result is stored at `[EBP-0x50]`, and velocity x and y are multiplied by it
+     (`0x78282d`, `0x78286b`).
+   - Ghidra lost that call's result, and so did the first version of this table and both blind readers.
 
 Results:
-- **Top speed** ≈ 0.6 × k × 0.775 / (1 − 0.775) ≈ **2.07 px/update at speed 1.0**, 90% reached in about 9 updates.
-- **Stopping:** ×0.775 per update, half speed in about 2.7 updates, under 1% in 18.
-- **There's no hard speed cap on a normal floor.**
+- **Top |velocity|** ≈ 0.6 × k × 0.880 / (1 − 0.880) ≈ **4.41 × k**. That is exactly the 4.41 × MoveSpeed cap
+  constant in the same function (line 273), so the formula and the designers' number agree.
+- **Per game update:** square-rooting the friction only makes sense if the movement step runs **twice per 30-Hz
+  update** (0.880² = 0.775). If so, Isaac moves about **8.8 px per update at speed 1.0**, about 11 at speed 2 (k =
+  1.25). That "twice" is inferred, not proven from this function.
+- **Stopping:** ×0.880 per call (×0.775 per update if twice), half speed in about 5.4 calls.
+- **There's no hard speed cap on a normal floor** (the 4.41 cap only applies on slippery floors).
 
 On slippery floors field 0x1660 counts 0..60, as t = 0..1:
-- friction becomes 0.775 + 0.185t;
-- sideways damping becomes 0.8 + 0.2t;
+- friction becomes √(0.775 + 0.185t);
+- sideways damping becomes √(0.8 + 0.2t);
 - accel shrinks to a quarter at t = 1;
 - a cap of 4.41 × MoveSpeed applies.
 
@@ -282,7 +296,7 @@ Other pushes:
 - being carried: velocity snaps to the carrier;
 - flying vs gravity: velocity.y += 0.225.
 
-**Knockback isn't applied here** (it would decay through the same ×0.775).
+**Knockback isn't applied here** (it would decay through the same ×0.880 per call).
 
 **Input** (`0x7817c0`): x = right − left, y = down − up, both analog.
 - Both axes are inverted when confused (flag 0x200, in the `Game+0x26628` ≥ 2 mode) or under one room effect.
@@ -291,9 +305,16 @@ Other pushes:
 
 **Review:**
 - **The accel, damping and friction numbers: all agree** (both B8 readers).
-- **The ~2.07 px/update top speed: unresolved.** It's a calculation from those numbers. Both readers flagged that the
-  sideways-damping projection uses the scaled input, so speed stats other than 1.0 are less certain. Check Isaac's
-  velocity magnitude in a recording under steady input.
+- **The first top-speed figure (2.07 px/update) was contradicted by the recording and is now corrected: settled by C**
+  (disassembly).
+  - The recorder's Isaac positions give a median of 6.7, p90 11.0 and p99 11.9 px/update (some runs with speed items).
+  - The bot's movement learning measured about 7.7 at a run's start (`mover.lua`, 2026-11-25).
+  - Both fit about 8.8 at speed 1.0 and about 11 with speed items.
+- **Still unresolved:**
+  - the "twice per update" step;
+  - speed stats other than 1.0: both readers flagged that the sideways projection uses the scaled input.
+  - Record Isaac's `Velocity` magnitude (expect about 4.4 at speed 1.0 under steady input) next to his position
+    change per update.
 
 ---
 
@@ -503,8 +524,10 @@ functions cover about 65%.** By share of appearances:
 7. **Can-shoot:** Gemini's baby never shoots beyond 300 px or with a rock between; the Pooter beyond 200 px.
 8. **Charger:** already confirmed (24/24); add the 16-update lead test (cross its column at speed from 30-60 px
    short).
-9. **Isaac's movement:** velocity per update under constant input, and the decay with no input, to check the
-   movement formulas below.
+9. **Isaac's movement:**
+   - `Velocity` magnitude under steady input: expect about 4.4 at speed 1.0.
+   - Position change per update: expect about 8.8 if the movement step runs twice per update.
+   - The decay with no input: ×0.880 per step.
 
 ## Gaps (for the next pass)
 
