@@ -7369,6 +7369,779 @@
      "checked": "2 readers"
     }
    ]
+  },
+  "15.0": {
+   "name": "Clotty",
+   "move": {
+    "kind": "wander",
+    "speed": 1.0
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 4,
+     "speed": 7,
+     "fixed": true,
+     "when": "on wander events, no range check"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "Stops and fires on wander events (no range check); all shots at 7: 15.0 a 4-shot + (mode 6), 15.1 Clot an X (mode 7), 15.2 I. Blob 8-way, 15.3 a 4-ring.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "15.1": {
+   "name": "Clot",
+   "move": {
+    "kind": "wander",
+    "speed": 1.0
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 4,
+     "speed": 7,
+     "fixed": true,
+     "when": "on wander events, no range check"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "Stops and fires on wander events (no range check); all shots at 7: 15.0 a 4-shot + (mode 6), 15.1 Clot an X (mode 7), 15.2 I. Blob 8-way, 15.3 a 4-ring.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "15.2": {
+   "name": "I. Blob",
+   "move": {
+    "kind": "wander",
+    "speed": 1.0
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 8,
+     "speed": 7,
+     "fixed": true,
+     "when": "on wander events, no range check"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "Stops and fires on wander events (no range check); all shots at 7: 15.0 a 4-shot + (mode 6), 15.1 Clot an X (mode 7), 15.2 I. Blob 8-way, 15.3 a 4-ring.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "15.3": {
+   "name": "Clotty (ring)",
+   "move": {
+    "kind": "wander",
+    "speed": 1.0
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 4,
+     "speed": 7,
+     "fixed": true,
+     "when": "on wander events, no range check"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "Stops and fires on wander events (no range check); all shots at 7: 15.0 a 4-shot + (mode 6), 15.1 Clot an X (mode 7), 15.2 I. Blob 8-way, 15.3 a 4-ring.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "16.0": {
+   "name": "Mulligan",
+   "move": {
+    "kind": "wander",
+    "speed": 1.5,
+    "notes": "flees when it sees Isaac"
+   },
+   "attacks": [
+    {
+     "kind": "bomb",
+     "blast": 60,
+     "when": "1/300 roll on touching a wall; also on death (16.1)"
+    },
+    {
+     "kind": "ring",
+     "count": 4,
+     "speed": 7,
+     "fixed": true
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "16.0/16.1 flee when they see Isaac.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "A 1/300 roll on touching a wall: explode (damage 40, radius 60, half a heart) + a 4-shot + at 7. On death: flies (16.0) or an X + a troll bomb (16.1).",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "16.1": {
+   "name": "Mulligoon",
+   "move": {
+    "kind": "wander",
+    "speed": 1.5,
+    "notes": "flees when it sees Isaac"
+   },
+   "attacks": [
+    {
+     "kind": "bomb",
+     "blast": 60,
+     "when": "1/300 roll on touching a wall; also on death (16.1)"
+    },
+    {
+     "kind": "ring",
+     "count": 4,
+     "speed": 7,
+     "fixed": true
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "16.0/16.1 flee when they see Isaac.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "A 1/300 roll on touching a wall: explode (damage 40, radius 60, half a heart) + a 4-shot + at 7. On death: flies (16.0) or an X + a troll bomb (16.1).",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "16.2": {
+   "name": "Mulliboom",
+   "move": {
+    "kind": "chase",
+    "speed": 1.2
+   },
+   "attacks": [
+    {
+     "kind": "bomb",
+     "blast": 60,
+     "when": "blows up within 40 px of Isaac"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "Chases at 1.2 and blows up within 40 px; 5/5 logged hits did 1, at 27-50 px.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "recording"
+    }
+   ]
+  },
+  "22.0": {
+   "name": "Hive",
+   "move": {
+    "kind": "wander",
+    "speed": 1.0,
+    "notes": "flees"
+   },
+   "attacks": [
+    {
+     "kind": "spawn",
+     "what": "18.0|23.0|38.1",
+     "cooldown": 75,
+     "when": "Isaac within 300 px on a clear line; cooldown 75 (210 for 22.3), longer when crowded"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Flees.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Spawns (Attack Fly / Charger / Holy 38.1 / 6 minions) when Isaac is within 300 px on a clear line; cooldown 75 updates (210 for 22.3), longer in crowded rooms.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "58.0": {
+   "name": "Para-Bite",
+   "move": {
+    "kind": "chase",
+    "speed": 0.8
+   },
+   "attacks": [
+    {
+     "kind": "contact",
+     "damage": 1
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Chases at 0.8; digs on a 1/30 roll and teleports 130-1000 px from Isaac.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Untouchable from DigIn frame 8 to DigOut frame 3.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "58.1": {
+   "name": "Para-Bite (shooter)",
+   "move": {
+    "kind": "chase",
+    "speed": 0.8
+   },
+   "attacks": [
+    {
+     "kind": "aimed",
+     "speed": 7,
+     "count": 1,
+     "when": "along its own movement, not at Isaac"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Chases at 0.8; digs on a 1/30 roll and teleports 130-1000 px from Isaac.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Untouchable from DigIn frame 8 to DigOut frame 3.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "58.1 shoots at 7 along its own movement.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "35.0": {
+   "name": "Mr. Maw",
+   "move": {
+    "kind": "chase",
+    "speed": 0.6,
+    "notes": "red 0.8"
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "The body chases at 0.6 (red 0.8).",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "35.1": {
+   "name": "Mr. Maw's head",
+   "move": {
+    "kind": "tethered",
+    "radius": 110,
+    "speed": 14
+   },
+   "attacks": [
+    {
+     "kind": "charge",
+     "speed": 14,
+     "trigger": "Isaac + 3 x his velocity within 130 px on a clear line; pulled back after ~40 updates"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "The head lunges at 14 when Isaac + 3 x his velocity is within 130 px on a clear line; pulled back after ~40 updates; ~110 px reach.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "3 logged head (35.1) contact hits did 1 each.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "recording"
+    }
+   ]
+  },
+  "41.0": {
+   "name": "Knight",
+   "move": {
+    "kind": "charge_line",
+    "speed": 5,
+    "band": 20,
+    "range": 200,
+    "lead": 1,
+    "notes": "charges when the led Isaac is within 20 px of its row/column, inside 200 px, clear line; ends only at a wall (Selfless ~8.25)"
+   },
+   "attacks": [
+    {
+     "kind": "charge",
+     "speed": 5,
+     "trigger": "row/column band 20, range 200, clear line"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Charges when the led Isaac is within 20 px of its row or column, inside 200 px, on a clear line; ~5 px/update (Selfless ~8.25); the charge ends only at a wall.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Front armour isn't in its AI (likely the directional-shield check in tear collision); 41.3 is invulnerable.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "240.0": {
+   "name": "Wall Creep",
+   "move": {
+    "kind": "axis_walk",
+    "speed": 5,
+    "notes": "crawls along its wall to line up with Isaac"
+   },
+   "attacks": [
+    {
+     "kind": "aimed",
+     "speed": 8,
+     "count": 1,
+     "cooldown": 15,
+     "when": "straight out of the wall whenever on screen, cooldown 15-59 (240.1 streams ~45 shots over 90)"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Crawls along its wall to line up with Isaac at 5 px/update (3.5 for 240.1/.3).",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Fires straight out of the wall at 8 whenever on screen, cooldown 15-59; 240.1 streams ~45 shots over 90 updates.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "31.0": {
+   "name": "Spitty",
+   "move": {
+    "kind": "wander",
+    "speed": 1.0
+   },
+   "attacks": [
+    {
+     "kind": "aimed",
+     "speed": 8,
+     "count": 1,
+     "when": "1/35 roll per update, along its facing axis (not aimed)"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "A 1/35 roll per update: one shot at 8 along its facing axis, not aimed.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "55.0": {
+   "name": "Leech",
+   "move": {
+    "kind": "charge_line",
+    "speed": 15.5,
+    "band": 20,
+    "range": 2000
+   },
+   "attacks": [
+    {
+     "kind": "charge",
+     "speed": 15.5,
+     "trigger": "lined up within 20 px, no range limit"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Charges at ~15.5 when lined up within 20 px, no range limit.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "55.1": {
+   "name": "Kamikaze Leech",
+   "move": {
+    "kind": "charge_line",
+    "speed": 15.5,
+    "band": 20,
+    "range": 2000
+   },
+   "attacks": [
+    {
+     "kind": "charge",
+     "speed": 15.5,
+     "trigger": "lined up within 20 px"
+    },
+    {
+     "kind": "bomb",
+     "blast": 60,
+     "when": "explodes on death (damage 40, radius 60)"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Charges at ~15.5 when lined up within 20 px, no range limit.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Kamikaze 55.1/55.2 explode on death (damage 40, radius 60).",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "55.2": {
+   "name": "Kamikaze Leech",
+   "move": {
+    "kind": "charge_line",
+    "speed": 15.5,
+    "band": 20,
+    "range": 2000
+   },
+   "attacks": [
+    {
+     "kind": "charge",
+     "speed": 15.5,
+     "trigger": "lined up within 20 px"
+    },
+    {
+     "kind": "bomb",
+     "blast": 60,
+     "when": "explodes on death (damage 40, radius 60)"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Charges at ~15.5 when lined up within 20 px, no range limit.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Kamikaze 55.1/55.2 explode on death (damage 40, radius 60).",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "34.0": {
+   "name": "Leaper",
+   "move": {
+    "kind": "hop",
+    "air": 30,
+    "notes": "a big leap at Isaac about once per 7 landings; untouchable in the air"
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 4,
+     "speed": 9,
+     "fixed": true,
+     "when": "on landing (BigJumpDown frame 24)"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Big leap at Isaac about once per 7 landings; untouchable in the air.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "A 4-shot + at 9 on landing: all 40 recorded Leaper shots are 9.0 along the 4 axes, at BigJumpDown frame 24.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "recording"
+    }
+   ]
+  },
+  "246.0": {
+   "name": "Ragling",
+   "move": {
+    "kind": "wander",
+    "speed": 1.5
+   },
+   "attacks": [
+    {
+     "kind": "aimed",
+     "speed": 7,
+     "count": 2,
+     "when": "one at Isaac and one away"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "2 shots at 7, one at Isaac and one away.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "255.0": {
+   "name": "Night Crawler",
+   "move": {
+    "kind": "pinned",
+    "notes": "digs and teleports"
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 4,
+     "speed": 10,
+     "fixed": true,
+     "when": "on emerging"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "Digs and teleports; a 4-shot + at 10 on emerging.",
+     "src": "RE_ENEMIES E5 243fb5d",
+     "checked": "2 readers"
+    }
+   ]
   }
  }
 }
