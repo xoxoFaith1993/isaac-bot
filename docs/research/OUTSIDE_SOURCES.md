@@ -519,3 +519,18 @@ fight and one Haunt fight (the checklist is there).
   shots doing no damage in `State` 4 and 16, treat it as unconfirmed.
 - **The point of the exercise:** a careful hand translation, our pilot and a blind second reader each got some things
   wrong. The original C plus a check of every disagreement settled them all but one, and that one needs a recording.
+**Ghidra, the other 8 enemies (2026-11-26):** all decompiled by the pilot session, in
+[`RE_ENEMIES.md`](RE_ENEMIES.md) (commit `4955283`). Highlights, all hypotheses until recorded:
+- Gemini: a 3.3 s tired window after every rage.
+- The Blighted Ovum: its baby is invulnerable, and its laser only fires along its row.
+- Monstro: the landing cell is readable in `TargetPosition` at take-off.
+- Charger: the exact charge trigger is Isaac in its tile row or column within 200 px with a clear line, led by up
+  to 16 updates of his velocity, with no wind-up.
+- Trite: 15 updates of guaranteed idle after each landing, and it aims past Isaac.
+
+**Spot-checked here in the C:**
+- Charger: the trigger (`IsFrame(4)`, `|dx| or |dy| < 20`, `dist² < 40000`, `Room::CheckLine`, the `× 16` lead);
+- Gemini: the `StateFrame > 100` tired limit;
+- Trite: the landing-idle `StateFrame` check.
+
+All match. ChatGPT's blind read (round 5) is next.
