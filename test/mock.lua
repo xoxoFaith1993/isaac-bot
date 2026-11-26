@@ -79,6 +79,7 @@ local GRID = {
   ["^"] = { GridEntityType.GRID_SPIKES, GridCollisionClass.COLLISION_NONE },
   ["~"] = { GridEntityType.GRID_PIT, GridCollisionClass.COLLISION_PIT },
   ["T"] = { GridEntityType.GRID_TRAPDOOR, GridCollisionClass.COLLISION_NONE },
+  ["M"] = { GridEntityType.GRID_ROCKB, GridCollisionClass.COLLISION_SOLID }, -- metal block: bombs don't break it
 }
 
 local Room = {}

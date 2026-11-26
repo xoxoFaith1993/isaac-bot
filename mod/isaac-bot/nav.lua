@@ -893,7 +893,9 @@ function Nav.update(player)
     local plateIdx = nil
     for i = 0, room:GetGridSize() - 1 do
       local ge = room:GetGridEntity(i)
-      if ge and ge:GetType() == GridEntityType.GRID_PRESSURE_PLATE and ge.State < 3 then plateIdx = i; break end
+      if ge and ge:GetType() == GridEntityType.GRID_PRESSURE_PLATE and ge.State < 3 and not skip["plate" .. i] then
+        plateIdx = i; break
+      end
     end
     if plateIdx then
       Nav.status.goal = "pressing the button"
@@ -927,7 +929,13 @@ function Nav.update(player)
         if finished then plateWay.job = nil; return nil end
         return norm(m), shoot, false
       end
-      return norm(pos - player.Position), nil, false
+      -- no way in (sealed by metal blocks, or the tries ran out): this plate is skipped for this visit - the next
+      -- plate or the normal goals go on (2026-11-26, room 82: three reward plates sealed in metal blocks, one behind a
+      -- poop; it walked into the blocks toward the nearest sealed one for minutes)
+      skip["plate" .. plateIdx] = true
+      plateWay = nil
+      if Nav.onNote then Nav.onNote("button out of reach: skipped") end
+      return nil
     end
   end
   if not room:IsClear() then Nav.status.goal = "waiting (room not clear)"; return nil end

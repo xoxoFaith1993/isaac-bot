@@ -242,6 +242,9 @@ return {
     patches = { { file = "nav", find = "if d:IsLocked() and p and p:GetNumKeys() == 0 and not deadEdge",
                   replace = "if false and d:IsLocked() and p and p:GetNumKeys() == 0 and not deadEdge" } } },
 
+  { test = "skips a button sealed in metal and presses the reachable one", why = "unreachable plates never skipped",
+    patches = { { file = "nav", find = "      skip[\"plate\" .. plateIdx] = true\n", replace = "" } } },
+
   { test = "doesn't swap its card for a pill", why = "pocket slot check for pills/cards",
     patches = { { file = "nav", find = "(p:GetPill(0) == 0 and p:GetCard(0) == 0) and V.pill_card or 0",
                   replace = "V.pill_card" } } },

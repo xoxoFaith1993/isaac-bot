@@ -23,7 +23,7 @@ local Options = include("options")
 -- handed to the watchdog so it can build the brain's multiple-choice menu
 local MODS = { Reflex = Reflex, Nav = Nav, Danger = Danger, Options = Options, Rescue = Rescue, json = json }
 
-local VERSION = "1.2.44"
+local VERSION = "1.2.45"
 Reflex.status.mode = "full" -- fight + walk + explore (Stage 3); "combat" = fights only, "off" = hands off
 local TAG = "IBOT|"
 local BOT_SLOT = 2

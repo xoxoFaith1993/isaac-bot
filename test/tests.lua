@@ -1850,4 +1850,33 @@ run("doesn't walk back to a locked door it already saw", function()
         fmt("move %s (right = on to the new room), goal %s", tostring(move), tostring(Nav.status.goal)))
 end)
 
+-- 72. 1.2.45 (2026-11-26, room 82: reward plates sealed in metal blocks, one behind a poop): it walked into the metal
+-- toward the nearest sealed plate for minutes. A plate with no way in is skipped; the reachable one gets pressed.
+run("skips a button sealed in metal and presses the reachable one", function()
+  Mock.room({
+    "WWWWWWWDWWWWWWW",
+    "W.............W",
+    "W.............W",
+    "W.............W",
+    "D.............D",
+    "W.............W",
+    "WMMMMMMMMMM...W",
+    "WMM_MMMMMMM._.W",
+    "WWWWWWWDWWWWWWW",
+  }, { clear = true, player = Mock.tile(3, 4) })
+  Isaac.GetPlayer()._bombs = 3
+  Nav.newRoom()
+  local p = Isaac.GetPlayer()
+  local pressedReachable = false
+  for _ = 1, 30 * 12 do
+    local move = Nav.update(p)
+    Mock.step(move)
+    local col = math.floor((p.Position.X - 20) / 40) + 1
+    local row = math.floor((p.Position.Y - 100) / 40) + 1
+    if col == 13 and row == 7 then pressedReachable = true; break end
+  end
+  check("skips a button sealed in metal and presses the reachable one", pressedReachable,
+        fmt("ended at %s, goal %s", tostring(p.Position), tostring(Nav.status.goal)))
+end)
+
 return table.concat(results, "\n")
