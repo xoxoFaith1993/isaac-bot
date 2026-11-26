@@ -1390,3 +1390,165 @@ gave them back. Shared facts:
 
 (Also from this batch: **tears run at × 0.75 while Death's hourglass timer runs**. The tear update `0x66dc80`
 multiplies a tear scale by 0.75 when `room+0x7244 > 0`. `[move · F1 0x66dc80 · 1 reader (write-up session)]`)
+
+## Batch E5 (2026-11-26): floors 1-2 regulars
+
+**Reading:** one Haiku reader per half. Both halves showed new logic, so every type except Embryo got a Sonnet second
+reader. Clotty's fire mode was settled from the assembly.
+
+**Already decoded** (earlier batches; tags only):
+- **Sucker (61.0)** and **Moter (80.0):** the fly AI `0x50d3c0` (Attack Fly section). `[move · worst-8 0x50d3c0 · 2 readers]`
+- **Night Crawler (255):** the Round Worm function. Its own branch is below.
+
+**Shared blocks:**
+- "flees when it sees Isaac" = `EvadeQ` (flee) after a can-see check;
+- "wanders" = `MoveRandomlyBoss`;
+- explosion damage 40 → half a heart to Isaac (`RE_CORE.md` E2).
+
+### Clotty (15.0 Clotty, 15.1 Clot, 15.2 I. Blob, 15.3), `0x513b70`
+- **Movement:** wanders (hop animation), friction × 0.9. It flees when feared. **It stands still while attacking.**
+  `[move · E5 0x513b70 · 2 readers]`
+- **Trigger:** it attacks whenever the wander routine reports a new target (no range or line-of-sight check).
+  - 15.3 skips every 4th trigger.
+  - The attack state lasts the "Attack" animation (timeout 30 updates, 15 for 15.3).
+  `[timing · E5 0x513b70 · 2 readers]`
+- **The shot** (on the "Shoot" event): `[attack · E5 0x513b70 · 2 readers + asm]`
+  - **15.0:** mode 6, 4 shots on the axes (+);
+  - **15.1:** mode 7, 4 on the diagonals (X);
+  - **15.2:** mode 8, 8-way;
+  - all at **7 px/update** (10 in hard mode);
+  - **15.3:** a 4-shot ring at 7 (8 in hard mode), randomly rotated 0-9°.
+  - One reader guessed mode 6 for every variant; the assembly gives the 6/7/8 split.
+- 15.0 and 15.3 swap with each other depending on a room water amount (`room+0x7258` vs 0.2). `[body · E5 0x513b70 · 2 readers]`
+
+### Mulligan (16.0; 16.1; 16.2 Mulliboom), `0x5123d0`
+- **16.0 / 16.1:** **flees when it can see Isaac**, otherwise wanders; friction × 0.8. `[move · E5 0x5123d0 · 2 readers]`
+  - While touching a wall, a 1/300 chance per update to **explode**:
+    - "Explode" overlay → explosion damage 40 (radius 60) and a **mode-6 4-shot + at 7** (10 in hard mode);
+    - then it dies.
+    `[attack · E5 0x5123d0 · 2 readers]`
+- **Death:** `[attack · E5 0x5123d0 · 2 readers]`
+  - **16.0:** up to 4 flies, each a Fly 13 (7/11), Pooter 14 (1/11) or Attack Fly 18 (3/11), within 6 px;
+  - **16.1:** a mode-7 4-shot X at 7 plus a troll bomb (4.3).
+- **16.2 (Mulliboom):** **chases at 1.2**. **Within 40 px of Isaac it blows up** (damage 40, radius 60; no shots).
+  `[attack · E5 0x5123d0 · 2 readers]`
+
+### Hive (22.0; 22.1 Drowned; 22.2 Holy; 22.3), `0x512b60`
+- **Movement:** **flees when it can see Isaac**, otherwise wanders; friction × 0.8 (22.1: × 0.76).
+  `[move · E5 0x512b60 · 2 readers]`
+- **The spawn attack:** `[timing · E5 0x512b60 · 2 readers]`
+  - **Trigger:** cooldown ≤ 0, **Isaac within 300 px**, a clear line, and not feared or confused.
+  - **Cooldown:** **75 updates** (22.3: 210). It's padded by 20-69 when the room already has many enemies (a chance
+    that rises from 1/5 at 4 enemies to always at 8 or more).
+  - Out of range, it re-checks after 3 updates; blocked line, after 7.
+  - **What it spawns:** `[attack · E5 0x512b60 · 2 readers]`
+    - 22.0: an Attack Fly (18);
+    - 22.1: a Charger 23.1 at half HP;
+    - 22.2: a type 38.1 launched sideways at 8;
+    - 22.3: 6 linked type-222 minions.
+- **Death:** ceil(4 / (enemies × 0.2 + 1)) flies (Fly / Pooter / Attack Fly); 22.1 drops Chargers, 22.2 drops Embryos
+  (77). `[attack · E5 0x512b60 · 2 readers]`
+
+### Embryo (77.0), `0x510ea0` (1 reader)
+- It wanders; it flees when feared; it stops on its "Landed" event; friction × 0.8. No attack. `[move · E5 0x510ea0 · 1 reader]`
+
+### Para-Bite (58.0; 58.1 Scarred), `0x52a980`
+- **Movement:** **path chase at 0.8**. `[move · E5 0x52a980 · 2 readers]`
+- **Digging:** each update a 1/30 chance to dig. `[timing · E5 0x52a980 · 2 readers]`
+  - **"DigIn":** it re-rolls a random room spot each update, accepting only spots **130-1000 px from Isaac** on a free
+    cell.
+  - When DigIn ends it **teleports there** and plays "DigOut".
+  - **Untouchable** (collision 0) from DigIn frame 8 until DigOut frame 3. It stands still while digging.
+    `[body · E5 0x52a980 · 2 readers]`
+- **58.1 only:** **one shot at 7 along its own movement direction** (not aimed at Isaac). Cooldown 40-59, start delay
+  5-24; it only fires while moving and not feared. `[attack · E5 0x52a980 · 2 readers]`
+
+### Mr. Maw (35.0 body, 35.1 head; 35.2 / 35.3 red; 35.10 neck), `0x51e6a0`
+- **Body:** **chases at 0.6** (red: 0.8). The head rides it. `[move · E5 0x51e6a0 · 2 readers]`
+- **The head lunge:** `[attack · E5 0x51e6a0 · 2 readers]`
+  - **Trigger:** every 4th update, when **Isaac's position + 3 × his velocity is within 130 px** and the line to him is
+    clear.
+  - **Launch: 14 px/update** in that fixed direction.
+  - It's pulled back toward the body (pull 0.7 → 1.4, rising friction): ≈ 40 updates, peaking ≈ 110 px out.
+  - The neck is visual only.
+- **Death:** `[body · E5 0x51e6a0 · 2 readers]`
+  - when the head dies, the body becomes a Gusher (11) at full HP;
+  - when the body dies, the head becomes a Maw (26; red → Red Maw);
+  - the red head's death fires a mode-6 4-shot + at 8.
+
+### Knight (41.0; 41.1 Selfless; 41.2 Loyal; 41.3; 41.4 Black), `0x519dd0`
+- **Walk:** a random axis walk at 0.75 (41.1: 1.25; 41.2: 0.6; 41.4: 0.66), friction × 0.8. `[move · E5 0x519dd0 · 2 readers]`
+- **The charge:** `[attack · E5 0x519dd0 · 2 readers]`
+  - **Trigger:** every 3rd update, when Isaac's position + 0-16 updates of lead is **within 20 px of the Knight's row or
+    column, within 200 px**, on a clear line.
+  - **Movement:** along that axis, push 1.0 (41.1: 1.65), so **≈ 5 px/update** (41.1: ≈ 8.25); lane-centred.
+  - **It ends only on a wall or rock hit.**
+  - **41.4** accelerates up to push 4 (≈ 20). A hard wall hit stuns it for 45 updates.
+- **Front armour is not in this function.** It's probably the directional-shield check (`CanBeDamagedFromVelocity`)
+  seen in F1's tear collision. `[body · E5 0x519dd0 · 2 readers]`
+- **41.3 is invulnerable**, bound to a type 840. A killed 41.2 turns into 41.3. `[body · E5 0x519dd0 · 2 readers]`
+
+### Wall Creep (240.0-240.3), `0x542930`
+- **Movement:** it sticks to the nearest wall and **crawls along it toward Isaac's x (top/bottom walls) or y (side
+  walls) at a fixed 5 px/update** (240.1 / 240.3: 3.5). It stops within 10 px of lining up.
+  `[move · E5 0x542930 · 2 readers]`
+- **The attack:** `[timing · E5 0x542930 · 2 readers]`
+  - **Trigger:** cooldown < 0 and **on screen**; no range or line-of-sight check, no aiming.
+  - **Cooldown:** 15-59 updates after each attack.
+  - **What it fires:** `[attack · E5 0x542930 · 2 readers]`
+    - **240.0 / 240.2:** **one shot at 8 straight out of the wall** (240.2: homing 0.8);
+    - **240.1:** a **90-update stream, a shot every 2 updates (≈ 45)**, at 8 out of the wall;
+    - **240.3:** a shot every 3 updates (mode 4, unresolved).
+
+### Spitty (31.0, 31.1) and Leech (55.0; 55.1 Kamikaze; 55.2), `ai_charger` `0x534300`
+- **Spitty:** a random axis walk at 0.72, friction × 0.85. `[move · E5 0x534300 · 2 readers]`
+  - **The spit:** a 1/35 chance per update (no range check) → **one shot at 8 along its facing axis** (not aimed).
+    `[attack · E5 0x534300 · 2 readers]`
+  - **31.1:** 10 shots at 18 down that axis, plus 3-4 boss shots. On death, two 8-shot rings at 8.
+- **Leech:** a walk at 0.85. `[move · E5 0x534300 · 2 readers]`
+  - **The charge:** checked every 4th update, when the led Isaac (0-16 updates) is **within 20 px of its row or column**
+    on a clear line. **No range limit.** `[attack · E5 0x534300 · 2 readers]`
+  - **Movement:** push 1.55, friction 0.9, so **≈ 15.5 px/update**, lane-centred.
+  - It ends on a wall, 6 stuck updates, or fear.
+  - **55.1 and 55.2 explode on death** (damage 40, radius 60). `[attack · E5 0x534300 · 2 readers]`
+
+### Leaper (34.0, 34.1) and Ragling (246.0, 246.1), `ai_hopper` `0x52cd30`
+- **Hops** (shared): `[move · E5 0x52cd30 · 2 readers]`
+  - **Near Isaac** (Leaper: within 130 px): it hops at his position (Ragling overshoots by 0-60%).
+  - Otherwise it hops 95 px (Ragling 95-215) in a random direction.
+  - Ragling waits 15 updates between hops.
+- **Leaper's big leap:** `[attack · E5 0x52cd30 · 2 readers]`
+  - about 1/7 per landing (not while feared), **aimed at Isaac's position**;
+  - **untouchable while airborne** (collision 0);
+  - landing: **34.0 fires a mode-6 4-shot + at 9** (12 in hard mode); 34.1 fires 6 boss shots.
+- **Ragling:** 1/3 per hop decision → "Appear", then **two shots at 7: one at Isaac, one directly away**.
+  `[attack · E5 0x52cd30 · 2 readers]`
+  - 246.1 revives (invulnerable) while its Rag Man parent lives.
+
+### Night Crawler (255.0), `0x544cd0` branch
+- **Cycle:** DigIn → hidden (untouchable; teleports 50% per update to room centre + 60-310 px, only 100-1000 px from
+  Isaac) → DigOut. `[move · E5 0x544cd0 · 2 readers]`
+- **On DigOut's "Shoot" event:** a **mode-6 4-shot + at 10** with orbit flag 0x800. Not aimed.
+  `[attack · E5 0x544cd0 · 2 readers]`
+
+### Bot meaning (E5)
+- **Fleers (Mulligan, Hive):** they run when they see Isaac. Corner them.
+  - A **Mulliboom explodes within 40 px**: shoot it from range.
+  - A Hive spawns every 75 updates within 300 px. Kill it fast or break line of sight.
+- **Mode-6 crosses** (Clotty 15.0, Leaper, Night Crawler, Red Mr. Maw, the Mulligan blast): stand diagonal to the
+  source. **Clot 15.1's X**: stand on its row or column.
+- **Lane chargers** (Knight ≈ 5-8, Leech ≈ 15.5): don't line up within 20 px of their row or column. The Leech has no
+  range limit.
+- **Mr. Maw:** keep more than 130 px from its head, allowing for his own 3-update lead.
+- **Wall Creep:** never stand in front of it along its wall's normal; it lines up with you at 5 px/update.
+- **Para-Bite:** untouchable while digging; it reappears 130-1000 px away.
+
+### Record to confirm (E5)
+- Clotty 6 / 7 / 8 modes at 7.
+- Hive's 300 px range and 75-update cooldown.
+- Mulliboom's 40 px trigger.
+- Mr. Maw's 130 px lunge at 14.
+- Knight charge ≈ 5 and Leech ≈ 15.5.
+- Wall Creep 5 px/update and its shot at 8.
+- Para-Bite teleport ranges.
+- Leaper 4-shot at 9.

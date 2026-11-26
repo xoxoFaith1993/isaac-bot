@@ -872,8 +872,10 @@ the REPENTOGON field table. Real offsets: `[body · F1 0x799750, 0x7c8250 · 2 r
 - falling accel **0x1480**;
 - tear range **0x1484**;
 - recent-movement vector **0x1650**.
-(The table's 0x1470 is a per-player shot counter here. The E2c i-frame field 0x13c0 matches the same +8 shift.) Not
-every field shifts by exactly 8: two readers saw +0xc at 0x1578.
+(The table's 0x1470 is a per-player shot counter here. The E2c i-frame field 0x13c0 matches the same +8 shift.)
+**From the speed/luck block on, the shift is +0xc**, confirmed in TakeDamage's luck-scaled chances: move speed 0x1568,
+**luck 0x156c**, **canFly 0x1570**, tear displacement 0x1578. Check each field before reading memory directly.
+`[body · F1/F2 0x77ad70 · 1 reader (write-up session)]`
 
 - **Firing** (`FireTear`): `[move · F1 0x799750 · 2 readers]`
   - **Spawn:** the tear spawns as type 2 one velocity-step ahead of the muzzle, then runs one update and steps back,
