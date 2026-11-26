@@ -74,8 +74,8 @@ the author can move an item up.
 ## Tier 3: floors 3-6 and the bosses to Delirium
 | Batch | Item | Status |
 |---|---|---|
-| G1 | Common enemies of Caves, Catacombs, Flooded Caves, Mines (incl. the mole floors) and Depths, by future hit counts | [ ] |
-| G2 | Bosses: Chub, Pestilence, Peep, Loki, Mask of Infamy, Gurdy Jr. variants, Bloat, The Hollow, Carrion Queen, Mom | [ ] |
+| G1 | Common enemies of Caves, Catacombs, Flooded Caves, Mines (incl. the mole floors) and Depths, by future hit counts | [x] 294a96c, 0b191c0 |
+| G2 | Bosses: Chub, Pestilence, Peep, Loki, Mask of Infamy, Gurdy Jr. variants, Bloat, The Hollow, Carrion Queen, Mom | [x] e7bf184 |
 | G3 | Mom's Heart / It Lives, Satan, Isaac, ???, The Lamb, Hush | [ ] |
 | G4 | **Delirium**: how it picks and copies bosses | [ ] |
 
@@ -112,3 +112,4 @@ the author can move an item up.
 - 2026-11-26: F2 done (f755a66): charge weapons, tear period fireDelay+1, flight = grid class 0-3, piercing/spectral. Not checked against recordings. G1a is in its second read.
 - 2026-11-26: G1a done (294a96c; RE_ENEMIES.md Batch G1a). Not checked against recordings. G1b-G4 handover in runs/research/re/HANDOVER.md; the Ghidra session proposed a fresh Sonnet session (waits on the author).
 - 2026-11-26: G1b done (0b191c0; Record-to-confirm list in RE_ENEMIES.md), by the fresh Sonnet decompile session. Not checked against recordings. G2-G4 follow.
+- 2026-11-26: G2 done (e7bf184; 2 Sonnet readers). Not checked against recordings. G3 and G4 next.
