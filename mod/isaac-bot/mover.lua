@@ -394,6 +394,10 @@ local function run(ctx, plan, si, dir)
   local acc = ctx.acc
   local wallMemo, mWall = ctx.wallMemo, ctx.S.m_wall
   local dfx, dfy = ctx.driftX or 0, ctx.driftY or 0 -- an outside push (Mover.observeDrift)
+  -- Isaac moves his Velocity TWICE per game update (recordings 2026-11-26: position change / |Velocity| = 1.97 over
+  -- 4,159 pairs; enemies move it once). His top speed is learned from his Velocity, so without this the plans moved
+  -- him at half his real speed. Setting isaac_steps (1 = the old sim, 2 = measured); A/B decides.
+  local ksteps = ctx.ksteps or 1
   local lock = nil -- where this plan was when a known dash locked its aim (copied: branches must not share it)
   if ctx.hasDash then
     lock = {}
@@ -404,7 +408,7 @@ local function run(ctx, plan, si, dir)
     local dt = t - prevT
     for _ = 1, dt do
       vx, vy = vx + (tx - vx) * acc + dfx, vy + (ty - vy) * acc + dfy
-      local nx, ny = x + vx, y + vy
+      local nx, ny = x + vx * ksteps, y + vy * ksteps
       local key = (nx // 10) * 4096 + (ny // 10)
       local blk = wallMemo[key]
       if blk == nil then blk = blockedAt(ctx, Vector(nx, ny)) end
@@ -731,7 +735,9 @@ function Mover.choose(ctx)
   ctx.pr = player.Size
   ctx.vel = player.Velocity
   -- Isaac's learned movement (top speed per speed stat, acceleration); the old constant until it's learned
-  if Mover.top then ctx.speed = Mover.top * math.max(0.3, player.MoveSpeed) end
+  ctx.ksteps = S.isaac_steps or 1
+  if Mover.top then ctx.speed = Mover.top * math.max(0.3, player.MoveSpeed)
+  else ctx.speed = ctx.speed / ctx.ksteps end -- (the starting guess is a distance per update, not a velocity)
   ctx.acc = Mover.acc
   -- a measured outside push, only when it's real (tiny noise isn't worth bending every plan for)
   local dr = Mover.drift
