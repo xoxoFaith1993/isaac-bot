@@ -1849,3 +1849,100 @@ are the code's, so top speeds are estimates. Variant and subtype numbers are the
 - Chub charge speed and the 20 px gate; Peep ring speed (10 or 12) and jump distance factor.
 - Loki shots at 12 and the +, ×, + order; teleport only within 300 px.
 - Mask charge speed; Mom no-stomp near doors and eye shot speeds.
+
+## Batch G3 (2026-11-26): Mom's Heart / It Lives, Satan, Isaac, ???, The Lamb, Hush
+
+**Readers:** two blind Sonnet readers for Heart, Satan and Lamb, two for Isaac, ??? and Hush, and two more for the
+Heart's and Lamb's pattern helpers. Isaac's volley count and post-sweep rings were settled in the C. Satan's angles
+and several beam and laser details are lost arguments.
+
+### Mom's Heart / It Lives (78), `0x4db120`; attacks `0x4d9c30`, `0x4dae70`
+- **Never moves.** Untouchable while retracted and for the first 6 updates coming down. Phases at about 68% and 35%
+  HP; the last never retracts. Subtype 1: HP × 1.4. `[body · G3 0x4db120 · 2 readers]`
+- Retracts after a meter of 100 runs out (−1 per update, −3 more when hurt). Cooldown 75, which counts down mainly with
+  fewer than 3 enemies. Retracted, it spawns enemies along a half ellipse below (radius 40 or 180) up to table limits;
+  at 20% HP or less it attacks instead. Spawn tables unread. `[attack · G3 0x4db120 · 2 readers]`
+- **Attacks are rings (mode 9)**, picked uniformly by subtype and phase (subtype 0: ids 0-3 / 2-7 / 0-7; subtype 1:
+  10-13 / 14-17 / 10-17; retracted: 8; at ≤ 20%: 9 or 18). An attack lasts over 180 updates.
+  `[attack · G3 0x4d9c30 · 2 readers]`
+
+| Id | Shots @ speed, every N updates |
+|---|---|
+| 0 / 10 | 2-3 @ 3 every 2-6, spiralling |
+| 1 | 8 @ 3 every 18 |
+| 2, 3 | 10 (phase 3: 4) @ 5 per heartbeat |
+| 4, 5 | 3 @ 3 every 6; 3 @ 3.5 every 4 |
+| 6, 7 | 1 aimed @ 8→15 every 4; 5 @ 6 every 4 |
+| 11, 14, 17 | 8 @ 5 every 16; 5 @ 3 every 4; 8 @ 8 every 8 |
+| 12, 13, 15, 16 | double rings: 8@3 + 8@6; 8+8 @ 6 every 8; 4+4+12 @ 3 every 30, curving |
+| 9, 18 | **lasers**: 9 = four, turning 2°/update after 15-44; 18 = two endless ones plus aimed shots @ 8 every 9 |
+
+### Satan (84), `0x4839d0`
+- **First form:** starts after 130 updates behind adds; Satan activates once alone. Statue phases don't collide.
+  `[body · G3 0x4839d0 · 2 readers]`
+- **Spread:** aimed with 10 updates of lead, alternating 5 shots (0, ±14, ±28°) and 4 (±9, ±28°, **gap in the
+  middle**); about 8.4 within 300 px, else 10.2. Often repeats. `[attack · G3 0x4839d0 · 2 readers]`
+- **Twin rings** from x ± 100: partial rings of 14 slots at 7.5. **Twin lasers** when Isaac is 40-100 px off in x: from
+  x ± 100, sweeping 40° at 1.5°/update. **Single laser** when Isaac's 50-update lead crosses his column.
+  `[attack · G3 0x4839d0 · 2 readers]`
+- Picks 1/15 per update (faster after a laser): 30% spread, 70% rings. Stays at y ≥ 245. `[timing · G3 0x4839d0 · 2 readers]`
+- **Feet (variant 10):** stomp on Isaac's position at the start, no lead, ≥ 111 px apart; hittable only after the Stomp
+  event; shared HP. `[attack · G3 0x4839d0 · 2 readers]`
+
+### Isaac (102.0), `0x467060`
+- Anchored at the spawn point until **phase 3 (< 50%)**; phase 2 below 75%. No attack until hurt; idle 15-104.
+  `[move · G3 0x467060 · 2 readers]`
+- **Volleys:** 3-8 (rising with a counter) every 3-6 updates, same angles each volley, first after 3 updates (19 in
+  phase 3): 10 curving at 7 + 10 opposite at 11; 10 straight at 7; 8 at 7 alternating 22.5°; 8 curving at 12.
+  `[attack · G3 0x467060 · 2 readers + settled in C]`
+- **Phase 2:** one ring, alternating 4 bursting shots at 7 and 8 at 10. Cooldown 40, then 1/4 per update: **two light
+  beams** 5 updates apart (1/3 of them lead Isaac), or 2 Angelic Babies. `[attack · G3 0x467060 · 2 readers]`
+- **Retaliation:** after enough damage, 1-3 shots at Isaac's position (± 6°) at 8 / 6; phase 3 fires them cardinally.
+  `[attack · G3 0x467060 · 2 readers]`
+- **Phase 3:** moves between attacks to line up on Isaac's row or column 120-200 px away. `[move · G3 0x467060 · 2 readers]`
+- **Light sweep** at 50/40/30/20/10% HP: gone and untouchable; a diagonal line of beams every 8 updates marching 75 px
+  from one side; reappears ≥ 100 px away and fires 8 rings of 10 at 7. `[attack · G3 0x467060 · 2 readers]`
+
+### ??? (102.1) and variant 2, same function
+- Phases at 70% and 50%; anchored until phase 3. `[move · G3 0x467060 · 2 readers]`
+- Volleys of 6-9 **fixed spokes** at 7 from 20 px below him (curving under 90%; some homing and big early).
+  Phase 2: 4 homing at 10 / 8 homing at 8. `[attack · G3 0x467060 · 2 readers]`
+- Below 90% HP: 2-5 flies or pooters. Phase 3: chases weakly; every 100 updates 50% **teleports about 150 px ahead of
+  Isaac's movement**. `[attack · G3 0x467060 · 2 readers]`
+- Variant 2 is Hush's first form: on death it spawns Hush at the top centre. `[body · G3 0x467060 · 2 readers]`
+
+### The Lamb (273), `0x4878e0`; patterns `0x4872b0`
+- Chases at 2.0; attacks every 60-89. Head splits off below 50%. `[move · G3 0x4878e0 · 2 readers]`
+- **Phase 1:** 50% 12 explosive lobs all round, 50% a ring pattern. **Head:** about 25% each: 15 homing lobs at Isaac,
+  a ring pattern, brimstone cross, dash or hop. `[attack · G3 0x4878e0 · 2 readers]`
+- **Ring patterns** (~120 updates): 5 @ 12 every 3 (turning 1.5°/update); 3 @ 8 every 22; 10 @ 9 every 22; 7 @ 9 every
+  8, homing, aimed cone; 8 @ 9 every 13; 3 @ 9 every 10, strong homing. `[attack · G3 0x4872b0 · 2 readers]`
+- **Brimstone:** 4 cardinal beams, static for 90, or turning ± 90° at 2°/update after 15-44. `[attack · G3 0x4878e0 · 2 readers]`
+- **Dash** (aligned within 20 px): 24-update flashing warning, then 30 updates at 7.5-12 plus 4 homing. The other half
+  is a hop with **no warning** that lands past Isaac, no contact for 7-8 updates. `[attack · G3 0x4878e0 · 2 readers]`
+- The body stays put and sometimes throws 12 lobs plus up to 4 Attack Flies while the head is idle; a dead body is
+  harmless. `[attack · G3 0x4878e0 · 2 readers]`
+
+### Hush (407), `0x4c3ba0`
+- Moves at most 2. **Invulnerable** while appearing and while flat (states 16, 700, 710, 720). **Touching him flat
+  makes him pop out** (vulnerable) with a 20-speed push. `[body · G3 0x4c3ba0 · 2 readers]`
+- Retracts at 80/60/40/20% HP; flat lasts over 30 updates, until his shots mostly clear, at most 181, and **never
+  attacks** in state 16. `[timing · G3 0x4c3ba0 · 2 readers]`
+- **Face patterns** (~150 updates, 1-3 overlaid): aimed bursts at 7, spinning spirals at 5, curved rings at 4-6,
+  accelerating rings, and a 60-shot ring at 4 with a gap of about 40° toward Isaac. `[attack · G3 0x4c3ba0 · 2 readers]`
+- **Face streams:** 2-4 rounds of 60-179 updates, three curving streams at 6; only the last turns toward Isaac.
+  **Lasers** (last phase): two ground lasers ± 45° off Isaac's line for 60-179 updates plus slow 5-shot rings at 3.
+  Three big bursting shots, gaper waves, flies (cap 20). A chase only after about 12 s more than 400 px away.
+  `[attack · G3 0x4c3ba0 · 2 readers]`
+- After attacks he idles about 30 updates (60 after the big shots). `[timing · G3 0x4c3ba0 · 2 readers]`
+
+### Bot meaning (G3)
+- **Heart:** wait out retracts; the rings are fixed-angle, so move between spokes and keep distance for lasers.
+- **Satan:** the 4-shot spread has a middle gap; don't stand 40-100 px off his column; stomps target where you were.
+- **Isaac / ???:** step between fixed spokes; keep moving in the sweep; ??? teleports ahead of your motion.
+- **Lamb:** stay off his rows and columns for the dash and brimstone.
+- **Hush:** touch him to open him; state 16 is safe time.
+
+### Record to confirm (G3)
+- Satan's spread speeds (8.4 / 10.2) and the 4-shot gap; Heart ring speeds; Isaac ring counts and beam delay.
+- Lamb dash warning length; Hush pop-out on touch, 60-shot ring gap.
