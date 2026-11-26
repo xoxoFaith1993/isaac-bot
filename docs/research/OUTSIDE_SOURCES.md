@@ -355,7 +355,7 @@ read in full, about 600 lines). In our own words:
 | Laser (`STATE_ATTACK2`, 9) | at the "Shoot" event: a thick laser **straight down**. Pink: two bouncing diagonal lasers (down-left, down-right). Black: throws 1-2 spiders toward the midpoint between it and Isaac | it keeps sliding while it lasers |
 | Lil' Haunt, orbiting (`STATE_IDLE`) | circles the Haunt at 50 px, takes no damage, touches only the player, flies over rocks | **never shoot orbiting Lil' Haunts** |
 | Lil' Haunt, chasing (`STATE_MOVE`) | the first one detaches after about 90 updates (3 s), the rest once one has died. It accelerates toward **where Isaac is heading** (his position plus his velocity scaled by the distance) | it cuts Isaac off; running straight lets it catch him |
-| Lil' Haunt shot | only after 90 updates of chasing, **only within about 63 px**, with a 1-in-50 chance each update: one shot at speed 10, aimed at Isaac's position plus 5 updates of his velocity | keeping more than 70 px away means it never shoots; up close, change direction instead of strafing straight |
+| Lil' Haunt shot | only after 90 updates of chasing, **only within about 63 px** (**corrected: 200 px**; see the Ghidra pilot below), with a 1-in-50 chance each update: one shot at speed 10, aimed at Isaac's position plus 5 updates of his velocity | it shoots from across most of the room, so change direction instead of strafing straight |
 
 **Matches our data:**
 - Our Haunt hits are 81 Lil' Haunt body contacts and 50 shots from type 260.
@@ -371,8 +371,8 @@ attacks, `I1`, and the side-dash trigger.
 
 **Usable once one recording confirms it** (knowledge edits for the main session, in `boss_tactics.json`):
 - `260.10`: orbiting Lil' Haunts (`State` 3, animation Float) are invulnerable, so add them to `never_aim`.
-  Chasing ones (`State` 4) are the targets. Add a 70 px berth (they only shoot within about 63 px) and
-  `how: change_direction` for their led shot.
+  Chasing ones (`State` 4) are the targets. Add `how: change_direction` for their led shot. (A
+  "70 px berth" was suggested here first; the real range is 200 px, so a berth doesn't stop the shot.)
 - `260.0`: invulnerable in `State` 4 and 16 (IdleSkin, AngrySkin, Peel), so add those to `invulnerable_while`.
   Add a safe window of `StateFrame < 60` after each attack, the time to step under it and shoot. Add the side-dash
   rule: more than 40 px below its line.
@@ -429,7 +429,9 @@ covered):
   stored in `V1` at take-off.
 
 **The Haunt, two blind readings compared:** all numbers match (60-update gap, 1 in 60, 40 px side-dash band, 10-15
-dash, 63 px Lil' Haunt range, 5-update lead, orbit 50 px). On slips:
+dash, the Lil' Haunt range, 5-update lead, orbit 50 px). But both readings copied the same mistake: the community
+file's "63 px" range is really 200 px in the game's code (Ghidra pilot, below). Two readers of one source can't catch
+an error in the source itself. On slips:
 - **GPT caught two that we missed:**
   - the Pink champion's angle multiplies the whole `V2` vector instead of `V2.X` (line 197);
   - the Lil' Haunt's parent subtype is overwritten by its own (line 439; GPT cited 442-443, a small line slip).
@@ -454,3 +456,40 @@ game itself. When it has output, the same blind second read applies.
 [Widow/Common.lua](https://github.com/Guantol-Lemat/Isaac.LuaDecomps/blob/main/_Legacy/Actor/Boss/Widow/Common.lua),
 [Haunt.lua](https://github.com/Guantol-Lemat/Isaac.LuaDecomps/blob/main/_Legacy/Actor/Boss/Haunt.lua),
 [Gaper.lua](https://github.com/Guantol-Lemat/Isaac.LuaDecomps/blob/main/Isaac/Content/Actor/Enemy/Gaper.lua).
+---
+
+## 2026-11-26: Ghidra pilot, the game's own code (our own work, cross-checked)
+
+**What it is:** our own decompile of a copy of `isaac-ng.exe` (Ghidra, plus REPENTOGON's signatures), done in a
+separate session. Full method and results: [`RE_PILOT.md`](RE_PILOT.md); scripts in `tools/re/`.
+
+**Verdict:** works. **GO** for the other worst enemies.
+- **The Haunt:** the decompiled AI matches the community `Haunt.lua` on every number but one. The Lil' Haunt's shot
+  range is **200 px** (`dist² < 40000`), not 63 px. The hand translation dropped a zero, and both of our blind
+  readings copied it. The real code also settles the `controllerIdx` slip: it's -1, as we guessed.
+- **Dingle:** the full behaviour table is in `RE_PILOT.md`. In short:
+  - **no attack in the first 30 updates of each Idle** (15 for Dangle);
+  - **3 dashes** (Red 4, Black 1), each aimed at Isaac's position at that moment, no lead, with a 12-15 update pause
+    between them;
+  - Tired lasts about 2-3 s, with no attacks;
+  - the triple Spit is aimed at Isaac's position with no lead, at ±16°;
+  - the Black champion fires an 8-way ring instead.
+  - Champions are `SubType` 1 (Red) and 2 (Black).
+  - Nothing in the code makes the Red champion's dashes slower or shorter, which contradicts the wiki (check it in a
+    recording).
+
+**How it was checked:**
+- From this session, three spots read in the decompiled C:
+  - the Lil' Haunt `40000.0` check (with the 90-update delay);
+  - Dingle's IDLE threshold (30, or 15 for Dangle), its 1 in 20 (or 10) roll, then 1/3 Whistle and 1/2 BeforeSlide,
+    else Dance;
+  - the 12-15 update pause (`(rand & 3) + 12`) and the first-dash poop roll (1 in 5).
+- All match `RE_PILOT.md`.
+- ChatGPT's blind read of the same C (round 4) is still to come.
+
+**Usable now:** nothing directly. The `boss_tactics.json` suggestions in `RE_PILOT.md` wait for one recorded Dingle
+fight and one Haunt fight (the checklist is there).
+
+**Worth learning from:**
+- The original code beats every secondary source, including a careful hand translation that two readers agreed on.
+- Keep the method, not the addresses: every game update moves them.
