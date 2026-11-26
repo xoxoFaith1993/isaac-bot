@@ -5,6 +5,30 @@ Method, build and rules: see `RE_PILOT.md` (same build, same pipeline). This fil
 **Recording check (2026-11-26):** Sloth, Charger and the Gurgling charge trigger were checked against real recorded
 fights. See "Recording check" at the end of this file for what's confirmed, contradicted or not covered.
 
+**Check labels (added 2026-11-26; feeds `knowledge/enemy_cards.json`, see `docs/FORECAST_PLAN.md` "The fallback").**
+- **Format:** every fact has `[category · batch address · checked]`.
+  - **Category:** move / attack / timing / body / terrain.
+  - **Checked:** `1 reader` / `2 readers` / `recording` / `contradicted`.
+- **From Batch E3 on, the label sits on each bullet.**
+- **Earlier batches (this file, `RE_CORE.md`, `RE_PILOT.md`) were labelled here, as tags only, with no re-reading.**
+  Every fact from those batches is `2 readers` (both blind readers, or one reader plus the community decomp for the
+  pilot), except the ones below.
+
+| Fact | Label |
+|---|---|
+| Dingle: the Idle ≤ 30 gate; 3 dashes; the 12-15 pause; Tired 61-90; the dash aimed at Isaac's position; the Spit triple at ±16° | `[timing/move/attack · pilot 0x4898c0 · recording]` |
+| Dingle: spit speeds 10 / 9 | `[attack · pilot 0x4898c0 · contradicted]` (really 12 / 10.8, the hidden ×1.2) |
+| Haunt: attack gap > 60; no damage in State 4; pinned to the top wall; the spit straight down | `[timing/body/move/attack · pilot 0x4855e0 · recording]` |
+| Lil' Haunt: 200 px shot range; no damage while orbiting; speed 10 | `[attack/body · pilot 0x4855e0 · recording]` |
+| Lil' Haunt: shot led 5 updates | `[attack · pilot 0x4855e0 · contradicted]` (it aims at his position) |
+| Sloth: StateFrame 5; the Charger spawn (30 px, already charging); attack end at 30; the lob shape | `[timing/attack · worst-8 0x4780e0 · recording]` |
+| Sloth: the lob aimed at Isaac | `[attack · worst-8 0x4780e0 · contradicted]` (it isn't aimed at him) |
+| Charger and Gurgling: the charge triggers; V1 1.3; the Gurgling charge speed and creep | `[timing/move/terrain · worst-8 + E1 0x534300 · recording]` |
+| Shots: the spread tail ×1.2 / 0.4; the Host's shot speed; Gurdy's shot speed | `[attack · L1 0x6d2bb0, Host, E1 0x480bf0 · recording]` |
+| Hazards: spikes 2; bomb damage 2; creep 1 damage; the curse door 1 damage | `[terrain · E2 0x725e10, E2/E2c 0x705fe0, A, E2c 0x7136e0 · recording]` |
+| Physics and speed: the one-step enemy physics; the Gaper's angry speed | `[move · D 0x6b5720, B · recording]` |
+| Isaac's top speed 2.07 | `[move · L2 0x781fc0 · contradicted]` (fixed to ≈ 8.8, the hidden sqrt in the friction) |
+
 **How to read these tables:**
 - Every claim is a **hypothesis** until the recorder (`record|1`) confirms it. Each section ends with what to record.
 - The AI runs **30 updates per second** (30 updates = 1 s).
@@ -900,3 +924,151 @@ noted.
 - **Gurdy:** summons whenever Isaac's y ≤ 200; the spray direction by Isaac's side; the start position y = 400.
 - **Gurdy Jr.:** a charge every 3rd idle (always below 100 HP); charge peak speed.
 - **Duke:** flies parented until State 8; burst speed 18; release every ~40 updates on average.
+
+## Batch E3 (2026-11-26): the sins (Gluttony, Envy, Pride, Lust, Greed, Wrath)
+
+Two blind readers (Sonnet and Haiku), per the reading policy for bosses and minibosses. Disagreements were settled in
+the C by the write-up session; each is noted where it happened. Labels: `[category · batch address · checked]`.
+- **No sin blocks damage or reads the damage queue.** Their hits all land normally. `[body · E3 all six · 2 readers]`
+- **Speeds:** every sin multiplies its friction each update and adds `push / friction`, so the steady speed is
+  `push / (1 − f)` (the physics step in `RE_CORE.md`, Batch D). The figures below use that formula, assuming the base
+  friction is 1. A recording confirms them.
+- **The lists below give variant 1 (Super) only where it differs.**
+
+### Gluttony (49.0, Super 49.1), `0x532ed0` (shared with types 39 and 836)
+- **Walk:** a random axis walk at 0.7, with friction × 0.8. No chase. `[move · E3 0x532ed0 · 2 readers]`
+- **It decides only every 3rd update** (`IsFrame(3)`). `[timing · E3 0x532ed0 · 2 readers]`
+- **The fat attack (State 8):**
+  - **Trigger:** a 1-in-7 roll per decision, then **Isaac closer than a random 70-200 px**.
+    `[timing · E3 0x532ed0 · 2 readers]`
+  - **What fires:** on the anim's "Shoot" event, **an 8-way ring (mode 8) at 8 px/update**. It is 12 when an unknown
+    helper (`0x6dfc20`) returns ≥ 1. `[attack · E3 0x532ed0 · 2 readers]`
+  - **Super only:** it also fires **5 boss shots** at Isaac's current position (within ±30°, speed 3.5-10.5).
+    `[attack · E3 0x532ed0 · 2 readers]`
+- **The laser (State 9):**
+  - **Trigger:** used when the fat attack didn't go (the 1/7 roll hit but Isaac was too far, or a 1/10 roll hit). It
+    also needs all of these: `[timing · E3 0x532ed0 · 2 readers]`
+    - **Isaac within 20 px of its row or column;**
+    - **closer than 400 px;**
+    - **Gluttony on screen;**
+    - not under a status flag (`0x1000a00`; probably fear or confusion).
+  - **Tell:** the "Attack01" Up/Down/Horiz animation ("Attack02" for Super). `[attack · E3 0x532ed0 · 2 readers]`
+  - **The beam:** fixed at the "Shoot" frame, along the axis toward Isaac from its side (pos.x + 6 × dir.x, offset −20
+    up). Very likely cardinal, not aimed. `[attack · E3 0x532ed0 · 2 readers]`
+  - **Super fires two beams**, the second the mirror image (opposite side). `[attack · E3 0x532ed0 · 2 readers]`
+  - The laser's lifetime and frame number are not in this function.
+  - *Settled:* one reader read a laser angle of 190 / −10. The C writes 3000.0 or −10.0 into laser field +0x358,
+    picked by the aim's y. It's probably the draw depth, not an angle.
+- **It stands still** during both attacks until the animation ends. That's the opening.
+  `[move · E3 0x532ed0 · 2 readers]`
+- It stamps 900 into the room grid under itself (likely "blocked" for pathing). `[terrain · E3 0x532ed0 · 2 readers]`
+
+### Lust (47.0, Super 47.1), `0x478cf0`: no states, pure chase
+- **Line of sight clear:** it pushes 0.65 toward **Isaac's position + 10 × his velocity** (a 10-update lead), with
+  friction × 0.95. That gives a **steady speed ≈ 13 px/update**, the fastest sin. `[move · E3 0x478cf0 · 2 readers]`
+- **Line blocked:** the path chase toward Isaac's current position at 0.996 (≈ 6.6 px/update), with no lead.
+  `[move · E3 0x478cf0 · 2 readers]`
+- **No attack; contact damage only.** It never stops. `[attack · E3 0x478cf0 · 2 readers]`
+- **Super:** spawns effect 1000.22 (red creep, as the Gurgling trail) every 7th update. `[terrain · E3 0x478cf0 · 2 readers]`
+  - The readers didn't name that effect. The red-creep id comes from Batch A, so check it in a recording.
+
+### Wrath (48.0, Super 48.1), `0x479000`
+- **Walk:** a random axis walk at 1.0, with friction × 0.85. `[move · E3 0x479000 · 2 readers]`
+- **After a bomb:** it walks randomly only within 130 px of its bomb, and otherwise stands still. `[move · E3 0x479000 · 2 readers]`
+  - *Settled:* the "Wrath: Evade own bomb" line is only a debug log. There's no hidden evade code.
+- **Plain bomb:** a 1 / max(60, distance) chance per update (≈ 1/60 when Isaac is within 60 px, rarer when far). It
+  plays "Attack" and drops a bomb in place. `[timing · E3 0x479000 · 2 readers]`
+- **Aimed attack:**
+  - **Prediction:** it predicts Isaac at his position + a random 0-16 × his velocity.
+  - **Conditions:** the prediction must be within 20 px of Wrath's row or column, **closer than 200 px**, and on a clear
+    line. `[timing · E3 0x479000 · 2 readers]`
+  - **50/50:** a **thrown bomb** (10 px/update along that axis) or a **charge** along it.
+    `[attack · E3 0x479000 · 2 readers]`
+- **The bomb:**
+  - spawned at the 6th update of State 9 (stateFrame > 4) on Wrath's tile centre;
+  - variant 0 (normal) or **4 (Super: mega troll bomb)**;
+  - its fuse comes from `RE_CORE.md` E2c: 45 updates for variant 0, 45-74 for variant 4.
+  `[attack · E3 0x479000 · 2 readers]`
+- **The charge:**
+  - push 1.5, friction × 0.68, so a **steady speed ≈ 4.7 px/update**;
+  - it's **pulled 10% per update toward its lane's centre**;
+  - **it ends only on a wall or rock hit**. `[move · E3 0x479000 · 2 readers]`
+- **Rest:** **61 updates (≈ 2 s) after each bomb before the next attack**; none after a charge.
+  `[timing · E3 0x479000 · 2 readers]`
+
+### Greed (50.0, Super 50.1), `0x479910`
+- **Walk:** a random axis walk at 1.0, with friction × 0.75. `[move · E3 0x479910 · 2 readers]`
+- **Choosing an attack:** each update a 1-in-50 chance; then a 1-in-3 roll leads to **summon** if the room has fewer
+  than 3 enemies (a room-counter sum), and otherwise to **shoot**. `[timing · E3 0x479910 · 2 readers]`
+- **The shot:** `[attack · E3 0x479910 · 2 readers]`
+  - aim locked at stateFrame 1 (the direction to Isaac × 10; likely cardinal, with 4 animations);
+  - **fires at stateFrame 5**: **mode 2, a triple** (Super: **mode 4**, four);
+  - ≈ 12 px/update after the ×1.2;
+  - it ends at stateFrame > 24.
+- **The summon:** at stateFrame 5, two **Hoppers (type 29)** (Super: **two type 86**) near Greed ±50 px; it ends at
+  stateFrame > 26. `[attack · E3 0x479910 · 2 readers]`
+  - *Settled:* one reader called these coins. They're NPC types; the pickup-spawn helper is only used to find a free
+    spot.
+- **The gun:** a promo-only gun (a game flag and a room-type check; the asset path is a promo folder). With it, Greed
+  walks at 1.5, adds a 1/20 shot chance and fires at stateFrame 17 at double speed with recoil. Not normal play.
+  `[attack · E3 0x479910 · 2 readers]`
+  - *Settled:* one reader saw a contradiction in the exits. It was pointer arithmetic in the C; the exits are clean
+    (> 24 without the gun, > 20 with it).
+- **It stands still while shooting or summoning.** `[move · E3 0x479910 · 2 readers]`
+
+### Envy (51.x: tens digit = size, units digit 1 = Super), `0x47a480`
+- **Movement:** `[move · E3 0x47a480 · 2 readers]`
+  - **no chase:** a constant diagonal push whose signs follow its current velocity, so it **drifts diagonally and
+    bounces off walls**;
+  - push size k × an unseen constant: k = 0.25 (biggest), 0.35 (10s and 30s), **0.45 (20s, fastest)**;
+  - friction × 0.9;
+  - it starts at a random angle.
+- **When feared** (`flags & 0x1000800`), it pushes away from Isaac: full at ≤ 70 px, none at ≥ 120.
+  `[move · E3 0x47a480 · 2 readers]`
+- **No attack; contact damage only.** `[attack · E3 0x47a480 · 2 readers]`
+- **The death split:** `[attack · E3 0x47a480 · 2 readers]`
+  - **2 children** (variant + 10) at ±10 px along a random angle, **flying apart at 4 px/update**;
+  - **Super variant 1 always adds a 3rd** (perpendicular); variant 11 adds one 50% of the time; variant 21 never;
+  - variants 30+ don't split;
+  - normal Envy goes 1 → 2 → 4 → 8.
+  - *Settled:* one reader gave the child speed as 0.4 × 10 = 4 and the other as 4. Same number.
+- **Child HP:** the 10s ÷ 3, the 20s ÷ 4, the 30s ÷ 5 (of the config HP). `[body · E3 0x47a480 · 2 readers]`
+- **A wall at y = 320** in one room kind (+0x1bb0 == 55) only. `[terrain · E3 0x47a480 · 2 readers]`
+
+### Pride (52.0, Super 52.1), `0x47e160`
+- **Walk:** a random axis walk at 1.0, with friction × 0.75. `[move · E3 0x47e160 · 2 readers]`
+- **Choosing an attack:** each update a 1-in-50 chance, then 50/50 between **lasers** (State 8) and **bombs**
+  (State 9). Each state lasts 46 updates and Pride **stands still** throughout. `[timing · E3 0x47e160 · 2 readers]`
+- **The lasers:** `[attack · E3 0x47e160 · 2 readers]`
+  - a warning sound at stateFrame 12;
+  - at **20**, **four beams on the diagonals (45°, 135°, 225°, 315°)** from 10 px above Pride;
+  - Super adds a **6-shot ring at 8** from 20 px below it.
+  - **8 updates of warning; the straight rows and columns are safe.**
+- **The bombs:** **troll bombs (variant 3)** at stateFrame 6, 11, 16, 21 (four). Super: **mega troll bombs (4)** at
+  6 and 11 (two). `[attack · E3 0x47e160 · 2 readers]`
+  - They're placed at positions from `0x81baf0` (likely random), with no velocity; fuse 45-74 (E2c).
+- The beams' lifetime is unresolved (one reader saw 17 in a register argument).
+
+### Bot meaning (E3)
+- **Gluttony:** don't stand on its row or column within 400 px (the laser), and keep out of 70-200 px (the 8-ring).
+  Diagonal and mid-range is safest. Attack while it stands still after an animation.
+- **Lust:** too fast to outrun in the open (≈ 13), and it leads Isaac by 10 updates. **Change direction rather than
+  run straight.** Breaking line of sight halves its speed.
+- **Wrath:**
+  - don't line up within 200 px;
+  - **after any bomb, 2 s of free damage**;
+  - its charge is slow (≈ 4.7) and lane-locked, so step off the lane.
+- **Greed:** a triple shot after a 5-update tell, aimed once. Sidestep after the tell. It summons Hoppers when the room
+  has fewer than 3 enemies.
+- **Envy:** a bouncer, like the Duke. The 20s are the fastest; don't sit in a corner where splits converge.
+- **Pride:** on the laser tell, **stand on its row or column** (the diagonals are the beams). Bomb phase: troll bombs
+  around the room; move away from new bombs.
+
+### Record to confirm (E3)
+- **Gluttony:** 8-ring speed 8 vs 12; the laser fires along an axis and both sides for Super; the attack range 70-200.
+- **Lust:** steady speed ≈ 13 in open sight vs ≈ 6.6 around rocks; the lead point (10 updates); whether the Super
+  trail is red creep.
+- **Wrath:** the 61-update rest after a bomb; charge speed ≈ 4.7; 50/50 bomb or charge; the Super bomb variant.
+- **Greed:** fire at stateFrame 5, ≈ 12 px/update; summon type 29 (Hoppers).
+- **Envy:** child speed 4; the 3rd child for Super; push per size.
+- **Pride:** diagonal beams at stateFrame 20 after a sound at 12; bomb count 4 vs 2; state length 46.

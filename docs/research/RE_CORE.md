@@ -1,5 +1,8 @@
 # Decompiled core rules: enemy building blocks and Isaac's own rules (2026-11-26)
 
+**Check labels:** every fact in this file is `2 readers` unless the label table at the top of `RE_ENEMIES.md` says
+`recording` or `contradicted` (shots ×1.2/0.4, hazards, physics, Isaac's top speed).
+
 Same build and pipeline as `RE_PILOT.md`; per-enemy tables are in `RE_ENEMIES.md`. Approved by the author
 2026-11-26 ("start with 1 and 2").
 

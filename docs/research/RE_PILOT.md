@@ -1,5 +1,8 @@
 # RE pilot: reading enemy AI out of isaac-ng.exe (2026-11-26)
 
+**Check labels:** the Dingle and Haunt facts here carry the labels in the table at the top of `RE_ENEMIES.md`
+(most are `recording`; the spit speeds 10/9 and the Lil' Haunt lead are `contradicted`). Anything else is `2 readers`.
+
 **Question:** can we read the exact behaviour of our worst enemies (Dingle, Gemini, Sloth, Pin, Monstro, ...)
 straight from the game's compiled code, the way the community decompiled the Haunt by hand? Go/no-go in one sitting.
 
