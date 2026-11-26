@@ -759,6 +759,25 @@ end)
 
 ------------------------------------------------------------------------ pickups (nav.lua, rules.lua)
 -- 23. the author, 2026-11-25: it died walking over spikes for a coin. Value vs damage at this health decides.
+-- 47. 1.2.29 (the author: "it's the Gemini's little balls that he has attached to him"): the cord balls (79.20: no
+-- collision, a parent, unhurtable) are never enemies, even when their reused memory address was "seen solid" before
+run("Gemini's cord balls aren't enemies, even at a reused address", function()
+  Mock.room(nil, { clear = false, player = Mock.tile(11, 4) })
+  local boss = Mock.enemy(79, 0, Mock.tile(3, 4), { hp = 300, boss = true })
+  local balls = {}
+  for i = 1, 6 do
+    local b = Mock.enemy(79, 20, Mock.tile(4 + i, 4), { parent = boss, vulnerable = false,
+                                                         coll = EntityCollisionClass.ENTCOLL_NONE })
+    IsaacBotSolidSeen[GetPtrHash(b)] = 0 -- as if an earlier room's solid enemy lived at this address
+    balls[#balls + 1] = b
+  end
+  local counted = 0
+  for _, b in ipairs(balls) do if IsaacBotSolid(b) then counted = counted + 1 end end
+  Reflex.update(Isaac.GetPlayer())
+  check("Gemini's cord balls aren't enemies, even at a reused address", counted == 0 and Reflex.nEnemies == 1,
+        fmt("%d balls counted, bot sees %s enemies", counted, tostring(Reflex.nEnemies)))
+end)
+
 run("doesn't cross spikes for a penny", function()
   Mock.room({
     "WWWWWWWDWWWWWWW",

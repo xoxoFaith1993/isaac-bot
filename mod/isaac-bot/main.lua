@@ -23,7 +23,7 @@ local Options = include("options")
 -- handed to the watchdog so it can build the brain's multiple-choice menu
 local MODS = { Reflex = Reflex, Nav = Nav, Danger = Danger, Options = Options, Rescue = Rescue, json = json }
 
-local VERSION = "1.2.28"
+local VERSION = "1.2.29"
 Reflex.status.mode = "full" -- fight + walk + explore (Stage 3); "combat" = fights only, "off" = hands off
 local TAG = "IBOT|"
 local BOT_SLOT = 2
@@ -393,6 +393,18 @@ local function handle(seq, cmd, payload)
   elseif cmd == "map" then
     local ok, rep = pcall(Nav.mapReport)
     send("map", tostring(rep))
+  elseif cmd == "ents" then
+    -- everything in the room the bot might count, for diagnosing (2026-11-25: Gemini's cord balls were counted as
+    -- 18 enemies): type.variant, collision class, has a parent, hurtable, hp, counted as an enemy by the bot
+    local out = {}
+    for _, e in ipairs(Isaac.GetRoomEntities()) do
+      if e.Type >= 10 and e.Type < 1000 then
+        out[#out + 1] = string.format("%d.%d c%d %s%s hp%.0f%s", e.Type, e.Variant, e.EntityCollisionClass,
+          e.Parent and "P" or "-", e:IsVulnerableEnemy() and "V" or "-", e.HitPoints,
+          (e:IsActiveEnemy(false) and IsaacBotSolid(e)) and " enemy" or "")
+      end
+    end
+    send("ents", table.concat(out, "; "))
   elseif cmd == "reload" then
     -- reload this mod's code inside the running game (seconds, instead of closing and relaunching Isaac)
     send("reload", "reloading the bot's code")
@@ -577,6 +589,15 @@ mod:AddCallback(ModCallbacks.MC_POST_UPDATE, function()
       send("perf", string.format("bot avg %.1f ms (fighting %.1f: planner %.1f, moves %.1f), max %d ms, %d enemies, room %dx%d",
         perf.sum / perf.n, perf.rsum / perf.n, Reflex.prof.plan / perf.n, Reflex.prof.move / perf.n, perf.max,
         Isaac.CountEnemies(), Game():GetRoom():GetGridWidth(), Game():GetRoom():GetGridHeight()))
+      -- inside the movement core, per call: where the time goes (2026-11-25: the Gemini fight lagged the game)
+      local MP = Reflex.mover.prof
+      if MP and MP.calls > 0 then
+        local n = MP.calls
+        send("perf", string.format("core per call %.1f ms: setup %.1f, move 1 %.1f, moves 2-3 %.1f, stand %.1f, why %.1f"
+          .. " | bot sees %d enemies, %d shots", (MP.pre + MP.b1 + MP.b23 + MP.stand + MP.dbg) / n, MP.pre / n, MP.b1 / n,
+          MP.b23 / n, MP.stand / n, MP.dbg / n, Reflex.nEnemies or -1, #Isaac.FindByType(EntityType.ENTITY_PROJECTILE)))
+        for k in pairs(MP) do MP[k] = 0 end
+      end
       perf.n, perf.sum, perf.max, perf.rsum = 0, 0, 0, 0
       Reflex.prof.plan, Reflex.prof.move = 0, 0
     end

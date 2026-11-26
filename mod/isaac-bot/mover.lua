@@ -538,8 +538,14 @@ NEXT[9] = Vector(0, 0)
 
 -- ctx: S, w, room, player, speed, DIRS, target, ledPos, prefDist, wayPos, calm + helper functions.
 -- Returns the index into DIRS of the first move, and its plan cost.
+-- where the time goes, per section (ms, summed; the perf line prints and clears it). 2026-11-25: Gemini on the bench
+-- cost 30 ms an update in 1.2.28 (the game has 33), up from under 24 at most in 1.2.24, and the game lagged.
+Mover.prof = Mover.prof or { pre = 0, b1 = 0, b23 = 0, stand = 0, dbg = 0, calls = 0 }
+local now = Isaac.GetTime
 function Mover.choose(ctx)
   local S, w, player = ctx.S, ctx.w, ctx.player
+  local P, tp0 = Mover.prof, now()
+  P.calls = P.calls + 1
   ctx.pr = player.Size
   ctx.vel = player.Velocity
   -- Isaac's learned movement (top speed per speed stat, acceleration); the old constant until it's learned
@@ -675,6 +681,8 @@ function Mover.choose(ctx)
   end
   -- move 1: full-speed directions + standing still; the slow "fine positioning" steps only when lining up a
   -- shot on a target that's close to lined up (creeping everywhere looked awkward and slow)
+  local tp1 = now()
+  P.pre = P.pre + (tp1 - tp0)
   local beam = {}
   local start = { p = player.Position, c = 0 }
   local half = math.floor(#ctx.DIRS / 2)
@@ -703,6 +711,8 @@ function Mover.choose(ctx)
     for _, pl in ipairs(keep) do if pl == stand then has = true end end
     if not has then keep[#keep + 1] = stand end
   end
+  local tp2 = now()
+  P.b1 = P.b1 + (tp2 - tp1)
   -- moves 2 and 3: 8 directions + stop, best few kept each time
   for si = 2, 3 do
     local nextBeam = {}
@@ -719,6 +729,8 @@ function Mover.choose(ctx)
     for k = 1, math.min(S.m_beam, #nextBeam) do keep[#keep + 1] = nextBeam[k] end
   end
 
+  local tp3 = now()
+  P.b23 = P.b23 + (tp3 - tp2)
   -- best full plan, aim and distance included; its first move is what we do now
   local best, bestC, bestPl = 0, math.huge, nil
   local standC = nil
@@ -746,6 +758,8 @@ function Mover.choose(ctx)
   end
   Mover.lastStandC = standC
   Mover.lastHidden = ctx.hidden
+  local tp4 = now()
+  P.stand = P.stand + (tp4 - tp3)
   -- why it chose this (for the log): danger part, ways out, total; and the same for standing still
   if bestPl then
     -- what the danger is made of where Isaac stands now (all sample times): which source is driving the choice
@@ -758,6 +772,7 @@ function Mover.choose(ctx)
       best, bestC, bestPl.c, waysOut(ctx, bestPl.p), tostring(bestPl.aimT), standC and string.format("%.0f", standC) or "pruned",
       #keep, #here > 0 and table.concat(here, ", ") or "none")
   end
+  P.dbg = P.dbg + (now() - tp4)
   Mover.last = { move = best, cost = bestC }
   Mover.lastMove = best
   Mover.lastDir = ctx.DIRS[best]

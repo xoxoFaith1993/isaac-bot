@@ -554,6 +554,10 @@ priority of the core fundamentals." Core = no damage on floors 1-2, natural move
 - **Leading shots on the Haunt:** still not strong (the author, 2026-11-25: "doesn't have to change immediately").
   It slides and turns at the walls; the lead uses a settled average velocity clamped to the room.
 - **Laptop as a second test machine** (parked: usage cost).
+- **Delirium as a reflex stress test** (the author, 2026-11-25: the hardest boss, "the unfair": it shifts into almost
+  every boss, not quite as the real ones, with projectiles everywhere). Not a cheat sheet for single bosses and not
+  core (floor 11+), but a good later benchmark drill for pure dodging: a `bench_suite_delirium` once floors 1-2 pass
+  the gate, scored on hits per minute survived.
 Done from this list: red fires are shot out like enemies (1.2.17).
 
 ### Situations to watch: surprise bombs (noted 2026-11-25)

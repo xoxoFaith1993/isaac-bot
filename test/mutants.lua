@@ -5,6 +5,12 @@
 -- `find` is plain text (not a pattern); \n = line break (Windows line endings are ignored).
 
 return {
+  { test = "Gemini's cord balls aren't enemies", why = "the cord rule and the seed check (stale 'seen solid' memory)",
+    patches = { { file = "reflex", find = "if e.Parent ~= nil and not e:IsVulnerableEnemy() then return false end",
+                  replace = "" },
+                { file = "reflex", find = "if IsaacBotSolidSeen[h] == seed then return true end",
+                  replace = "if IsaacBotSolidSeen[h] then return true end" } } },
+
   { test = "walks to the button in a cleared trap room", why = "walking onto an unpressed plate",
     patches = { { file = "nav", find = "if plateIdx then", replace = "if false then" } } },
 

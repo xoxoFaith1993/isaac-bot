@@ -27,8 +27,16 @@ function IsaacBotTrollPickup(e)
 end
 function IsaacBotSolid(e)
   local h = GetPtrHash(e)
-  if e.EntityCollisionClass ~= EntityCollisionClass.ENTCOLL_NONE then IsaacBotSolidSeen[h] = true; return true end
-  if IsaacBotSolidSeen[h] then return true end
+  -- remembered with the entity's own seed: the game REUSES memory addresses, and this table was never cleared, so after
+  -- many bench replays Gemini's 18 cord balls (79.20: no collision, a parent, unhurtable) inherited "was solid" from
+  -- enemies of earlier rooms. The bot counted 20 enemies, planned around every ball (65 ms an update, the game has 33)
+  -- and the game lagged (the author spotted the balls, 2026-11-25).
+  local seed = e.InitSeed or 0
+  if e.EntityCollisionClass ~= EntityCollisionClass.ENTCOLL_NONE then IsaacBotSolidSeen[h] = seed; return true end
+  -- hangs off something, can't be hurt and touches nothing right now: a cord or chain piece, never an enemy to dodge
+  -- (when it does get collision it counts again, above)
+  if e.Parent ~= nil and not e:IsVulnerableEnemy() then return false end
+  if IsaacBotSolidSeen[h] == seed then return true end
   -- Never solid yet: a cord/chain segment hangs off a parent (skip it). A free-standing enemy that can be hurt
   -- is real (Boils spawn small with no collision: the plain "never solid" rule hid them, 0/3 cleared).
   return e.Parent == nil and e:IsVulnerableEnemy()
@@ -773,6 +781,7 @@ local function gather(player)
       w.enemies[#w.enemies + 1] = e
     end
   end
+  Reflex.nEnemies = #w.enemies -- (for the perf line: what the bot counts, next to the game's own count)
   return w
 end
 
