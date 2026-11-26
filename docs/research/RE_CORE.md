@@ -531,8 +531,6 @@ functions cover about 65%.** By share of appearances:
 
 ## Gaps (for the next pass)
 
-- Knockback on Isaac: not in TakeDamage or the player's collision handler.
-- EvadeTarget / MoveRandomly: signatures stale, functions not located.
 - Projectile `PositionOffset.Y` vs the height field: whether they are kept in sync.
 
 ---
@@ -638,3 +636,91 @@ then (`0x6d65e9`-`0x6d67ed`):
 - Contact: a Trite hurts mid-hop; Monstro doesn't mid-jump.
 - Contact: in a wave room, no contact damage in an enemy's first 10 updates; contact damage = the enemy's
   `CollisionDamage`.
+
+---
+
+## Batch D (2026-11-26): knockback, the physics step, flee, height sync, "two steps"
+
+Two blind readers (bundle D1, one on Sonnet); all agree unless noted.
+
+### The per-update physics step (`Entity::EntityUpdate`, `0x6b5720`, lines 189-204)
+For every entity, every update:
+1. **velocity × f**, where f = the friction field `+0x36c` (adjusted for `speedMultiplier` when that isn't 1);
+2. **then position += speedMultiplier × velocity**;
+3. **then f is reset to its base `+0x368`.**
+
+So any helper that multiplies `+0x36c` (×0.7, ×0.8 ...) only changes **that update's** damping. A helper that adds
+a / f to velocity and sets friction f gives the steady speed **v = a / (1 − f)**.
+
+**Derived enemy top speeds** (base friction 1.0, the config default):
+
+| Enemy | Formula | Top speed |
+|---|---|---|
+| PathChase (`0x7ebb70`) far from its target | accel 2 × speed, f = 0.7 | **v ≈ 6.7 × speed** |
+| Gaper 10.0 | 6.7 × 0.6 / 0.72 | **≈ 4.0 px/update, 4.8 when angry** |
+| Gaper 10.1 | 6.7 × 0.498 | ≈ 3.3 |
+| Gaper 10.2 | 6.7 × 0.548 | ≈ 3.7 |
+| Globin | 6.7 × 0.75 | ≈ 5.0 |
+| Gazing Globin | 6.7 × 1.1 | ≈ 7.3 |
+| Spider dart | accel 6, f = 0.6 | up to ≈ 15 px/update, but it stops within 14 px of a 70-200 px target |
+| Dart Fly | 0.30 accel, f = 0.95 | ≈ 6, capped 8 |
+
+These are calculations from the code (**unresolved** until recorded). Compare Isaac's ≈ 4.4 × k velocity (`RE_CORE.md`,
+movement): **a Gaper is close to Isaac's speed.**
+
+### Knockback (`Entity::AddKnockback`, `0x6be8c0`, and `EntityUpdate` lines 121-187)
+- **AddKnockback(source, vector, countdown, bounce)** stores the vector and the countdown and sets the "knockback"
+  flag.
+  - It does nothing if the source test `0x6b3ca0` passes, if countdown is 0, or if the entity has flag bit 0 (unless
+    bit 49 is set).
+  - **Mass above 10 scales the vector and the countdown by 1 / log10(mass).**
+- **While active, each update:**
+  - velocity = the knockback vector, which decays ×0.95 per update (no decay with flag 0x20000);
+  - friction = 0.95 × base;
+  - a wall hit halves the countdown; with the bounce flag, the first wall hit reflects at 0.8 and **damages the entity
+    itself** (wall slam).
+  - **It ends** when the countdown runs out, the vector falls below 2.0, or the entity's own opposite motion is
+    stronger.
+- **Knockback on Isaac:** his TakeDamage and collision handlers call `AddKnockback` only on **other** entities (the
+  reflect item 690 knocks back the attacker; contact pushes enemies at 18 px). **A normal hit gives Isaac no
+  knockback.** What he feels is the physical separation of two solid bodies (`CollidePair`).
+
+**Review:**
+- all agree (both readers) on the mechanism, the 0.95 decay, the 2.0 stop and the mass rule;
+- **"no knockback on Isaac from a hit": settled by C** (the callers of `0x6be8c0`: Tear, player TakeDamage paths for
+  item 690 only, the player's collision handler on the other entity, the NPC collision handler on the other entity).
+
+### Flee (`0x7ece80`, very likely REPENTOGON's EvadeTarget)
+What a feared NPC does (called with Isaac's position):
+- **The threat check** runs every 14 updates. If Isaac is within **250 px with a clear line, or 170 px behind
+  cover**, the flee timer is refilled to 3. Otherwise it drains about 1 per check, so roughly 1.4 s of fleeing after
+  Isaac backs off. Then it wanders (`MoveRandomlyBoss`).
+- **Picking a refuge:** up to 7 tries (fewer under "stress"):
+  - a random point 30-480 px from a spot 30 px away from Isaac (the y extent halved), snapped to a 40 px cell;
+  - the cell must be empty and reachable in a straight line;
+  - it must be at least about 100 + r/3 farther from Isaac than the NPC is now, preferring points **out of Isaac's
+    line of sight**.
+- **Moving there:** a one-time kick of 1.5 away from Isaac, then PathChase at 1.08.
+- **Review:** all agree. **MoveRandomly** (the plain random walk) is `0x7ed880` (`RE_CORE.md`, "RandomAxisWalk").
+
+### Projectile height vs `PositionOffset.Y`
+- `Entity_Projectile::Update` writes `PositionOffset.Y` only in one special-flag branch (line 2676, flag hi 0x100).
+- The normal copy of height (+0x410) into `PositionOffset.Y` is **not in Update**: probably Render or a shared helper.
+- **Unresolved:** record both fields for the same shot.
+
+### "Two movement steps per update"
+- `0x781fc0` has one caller, the player's Update (`0x78e4b2`), with no loop around it.
+- Whether the player's Update itself runs twice per 30-Hz game update is decided by the caller loop, which wasn't
+  traced.
+- **Unresolved.**
+- Evidence for "twice": the square-rooted friction, Move's `speedMultiplier / 60` charge counter (line 527), and the
+  recorded positions.
+- The decisive test: record Isaac's `Velocity` magnitude (≈ 4.4 at speed 1) next to his position change per update
+  (≈ 8.8 if twice, ≈ 4.4 if once).
+
+### Recording checklist (Batch D)
+- Gaper / Globin chase speed vs the derived 4.0-5.0 px/update.
+- No knockback on Isaac after a hit: his velocity doesn't jump in the hit's direction.
+- A feared enemy flees for about 1.4 s after Isaac is beyond 250 px (170 behind cover).
+- A projectile's height vs `PositionOffset.Y`.
+- Isaac's `Velocity` vs his position change per update (the two-steps test).
