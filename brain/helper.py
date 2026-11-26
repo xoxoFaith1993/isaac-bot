@@ -342,7 +342,8 @@ def send_boss_tactics(pipe):
             flags = ("d" if b.get("stay_diagonal") else "") + \
                     ("r" if b.get("avoid_row_col") or b.get("avoid_row") else "") + \
                     ("c" if b.get("avoid_row_col") or b.get("avoid_col") else "") + \
-                    ("k" if b.get("avoid_corners") else "")
+                    ("k" if b.get("avoid_corners") else "") + \
+                    ("g" if b.get("room_zone") == "edges" or b.get("style") == "ring" else "")  # ring-kite
             adds = b.get("adds") if b.get("adds") in ("ignore", "kill_close", "kill_first") else ""
             tells = set()
             for d in b.get("dodge") or []:

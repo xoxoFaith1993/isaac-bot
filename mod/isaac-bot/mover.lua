@@ -314,6 +314,29 @@ local function waysOut(ctx, p)
   return closed
 end
 
+-- Ring-kite (the author, 2026-11-25, Gemini: "slowly let him chase you... circle the outside of the room so you always
+-- have a clear line of sight to attack him"; it ran too far and wasted its shooting chances). Against a chasing boss
+-- the bot runs a LANE around the room: a rounded rectangle about ring_margin from the walls whose corners are arcs of
+-- radius ring_r, so it cuts every corner instead of running into one. Two parts: stay on the lane, and keep moving
+-- along it in one direction (away from the boss), so the boss follows at a steady distance and the open line behind
+-- it is always there to shoot down.
+local function ringCost(ctx, plan)
+  local S, rg = ctx.S, ctx.ring
+  -- distance from the inner rectangle (room shrunk by margin + radius): on the lane it equals the radius
+  local x = math.max(rg.x0 - plan.p.X, 0, plan.p.X - rg.x1)
+  local y = math.max(rg.y0 - plan.p.Y, 0, plan.p.Y - rg.y1)
+  local dr = math.sqrt(x * x + y * y)
+  local c = math.abs(dr - rg.r) * S.ring_w
+  -- flow along the lane: angle gained around the room's middle, in the chosen direction
+  local a0 = math.atan(ctx.player.Position.Y - rg.cy, ctx.player.Position.X - rg.cx)
+  local a1 = math.atan(plan.p.Y - rg.cy, plan.p.X - rg.cx)
+  local da = a1 - a0
+  if da > math.pi then da = da - 2 * math.pi elseif da < -math.pi then da = da + 2 * math.pi end
+  c = c - S.ring_flow * math.max(-1, math.min(1, da * rg.dir / 0.35))
+  return c
+end
+Mover.ringCost = ringCost
+
 local function total(ctx, plan)
   local S = ctx.S
   local c = plan.c
@@ -321,6 +344,7 @@ local function total(ctx, plan)
   -- below a spider Sack) must not scare it off for good (2026-11-25: it hovered outside while the Sack spawned)
   local trapW = S.m_trap
   if ctx.spot and (plan.p - ctx.spot):Length() < 45 then trapW = trapW * 0.2 end
+  if ctx.ring then trapW = trapW * 0.4 end -- the kite lane runs along the walls on purpose
   c = c + waysOut(ctx, plan.p) * trapW
   -- Cornered: a wall close on a left/right side AND on an up/down side. With fast movers about, the middle often looks
   -- as "closed" as a corner (their circles fill it), so the plain ways-out count stopped telling them apart and it
@@ -345,7 +369,9 @@ local function total(ctx, plan)
   end
   -- steady pull to the room's middle and a cost near walls (the old core had these; A/B 2026-11-25: no deaths vs 2/4).
   -- Not at a planned firing spot by a wall (the planner chose it).
-  if not (ctx.spot and (plan.p - ctx.spot):Length() < 45) then
+  if ctx.ring then
+    c = c + ringCost(ctx, plan) -- ring-kite: the lane replaces the pull to the middle (they'd fight each other)
+  elseif not (ctx.spot and (plan.p - ctx.spot):Length() < 45) then
     c = c + (plan.p - ctx.room:GetCenterPos()):Length() * S.m_center
     if not ctx.room:IsPositionInRoom(plan.p, S.edge_margin) then c = c + S.m_edge end
   end
@@ -415,7 +441,9 @@ local function total(ctx, plan)
     local t = ctx.target
     local hurtable = t.kind or not t.IsVulnerableEnemy or (t:IsVulnerableEnemy() and not t:IsInvincible())
                      or (IsaacBotRedFire and IsaacBotRedFire(t)) -- a red fire: tears put it out
-    if plan.aimT and hurtable then c = c - S.m_aim * (1 - plan.aimT / 30) end
+    -- (in boss fights lining up counts more: the author, 2026-11-25, "you don't want to be in a boss fight for as long
+    -- as possible... right now it's just taking the safest way while incrementally doing damage")
+    if plan.aimT and hurtable then c = c - S.m_aim * (ctx.bossAim or 1) * (1 - plan.aimT / 30) end
     if ctx.prefDist then
       local tp = ctx.targetAt(SEG_END[1])
       if tp then c = c + math.abs((plan.p1 - tp):Length() - ctx.prefDist) * S.m_dist_w end

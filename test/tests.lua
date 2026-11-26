@@ -503,6 +503,48 @@ run("puts out a red fire, leaves a plain fire alone", function()
         fmt("red fire targeted: %s, plain fire made a fight: %s", tostring(redTarget), tostring(plainFight)))
 end)
 
+-- 42. 1.2.18 ring-kite (the author's Gemini rule: "slowly let him chase you, circle the outside of the room so you
+-- always have a clear line of sight"): against a chasing boss it runs the lane round the room in one direction,
+-- keeps its distance, never parks in a corner, and keeps lining up shots
+run("ring-kites a chasing boss round the room", function()
+  local S = Reflex.S
+  local function fight(ringOn)
+    Reflex.loadPlaybook("46.0=chases,k2,d3")
+    local oldW, oldF = S.ring_w, S.ring_flow
+    if not ringOn then S.ring_w, S.ring_flow = 0, 0 end
+    Mock.room(nil, { clear = false, player = Mock.tile(11, 4) })
+    local boss = Mock.enemy(46, 0, Mock.tile(3, 4), { hp = 300, boss = true, chase = 1.6, size = 20 })
+    local c = Game():GetRoom():GetCenterPos()
+    local p = Isaac.GetPlayer()
+    local swept, prevA, corner, closest, aimed = 0, nil, 0, math.huge, 0
+    for _ = 1, 240 do
+      local move, shoot = Reflex.update(p)
+      Mock.step(move)
+      local a = math.atan(p.Position.Y - c.Y, p.Position.X - c.X)
+      if prevA then
+        local da = a - prevA
+        if da > math.pi then da = da - 2 * math.pi elseif da < -math.pi then da = da + 2 * math.pi end
+        swept = swept + da
+      end
+      prevA = a
+      local nearX = p.Position.X < Mock.tile(0, 0).X + 50 or p.Position.X > Mock.tile(13, 0).X - 50
+      local nearY = p.Position.Y < Mock.tile(0, 0).Y + 50 or p.Position.Y > Mock.tile(0, 7).Y - 50
+      if nearX and nearY then corner = corner + 1 end
+      closest = math.min(closest, (boss.Position - p.Position):Length())
+      if shoot then aimed = aimed + 1 end
+    end
+    S.ring_w, S.ring_flow = oldW, oldF
+    Reflex.playbook = {}
+    return math.abs(swept), corner, closest, aimed
+  end
+  local sw, corner, closest, aimed = fight(true)
+  local sw0 = fight(false)
+  check("ring-kites a chasing boss round the room", sw > sw0 + 0.8 and sw > 1.5 and corner < 20 and closest > 45
+        and aimed > 40,
+        fmt("swept %.1f rad (%.1f without the ring), %d updates in a corner, closest %.0f px, shooting %d of 240",
+            sw, sw0, corner, closest, aimed))
+end)
+
 -- 37. 1.2.7 boss tactics (knowledge/boss_tactics.json via the helper): loads, finds the boss, adds policy decides
 run("boss tactics: loaded and used", function()
   Reflex.loadBossTactics("261.0=200,k,kill_close,BeforeSlide|Dance|Whistle;260.0=160,c,kill_first,")

@@ -18,7 +18,7 @@ def check(name, ok, detail=""):
 def make():
     root = Path(tempfile.mkdtemp())
     sent, notes = [], []
-    w = watcher.Watcher(root, send=lambda c, b: sent.append((c, b)), note=notes.append)
+    w = watcher.Watcher(root, send=lambda c, b: sent.append((c, b)), note=notes.append, local_notes=False)
     return w, sent, notes, root
 
 

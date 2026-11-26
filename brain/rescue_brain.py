@@ -101,6 +101,38 @@ def choose(facts, options, goal="", timeout=90):
     return choice, str(ans.get("reason", ""))[:200]
 
 
+def diagnose(entry, timeout=120):
+    """Watcher Level B (the author chose it once the PC had memory to spare, 2026-11-25): a first plain-English read
+    of a problem the watcher queued for a code fix, from the same evidence a person would look at (log lines, the
+    movement core's "why", the risk level). Text only: this model can't read the frames. Returns a dict with
+    cause / category / change / confidence, or raises."""
+    evidence = "\n".join(entry.get("evidence", [])[-30:])
+    body = {
+        "model": MODEL, "stream": False, "format": "json", "think": THINK, "keep_alive": KEEP_ALIVE,
+        "options": {"temperature": 0.2, "num_ctx": 8192},
+        "messages": [
+            {"role": "system", "content": (
+                "You are an expert Binding of Isaac player and a careful programmer reviewing a bot that plays the "
+                "game. Fix CATEGORIES of situations, never one room. Be concrete and short.")},
+            {"role": "user", "content": (
+                f"The bot's watcher flagged a problem it could not fix by itself.\n"
+                f"Problem: {entry.get('summary')}\nKind: {entry.get('kind')}  Key: {entry.get('key')}\n"
+                f"Already tried: {entry.get('tried') or 'nothing'}\n"
+                f"Movement core's last reasoning: {entry.get('why')}\nRisk level: {entry.get('risk')}\n\n"
+                f"Recent log (hit lines: source|damage|position|move|via enemy type and distance|shot info|risk):\n"
+                f"{evidence}\n\n"
+                "Answer with JSON only: {\"cause\": \"the most likely cause, 1-2 sentences\", "
+                "\"category\": \"the general kind of situation\", \"change\": \"what the bot should do differently, "
+                "as a general rule\", \"confidence\": \"low|medium|high\"}")},
+        ],
+    }
+    req = urllib.request.Request(OLLAMA, data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        reply = json.loads(r.read().decode())["message"]["content"]
+    ans = json.loads(reply)
+    return {k: str(ans.get(k, ""))[:400] for k in ("cause", "category", "change", "confidence")}
+
+
 def ask(report, state, grid, timeout=90):
     rules = RULES.read_text(encoding="utf-8") if RULES.exists() else ""
     body = {

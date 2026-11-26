@@ -40,6 +40,17 @@ def show(r, full=False):
         print(f"  risk: {r.get('risk')}")
         for f in r.get("frames", []):
             print(f"  frames: {f}")
+        note = QUEUE.parent / "notes" / f"{r['id']}.json"  # Level B: the local model's first read, if it answered
+        if note.exists():
+            try:
+                n = json.loads(note.read_text(encoding="utf-8"))
+                if "cause" in n:
+                    print(f"  local model ({n.get('model')}, {n.get('confidence')} confidence):")
+                    print(f"    cause: {n['cause']}\n    category: {n['category']}\n    change: {n['change']}")
+                else:
+                    print(f"  local model: no answer ({n.get('error')})")
+            except ValueError:
+                pass
         print("  evidence (newest last):")
         for e in r.get("evidence", []):
             print("    " + e)

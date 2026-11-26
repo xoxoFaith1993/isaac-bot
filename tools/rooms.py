@@ -103,10 +103,14 @@ def stage_cmd(stage):
     return f"{s}{STAGE_SUFFIX.get(t, '')}"
 
 
-def run(limit=None):
+def run(limit=None, kinds=None, repeats=1):
     rooms = sorted(load(), key=lambda r: -r["hits_seen"])
+    if kinds:
+        rooms = [r for r in rooms if r["kind"] in kinds]
     if limit:
         rooms = rooms[:limit]
+    # each room `repeats` times in a row (boss fights swing a lot: one try proves little)
+    rooms = [r for r in rooms for _ in range(repeats)]
     # a fresh, item-free run first: every replay is plain Isaac vs that room, so results compare like for like
     # (the author: an item can make the bot look better or worse than it is, and hide bugs)
     start = len(lines())
@@ -148,6 +152,16 @@ def run(limit=None):
         time.sleep(2)
     send("bot|full")
     print(f"\nBENCH: {cleared}/{len(rows)} rooms cleared, {total_hits} hits in all")
+    if repeats > 1:  # per room: how often cleared, average time and hits
+        per = {}
+        for r, res, secs, hits in rows:
+            k = (r["kind"], r["variant"], r["name"])
+            per.setdefault(k, []).append((res, float(secs or 90), hits))
+        print("\nPer room (cleared / tries, average seconds, average hits):")
+        for (kind, var, name), xs in per.items():
+            n = len(xs)
+            print(f"  {kind}.{var:<6} {name[:24]:<24} {sum(x[0] == 'cleared' for x in xs)}/{n}  "
+                  f"{sum(x[1] for x in xs) / n:5.1f}s  {sum(x[2] for x in xs) / n:.1f} hits")
 
 
 def main():
@@ -156,6 +170,8 @@ def main():
         collect()
     elif cmd == "run":
         run(int(sys.argv[2]) if len(sys.argv) > 2 else None)
+    elif cmd == "bosses":  # python rooms.py bosses [tries]: every boss/miniboss room, `tries` times each (default 3)
+        run(None, kinds={"boss", "miniboss"}, repeats=int(sys.argv[2]) if len(sys.argv) > 2 else 3)
     else:
         for r in sorted(load(), key=lambda r: -r["hits_seen"]):
             print(f"{r['stage']} {r['kind']}.{r['variant']:<6} {r['name'][:24]:<24} seen {r['hits_seen']} hits: {r['causes']}")

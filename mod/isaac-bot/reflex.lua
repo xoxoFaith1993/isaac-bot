@@ -117,6 +117,11 @@ Reflex.S = {
   m_turn = 90,          -- v2: cost of turning (half-turn = full cost, slight bend ~0): flow, not twitching
   m_corner = 500,       -- v2: cost of ending in a corner (wall on a side AND above/below), x0.5-2.5 by movers near
   m_nolane = 150,       -- v2: cost of standing still when the plan never lines up a shot (rock pockets vs worms)
+  boss_aim = 1.8,       -- boss fights: lining up a shot is worth this much more (finish it, don't chip at it)
+  ring_margin = 70,     -- ring-kite vs chasing bosses: px from the walls to the lane...
+  ring_r = 90,          -- ...whose corners are arcs this big (cuts every corner)
+  ring_w = 3,           -- cost per px off the lane
+  ring_flow = 220,      -- reward for moving along the lane in the chosen direction (per ~20 degrees)
   corner_gap = 60,      -- v2: px to a wall on both axes that counts as a corner
   fire_pad = 14,        -- px: extra no-touch distance around lit fires
   deep_k = 6,           -- how many of the best moves get the expensive checks (speed: the rest are cut early)
@@ -389,7 +394,8 @@ function Reflex.loadBossTactics(text)
     if key then
       local tells, windows = (rest or ""):match("^([^,]*),?(.*)$")
       local t = { pd = tonumber(pd), diag = flags:find("d") ~= nil, row = flags:find("r") ~= nil,
-                  col = flags:find("c") ~= nil, corners = flags:find("k") ~= nil, adds = adds ~= "" and adds or nil,
+                  col = flags:find("c") ~= nil, corners = flags:find("k") ~= nil, ring = flags:find("g") ~= nil,
+                  adds = adds ~= "" and adds or nil,
                   tells = {}, windows = {} }
       for a in string.gmatch(tells or "", "[^|]+") do t.tells[a] = true end
       -- attack windows: animations where it's safe to pour damage in (Dingle "Tired"/"Idle"/"Whistle")
@@ -755,6 +761,45 @@ local function breakables(room)
     if e.HitPoints > 1 then list[#list + 1] = { Position = e.Position, Velocity = Vector.Zero, kind = "fire" } end
   end
   return list
+end
+
+-- Ring-kite against a CHASING boss (playbook "chases", or the tactics say "edges"; the author's Gemini rule): the lane
+-- (mover.lua ringCost) and which way round to run. The direction keeps the boss behind: it only flips when the boss
+-- cuts across in front of us. Nil = no ring (not a chaser, invincible, or the room is too small for a lane).
+Reflex.ringDir = 1
+function Reflex.ringFor(player, target, w, room)
+  if Risk.invincible or not target or target.kind then return nil end
+  -- the chaser to kite: the target if it chases, else any chasing boss in the room (Gemini: shooting the small twin
+  -- while the big one chases)
+  local function chaser(e)
+    if e.Type == EntityType.ENTITY_FIREPLACE or not e:IsBoss() then return false end
+    local pb, tac = playbookOf(e), Reflex.tacticsOf(e)
+    return (pb and pb.tags.chases) or (tac and tac.ring) or false
+  end
+  local boss = (target.IsBoss and chaser(target)) and target or nil
+  if not boss then
+    for _, e in ipairs(w.enemies) do if chaser(e) then boss = e; break end end
+  end
+  if not boss then return nil end
+  target = boss
+  local S = Reflex.S
+  local tl, br = w.tl or room:GetTopLeftPos(), w.br or room:GetBottomRightPos()
+  local r = S.ring_r
+  local half = math.min(br.X - tl.X, br.Y - tl.Y) / 2 - S.ring_margin - 10
+  r = math.min(r, half)
+  if r < 30 then return nil end
+  local ring = { x0 = tl.X + S.ring_margin + r, x1 = br.X - S.ring_margin - r,
+                 y0 = tl.Y + S.ring_margin + r, y1 = br.Y - S.ring_margin - r, r = r,
+                 cx = (tl.X + br.X) / 2, cy = (tl.Y + br.Y) / 2 }
+  local aI = math.atan(player.Position.Y - ring.cy, player.Position.X - ring.cx)
+  local aB = math.atan(target.Position.Y - ring.cy, target.Position.X - ring.cx)
+  local diff = aI - aB
+  if diff > math.pi then diff = diff - 2 * math.pi elseif diff < -math.pi then diff = diff + 2 * math.pi end
+  -- run so the gap to the boss grows; flip only when the boss is close ahead on our current way round
+  local away = (diff >= 0) and 1 or -1
+  if math.abs(diff) < 0.5 and away ~= Reflex.ringDir then Reflex.ringDir = away end
+  ring.dir = Reflex.ringDir
+  return ring
 end
 
 -- Boss fights (the author, 2026-11-25, after Mega Fatty: the bot shot its little adds for 4 minutes because low HP
@@ -1512,8 +1557,14 @@ function Reflex.update(player)
     best, bestCost, usedV2 = Mover.lastMove, 0, true
   elseif S.core == 2 then
     local tMove0 = Isaac.GetTime()
+    local ring, bossAim = Reflex.ringFor(player, target, w, room), nil
+    if target and not target.kind and target.IsBoss and target:IsBoss() then bossAim = S.boss_aim end
+    Reflex.status.ring = ring ~= nil
     local okM, mi, mc = pcall(Mover.choose, { S = S, w = w, room = room, player = player, speed = speed, DIRS = DIRS,
-      target = target, prefDist = prefDist, wayPos = wayPos, spot = plateSpot or navSpot or (plan.target and plan.cellPos) or nil, calm = calm, blocked = blocked, creepAt = creepAt,
+      ring = ring, bossAim = bossAim,
+      target = target, prefDist = prefDist, wayPos = wayPos,
+      -- (ring-kiting: no fixed firing spot; the lane and the open line behind the boss do that job)
+      spot = (not ring) and (plateSpot or navSpot or (plan.target and plan.cellPos)) or nil, calm = calm, blocked = blocked, creepAt = creepAt,
       bounce = function(pos, r) return bounced(w, pos, r) end, lane = Reflex.lane, segDist = segDist,
       laserEnd = laserEnd, playbookOf = playbookOf, tacticsOf = Reflex.tacticsOf, leadVel = Reflex.leadVel,
       lessonOf = Reflex.lessonOf, shotPadOf = Reflex.shotPadOf })

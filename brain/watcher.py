@@ -56,12 +56,13 @@ def hit_cause(body):
 
 
 class Watcher:
-    def __init__(self, root, send, note):
+    def __init__(self, root, send, note, local_notes=True):
         self.root = Path(root)
         self.knowledge = self.root / "knowledge"
         self.dir = self.root / "runs" / "watch"
         self.dir.mkdir(parents=True, exist_ok=True)
         self.send, self.note = send, note
+        self.local_notes = local_notes  # Level B: the local model writes a first diagnosis of each queued problem
         self.lessons_file = self.knowledge / "lessons.json"
         self.stats_file = self.dir / "stats.json"
         self.lessons = self._load(self.lessons_file, {})
@@ -164,6 +165,8 @@ class Watcher:
         self.room_seen = set()
         room = body.split("|")[0]
         self.room_now = room
+        if room == "-3":  # the bench's test room: it hops -3 <-> start room every round, that's not a bounce
+            return
         self.room_hist.append((now, room))
         self.floor_rooms[room] += 1
         self.fight_hp, self.fight_since = None, None
@@ -313,6 +316,29 @@ class Watcher:
         with open(self.dir / "queue.jsonl", "a", encoding="utf-8") as fh:
             fh.write(json.dumps(entry) + "\n")
         self.note(f"queued for a code fix: {summary}")
+        if self.local_notes:
+            self._local_note(entry)
+
+    # ------------------------------------------------------------------ Level B: the local model's first read
+    def _local_note(self, entry):
+        """In the background (the helper must keep moving): ask the local model for a plain-English diagnosis and save
+        it next to the queue entry (runs/watch/notes/<id>.json). The model unloads 45 s after answering."""
+        import threading
+
+        def work():
+            notes = self.dir / "notes"
+            notes.mkdir(exist_ok=True)
+            try:
+                import rescue_brain
+                note = rescue_brain.diagnose(entry)
+                note["model"] = rescue_brain.MODEL
+            except Exception as exc:  # no Ollama, timeout, bad JSON: the queue entry stands on its own
+                note = {"error": f"{exc.__class__.__name__}: {exc}"[:200]}
+            (notes / f"{entry['id']}.json").write_text(json.dumps(note, indent=1), encoding="utf-8")
+            if "cause" in note:
+                self.note(f"local diagnosis for {entry['key']}: {note['cause'][:160]}")
+
+        threading.Thread(target=work, daemon=True).start()
 
     # ------------------------------------------------------------------ report
     def write_report(self):
