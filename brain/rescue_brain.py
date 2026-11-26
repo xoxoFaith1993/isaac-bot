@@ -14,6 +14,10 @@ from botconfig import ROOT
 OLLAMA = "http://127.0.0.1:11434/api/chat"
 MODEL = "gemma4:12b"  # exam 2026-11-25: 28/28 (gemma3:12b 25.5, gpt-oss:20b 24, gemma4:26b 27 but 3x slower)
 THINK = False          # thinking off: ~1.3 s per answer and still careful; turn on for big Stage 4 decisions
+# Unload the model this long after its last answer (Ollama's default is 5 min). Loaded, it held ~11 GB of memory and
+# pushed the PC near its commit limit with a low-memory warning (2026-11-25). The cost: the next question after a
+# quiet spell waits ~15 s for the model to load again; questions in a burst still answer in ~2 s.
+KEEP_ALIVE = "45s"
 RULES = ROOT / "knowledge" / "RULES.md"
 ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 
@@ -75,7 +79,7 @@ def choose(facts, options, goal="", timeout=90):
     menu = "\n".join(f"{o['id']}: {o['text']}" for o in options)
     ids = [o["id"] for o in options]
     body = {
-        "model": MODEL, "stream": False, "format": "json", "think": THINK,
+        "model": MODEL, "stream": False, "format": "json", "think": THINK, "keep_alive": KEEP_ALIVE,
         "options": {"temperature": 0.1, "num_ctx": 8192},
         "messages": [
             {"role": "system", "content": "You are an expert Binding of Isaac player advising a bot. Rules you follow:\n" + rules},
@@ -100,7 +104,7 @@ def choose(facts, options, goal="", timeout=90):
 def ask(report, state, grid, timeout=90):
     rules = RULES.read_text(encoding="utf-8") if RULES.exists() else ""
     body = {
-        "model": MODEL, "stream": False, "format": "json", "think": THINK,
+        "model": MODEL, "stream": False, "format": "json", "think": THINK, "keep_alive": KEEP_ALIVE,
         "options": {"temperature": 0.2, "num_ctx": 8192},
         "messages": [
             {"role": "system", "content": "You are an expert Binding of Isaac player. Follow these rules:\n" + rules},

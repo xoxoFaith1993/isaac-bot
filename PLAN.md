@@ -538,6 +538,21 @@ hearts so I don't lose my devil deal chance? Will playing risky kill me? Risky d
   (`Danger.cost`: a hit with soul hearts in front, or no deal to lose, is cheap for good loot).
 - Tests: 9 offline risk checks. `risk|0.25` pins it (A/B), `risk|auto` lets it think.
 
+### Situations to watch: surprise bombs (noted 2026-11-25)
+The author: "In that TNT room... I don't know what spawns the random troll bomb and how often, if it's RNG or a
+scripted room in a seed. But it's something to make note of. Things like that can happen."
+- **What happened:** 2026-11-25, floor 1, a trap room (layout 765, "trap room (copy)"): 3 s after walking in, a hit
+  for a full heart with no enemy as the source (`hit 0.0|2`), i.e. an explosion. Most likely a troll bomb.
+- **What we know about where they come from:** the game's room files list each layout's spawns (some entries have
+  weighted random alternatives, so a layout can have a bomb only sometimes). Troll bombs also drop from chests,
+  beggars and some pickups, and certain enemies and plates can spawn them. So it can be either.
+- **Collecting the answer:** from 1.2.8 every bomb the player didn't drop is logged as a `bomb` line (variant, what
+  spawned it, how many updates after entering the room, the room layout). After a few runs that shows which layouts
+  spawn them, how soon, and whether it repeats.
+- **To check in the bot:** troll bombs are live bombs, so the movement core already avoids their blast. But one that
+  appears the moment Isaac walks in (or under him) gives about 1.5 s to react; the first update after entering a room
+  must already count it. If a layout spawns them reliably, add it to the knowledge so the bot steps away on entry.
+
 ### Level 3: whole-run strategy (next, in this order)
 1. **Run profile** each floor: stats, items (rating, carry and tags from `item_ratings.json`), hearts, consumables,
    curses, floor. Works out the build's weaknesses (low damage, slow tears, short range, no flight, no defence) and

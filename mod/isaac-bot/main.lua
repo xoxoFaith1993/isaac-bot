@@ -23,7 +23,7 @@ local Options = include("options")
 -- handed to the watchdog so it can build the brain's multiple-choice menu
 local MODS = { Reflex = Reflex, Nav = Nav, Danger = Danger, Options = Options, Rescue = Rescue, json = json }
 
-local VERSION = "1.2.7"
+local VERSION = "1.2.8"
 Reflex.status.mode = "full" -- fight + walk + explore (Stage 3); "combat" = fights only, "off" = hands off
 local TAG = "IBOT|"
 local BOT_SLOT = 2
@@ -661,6 +661,23 @@ mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, function()
   benchRoomStart()
   lastGrid = nil -- force a fresh map
   pcall(Nav.newRoom)
+  IsaacBotRoomEnter = Game():GetFrameCount()
+end)
+
+-- Surprise bombs (the author, 2026-11-25: a troll bomb in a trap room took a full heart 3 s after walking in; "is it
+-- RNG or a scripted room?"). Every bomb Isaac didn't drop: variant, who spawned it, updates since entering the room,
+-- and the room layout. A few runs of these lines answer it (PLAN.md "Situations to watch").
+mod:AddCallback(ModCallbacks.MC_POST_BOMB_INIT, function(_, b)
+  if not botAllowed() then return end
+  local sp = b.SpawnerEntity
+  if sp and sp.Type == EntityType.ENTITY_PLAYER then return end
+  pcall(function()
+    local d = Game():GetLevel():GetCurrentRoomDesc()
+    send("bomb", string.format("variant %d|from %s|%d updates after entering|room %s|layout %s", b.Variant,
+      sp and (sp.Type .. "." .. sp.Variant) or "none (room or pickup)",
+      Game():GetFrameCount() - (IsaacBotRoomEnter or 0), tostring(Game():GetLevel():GetCurrentRoomIndex()),
+      (d and d.Data) and (d.Data.Type .. "." .. d.Data.Variant) or "?"))
+  end)
 end)
 
 mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, function()
