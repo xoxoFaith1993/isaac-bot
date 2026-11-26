@@ -103,10 +103,12 @@ def stage_cmd(stage):
     return f"{s}{STAGE_SUFFIX.get(t, '')}"
 
 
-def run(limit=None, kinds=None, repeats=1):
+def run(limit=None, kinds=None, repeats=1, name=None):
     rooms = sorted(load(), key=lambda r: -r["hits_seen"])
     if kinds:
         rooms = [r for r in rooms if r["kind"] in kinds]
+    if name:  # only rooms whose name contains this (e.g. "Dingle")
+        rooms = [r for r in rooms if name.lower() in r["name"].lower()]
     if limit:
         rooms = rooms[:limit]
     # each room `repeats` times in a row (boss fights swing a lot: one try proves little)
@@ -170,8 +172,9 @@ def main():
         collect()
     elif cmd == "run":
         run(int(sys.argv[2]) if len(sys.argv) > 2 else None)
-    elif cmd == "bosses":  # python rooms.py bosses [tries]: every boss/miniboss room, `tries` times each (default 3)
-        run(None, kinds={"boss", "miniboss"}, repeats=int(sys.argv[2]) if len(sys.argv) > 2 else 3)
+    elif cmd == "bosses":  # python rooms.py bosses [tries] [name]: boss/miniboss rooms (optionally by name), N tries each
+        run(None, kinds={"boss", "miniboss"}, repeats=int(sys.argv[2]) if len(sys.argv) > 2 else 3,
+            name=sys.argv[3] if len(sys.argv) > 3 else None)
     else:
         for r in sorted(load(), key=lambda r: -r["hits_seen"]):
             print(f"{r['stage']} {r['kind']}.{r['variant']:<6} {r['name'][:24]:<24} seen {r['hits_seen']} hits: {r['causes']}")

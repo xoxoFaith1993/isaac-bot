@@ -607,7 +607,14 @@ local function planFire(player, room, w, targets, prefDist)
     -- ran down a wall, the planner sent the bot there, straight into the dash and spit lane (2026-11-25). The movement
     -- core keeps to open space instead and fires when the target comes roughly into line.
     local pbd = playbookOf(t)
-    if pbd and (pbd.tags.dashes_at_isaac or pbd.tags.charges_on_line) then still = false end
+    if pbd and (pbd.tags.dashes_at_isaac or pbd.tags.charges_on_line) then
+      -- ...unless its tells are KNOWN (boss tactics) and it's neither dashing nor telling right now: then a spot with a
+      -- clear lane is fine, and escape readiness keeps the sidestep open. Without any spot, in a room full of rocks
+      -- it never found a lane onto Dingle (2026-11-25, the author: "struggling against Dingle with the terrain")
+      local tacd = Reflex.tacticsOf(t)
+      local gated = tacd and tacd.tells and next(tacd.tells) ~= nil
+      still = gated and t.Velocity and t.Velocity:Length() < 1.5 and not Reflex.telling(t) or false
+    end
     if still and not (hash and plan.banned[hash] and plan.banned[hash] > f) then
       for _, c in ipairs(firingCells(room, t, range, relax >= 1 and 1 or 2)) do
         local steps = dist[c.idx]
