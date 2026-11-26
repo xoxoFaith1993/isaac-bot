@@ -33,7 +33,7 @@ class Rec:
     """The parsed recording: samples by frame, transitions, shots, spawns."""
 
     def __init__(self, lines):
-        self.samples, self.tra, self.shots, self.spawns = {}, [], [], []
+        self.samples, self.tra, self.shots, self.spawns, self.ivel = {}, [], [], [], {}
         for line in lines:
             m = LINE.match(line.rstrip("\n"))
             if not m:
@@ -47,7 +47,10 @@ class Rec:
 
     def _add(self, kind, p):
         if kind == "rec":
-            ix, iy = map(float, p[1].split(","))
+            iso = [float(v) for v in p[1].split(",")]  # x,y (older lines) or x,y,vx,vy (from 1.2.4x)
+            ix, iy = iso[0], iso[1]
+            if len(iso) >= 4:
+                self.ivel[int(p[0])] = (iso[2], iso[3])
             ens = []
             for e in (p[2].split(";") if len(p) > 2 and p[2] else []):
                 q = e.split(",")
@@ -283,9 +286,44 @@ def check_isaac(r):
              f"p90 {p90:.1f}, median {st.median(sp) if sp else 0:.1f} ({len(sp)} samples)", verdict(len(sp), 7.0 <= p90 <= 12.5))]
 
 
+def _step_ratio(pairs_):
+    """Position change per update / |velocity| over steady-motion sample pairs (1 = one step, 2 = two steps)."""
+    out = []
+    for (x0, y0, v0), (x1, y1, v1) in pairs_:
+        if v0 < 2 or v1 < 2 or abs(v0 - v1) > 0.3 * v0:
+            continue
+        d = math.hypot(x1 - x0, y1 - y0) / 2
+        if d < 40:  # room changes
+            out.append(d / ((v0 + v1) / 2))
+    return out
+
+
+def check_steps(r):
+    """Batch D (RE_CORE.md): position += velocity once per update. Isaac's own step is the open question."""
+    rows = []
+    en = []
+    for key in ("261.0", "23.0", "237.1", "10.0", "260.0", "260.10", "46.0", "217.0"):
+        tr = r.track(key)
+        en += _step_ratio(((a["x"], a["y"], math.hypot(a["vx"], a["vy"])), (b["x"], b["y"], math.hypot(b["vx"], b["vy"])))
+                          for (f0, _, _, a), (f1, _, _, b) in zip(tr, tr[1:]) if f1 - f0 == 2)
+    med = st.median(en) if en else 0
+    rows.append(("Enemies: one physics step per update (move = |Velocity|)", f"median ratio {med:.2f} ({len(en)} pairs)",
+                 verdict(len(en), 0.9 <= med <= 1.1)))
+    fs = [f for f in r.frames if f in r.ivel]
+    isa = _step_ratio(((r.samples[a][0], r.samples[a][1], math.hypot(*r.ivel[a])),
+                       (r.samples[b][0], r.samples[b][1], math.hypot(*r.ivel[b])))
+                      for a, b in zip(fs, fs[1:]) if b - a == 2)
+    med = st.median(isa) if isa else 0
+    step = "one step" if 0.9 <= med <= 1.1 else ("two steps" if 1.8 <= med <= 2.2 else "neither")
+    rows.append(("Isaac: position change per update vs his Velocity (1 = one step, 2 = two)",
+                 f"median ratio {med:.2f} ({len(isa)} pairs) -> {step}" if isa else "no Isaac velocity in this log",
+                 "not covered" if not isa else ("confirmed" if step != "neither" else "CONTRADICTED")))
+    return rows
+
+
 CHECKS = [check_dingle, check_haunt, check_lil_haunt, check_sloth,
           lambda r: check_charge(r, "23.0", "Charger 23.0"),
-          lambda r: check_charge(r, "237.1", "Gurgling 237.1"), check_isaac]
+          lambda r: check_charge(r, "237.1", "Gurgling 237.1"), check_isaac, check_steps]
 
 
 def has_recording(path):

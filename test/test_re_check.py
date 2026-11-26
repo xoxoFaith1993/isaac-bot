@@ -56,6 +56,16 @@ CH = "Charger 23.0: charges when Isaac (+0-16 updates lead) is in its tile row/c
 v = rows_for(lines)
 check("a charge with Isaac in its row fits the trigger", v[CH] == "confirmed", v[CH])
 
+# Isaac's velocity field (x,y,vx,vy): moving 8 px per update at |v| = 4 reads as "two steps"
+lines = [f"00:00:00 rec    {1000 + 2 * i}|{100 + 16 * i},300,4.0,0.0|" for i in range(10)]
+IS = "Isaac: position change per update vs his Velocity (1 = one step, 2 = two)"
+_, rows = re_check.run(lines)
+got = {c: (g, v) for c, g, v in rows}[IS]
+check("Isaac moving 2x his velocity reads as two steps", "two steps" in got[0] and got[1] == "confirmed", got[0])
+_, rows = re_check.run(dingle_log(40))
+got = {c: (g, v) for c, g, v in rows}[IS]
+check("old x,y-only lines -> not covered", got[1] == "not covered", got[0])
+
 print("\n".join(results))
 failed = sum(r.startswith("FAIL") for r in results)
 print(f"\n{len(results) - failed}/{len(results)} passed")
