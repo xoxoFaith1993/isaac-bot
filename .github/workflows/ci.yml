@@ -1,0 +1,64 @@
+# CI ("continuous integration"): GitHub runs these checks on its own computers after every push and every pull
+# request, and puts a green tick or a red cross on the commit. No game is needed: the tests use the fake Isaac in
+# test/mock.lua. Each job below is one tick, so a red one says what broke.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lua-tests:
+    name: Lua tests (Lua ${{ matrix.lua }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lua: ["5.3", "5.4"] # the game runs 5.3; 5.4 catches code that only works by accident
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Lua
+        run: sudo apt-get update && sudo apt-get install -y lua${{ matrix.lua }}
+      - name: Every mod file compiles + all offline tests
+        run: python3 test/run.py --lua lua${{ matrix.lua }}
+      - name: Mutant check (each fix's test fails without the fix)
+        if: matrix.lua == '5.3'
+        run: python3 test/run.py --lua lua5.3 --prove --no-compile
+
+  python-tests:
+    name: Python tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+      - name: Run every test/test_*.py and brain/test_*.py
+        run: |
+          failed=0
+          for t in test/test_*.py brain/test_*.py; do
+            [ -e "$t" ] || continue
+            echo "::group::$t"
+            python "$t" || { failed=1; echo "FAILED: $t"; }
+            echo "::endgroup::"
+          done
+          exit $failed
+
+  privacy:
+    name: No personal details
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: python3 tools/privacy_check.py --all
+
+  cards:
+    name: Enemy cards up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # mod/isaac-bot/cards.lua is generated from knowledge/enemy_cards.json; this fails if someone edited the
+      # JSON and didn't rebuild (python tools/build_cards.py)
+      - run: python3 tools/build_cards.py --check

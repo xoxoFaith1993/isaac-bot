@@ -938,3 +938,72 @@ the REPENTOGON field table. Real offsets: `[body · F1 0x799750, 0x7c8250 · 2 r
 - velocity.y gain of fallingAccel per update.
 - Enemy knockback per tear hit (unresolved).
 - Tears at × 0.75 during Death's hourglass.
+
+## Batch F2 (2026-11-26): charge weapons, flight, piercing
+
+**Readers:**
+- **Tears weapon:** one Sonnet reader on the real tears weapon (vtable `0xba5d48`: fire `0xa23900`, update `0xa27130`),
+  plus the write-up session's own check of the key lines.
+- **Earlier F2 rounds:** they read the player-side glue (`0x7834b0`) and a knife-family weapon (`0xa136a0`, type-8
+  knife slots, charge +1/update to 3 × fire delay). Their notes are in `runs/research/re/core/F2`, `F2b`.
+- **Flight and piercing:** from the write-up session's assembly reads.
+
+### Normal tears (the tears weapon `0xa23900`)
+- **Fire rate:** it fires while held when fireDelay < 0. Each shot adds maxFireDelay + 1. The update counts fireDelay
+  down by 1 per update (× a time scale, normally 1) and stops at −1. **Period = maxFireDelay + 1 updates.** It can catch
+  up by up to 8 shots in one update. `[timing · F2 0xa23900, 0xa27130 · 1 reader]`
+- **Tear velocity:** `[move · F2 0xa23900 · 1 reader]`
+  - base **dir × 10 + a movement term** (`0xa0e770`, body unread), then × shot speed (player 0x1468);
+  - Ipecac-style item 149: × 0.9-1.1 random.
+- **Direction:** `[attack · F2 0xa23900, 0xa0bf80 · 1 reader]`
+  - **axis-locked by default:** |x| ≤ |y| → straight up or down, else left or right;
+  - collectibles 465 and 394 (and an active aim target) unlock free aim (normalised).
+- **Multi-shot:** count from the player's multi-shot params; extra backward, ±90° and random-direction shots by flags;
+  spread jitter from items. `[attack · F2 0xa23900 · 1 reader]`
+
+### Chocolate Milk (modifier bit 1, collectible 69)
+- **Charge:** **while held, +1 per update** up to the weapon's max (≈ 2.5 × (maxFireDelay + 1)).
+  `[timing · F2 0xa23900 · 1 reader + write-up check]`
+- **Release:** **any charge > 0 fires one shot**, in the last held direction. `[attack · F2 0xa23900 · 1 reader + write-up check]`
+  - It auto-fires at 2.5 × maxFireDelay only with the auto-release items (bit 0x80) or fire delay ≤ 0.
+- **Multiplier = (charge + 1) × 4 / (2.5 × (maxFireDelay + 1)), clamped 0.1-4.0.** `[attack · F2 0xa23900 lines 686-702 · 1 reader + write-up check]`
+  - It's linear, and full charge gives ×4.
+  - It's passed to the tear-spawn helper; whether it scales damage, size or both is inside that helper (unread).
+- **Cursed Eye (bit 2):** the same charge. On release it fires a burst of one tear per update; the count is
+  `int((charge + 1) × 5 / (max + 1))`, so up to 5. `[attack · F2 0xa23900 · 1 reader]`
+- **Neptunus (0x100):** not a charge weapon. Charge builds while *not* firing and drains while firing; the fire rate
+  scales up to ≈ 2.45 × at full charge, with up to 16° of extra spread. `[timing · F2 0xa23900 · 1 reader]`
+- **Monstro's Lung, Brimstone, Ludovico, Anti-Gravity, Tractor Beam:** not in this weapon. They're separate weapon
+  classes (Brimstone `0xa185b0`, Lung `0xa20f90`).
+
+### Flight
+- **Rule:** **"flying" = grid collision class 0-3** (`Entity::IsFlying` `0x6b3660`). The player's canFly is at
+  **0x1570** (table + 0xc). `[body · F2 0x6b3660 · 1 reader (write-up session)]`
+- **Spikes skip flyers**, except when the "hurts flyers" switch is on: in sacrifice rooms (room type 13), on grid type
+  28, and on spike grids with variant > 99. `[terrain · F2 0x712290, 0x7110e0 · 1 reader (write-up session)]`
+- **Creep:** the creep/effect code calls `IsFlying` (about 10 call sites), so flyers very likely ignore creep. The call
+  sites weren't read one by one. `[terrain · F2 0x5da490 area · 1 reader (write-up session)]`
+- **The curse-room door** (E2c): its ground branch needs grid class 5, so flyers avoid it. They're still hit by its
+  other two branches (leaving a curse room, or both sides type 1).
+
+### Piercing and spectral (tear flags, from the masks used in tear collision `0x67a310`)
+- **Piercing (bit 1):** the tear survives enemy hits. It still stops at "solid" entities (`0x6b3600`): fireplaces
+  (33, variant < 10), types 292, 245, 302, 42 (stone grimace), 201, 203, 235 (Gaping Maw) and 202 (stone shooter).
+  `[attack · F2 0x67a310, 0x6b3600 · 1 reader (write-up session)]`
+- **Spectral (bit 0):** passes those solid entities too. `[attack · F2 0x67a310 · 1 reader (write-up session)]`
+- **Bit 9 (persistent):** the overkill rule from F1. The tear continues with damage minus the enemy's HP.
+  `[attack · F1/F2 0x67a310 · 2 readers]`
+
+### Bot meaning (F2)
+- **Tear rate:** 30 / (maxFireDelay + 1) per second. Tears are axis-locked unless the bot holds an item that frees
+  aim.
+- **Chocolate Milk:** hold to charge, at +1 per update. **A full charge (2.5 × (delay + 1) updates) gives ×4**, and
+  any tap fires a weak shot. Plan holds of about that length.
+- **Flight:** plan through spikes freely, except in sacrifice rooms. Creep can likely be ignored too.
+- **Piercing:** expect tears to pass enemies but stop at fireplaces and stone things. Spectral passes those too.
+
+### Record to confirm (F2)
+- Tear interval maxFireDelay + 1.
+- The Chocolate Milk multiplier at partial and full charge (damage and size).
+- Spike damage while flying (should be none outside sacrifice rooms).
+- Creep while flying.
