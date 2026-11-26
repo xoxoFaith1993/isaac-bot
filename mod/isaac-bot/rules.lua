@@ -133,7 +133,12 @@ R.risk = { half_heart = 6, full_hp = 12, per_hit = 25,
 R.invincible = { [298] = "stump", [77] = "ram", [93] = "ram", [58] = "shield" } -- Unicorn Stump, My Little Unicorn, Gamekid, Book of Shadows
 R.invincible_stop = 20
 R.buy = true
-R.deals = { take = true, min_value = 75, keep_containers = 2, keep_hp = 4 }
+-- Weighed in deals.lua since 2026-11-26 (levels 1-2): a heart container paid costs `container` x 6 / containers left
+-- (20 -> 24 points at 6 containers, 60 at 3); soul hearts `soul_heart` each; the FIRST deal of a run also gives up the
+-- angel rooms: deal floors left (to `last_deal_floor`) x `angel_odds` x `angel_item`. Buy when worth minus those >=
+-- `min_net`. Rules of thumb, tuned from the deal reports (tools/deals.py).
+R.deals = { take = true, keep_containers = 2, keep_hp = 4, container = 20, soul_heart = 12,
+  last_deal_floor = 8, angel_odds = 0.06, angel_item = 90, min_net = 10 }
 -- Shop: an item when its run value beats its price; keys/bombs/hearts only when short; keep a few coins otherwise.
 R.shop = { reserve = 5, key_if_none = 12, bomb_if_none = 10, heart_if_missing = 12 }
 

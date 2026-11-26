@@ -255,6 +255,16 @@ return {
     patches = { { file = "reflex", find = "and not (plateLeft and nonFire == 0) and fireThreat(e) then",
                   replace = "and not (plateLeft and nonFire == 0) then" } } },
 
+  { test = "deals: weighing devil items", why = "no angel-path cost on the first deal",
+    patches = { { file = "deals", find = "  if not st.dealTaken then", replace = "  if false then" } } },
+  { test = "deals: weighing devil items", why = "flat heart cost (not dearer when fewer are left)",
+    patches = { { file = "deals", find = "(D.container or 20) * 6 / math.max(1, containers - k)",
+                  replace = "(D.container or 20) * 2" } } },
+
+  { test = "deals: walks into an open devil room after the boss", why = "doors to negative room indexes ignored",
+    patches = { { file = "nav", find = "if d.TargetRoomIndex < 0 and not (R.room[d.TargetRoomType] or {}).deal then",
+                  replace = "if d.TargetRoomIndex < 0 then" } } },
+
   { test = "doesn't swap its card for a pill", why = "pocket slot check for pills/cards",
     patches = { { file = "nav", find = "(p:GetPill(0) == 0 and p:GetCard(0) == 0) and V.pill_card or 0",
                   replace = "V.pill_card" } } },

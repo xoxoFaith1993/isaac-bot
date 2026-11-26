@@ -1807,12 +1807,19 @@ run("strategy: deals, shop and risky rooms", function()
   local function priced(id, price, variant)
     return { Price = price, Variant = variant or PickupVariant.PICKUP_COLLECTIBLE, SubType = id }
   end
+  -- (since 2026-11-26 weighed in deals.lua: worth minus hearts minus the angel path - floor 2, no deal taken yet)
+  local lv0 = Game():GetLevel()
+  local stage0 = lv0.stage
+  lv0.stage = 2
+  p.GetMaxHearts = function() return 8 end
+  check("deal: a strong item for 1 heart container (4 -> 3 left) is taken", St.buyValue(p, priced(10, -1), V, Rules) > 0,
+        tostring(St.deals.why))
   p.GetMaxHearts = function() return 6 end
-  check("deal: a strong item for 1 heart container (3 -> 2 left) is taken", St.buyValue(p, priced(10, -1), V, Rules) > 0)
   check("deal: a weak item is never worth hearts", St.buyValue(p, priced(11, -1), V, Rules) == 0)
   p.GetMaxHearts = function() return 4 end
   check("deal: never below 2 heart containers", St.buyValue(p, priced(10, -1), V, Rules) == 0)
   p.GetMaxHearts = nil
+  lv0.stage = stage0
   p.GetNumCoins = function() return 20 end
   check("shop: a good item it can afford is bought", St.buyValue(p, priced(10, 15), V, Rules) > 0)
   p._keys = 0
@@ -1942,6 +1949,58 @@ run("skips a button sealed in metal and presses the reachable one", function()
   end
   check("skips a button sealed in metal and presses the reachable one", pressedReachable,
         fmt("ended at %s, goal %s", tostring(p.Position), tostring(Nav.status.goal)))
+end)
+
+-- 78. Deals, level 2 (the author, 2026-11-26, after the first Mom kill: "I'd like to work on the devil deals and angel
+-- deals weighing"). deals.lua's devilNet on its own: hearts dearer the fewer are left, the first deal pays for the
+-- angel rooms it gives up, and once on the devil path that cost is gone.
+run("deals: weighing devil items", function()
+  local Deals = Reflex.strategy.deals
+  local D = Rules.deals
+  local function st(containers, stage, taken, soul)
+    return { containers = containers, stage = stage, dealTaken = taken, soul = soul or 0,
+             hp = containers * 2 + (soul or 0) }
+  end
+  local one = { red = 2 }
+  local q4, q2 = 90, 60
+  local a = Deals.devilNet(q4, one, st(6, 2, false), D)
+  local b = Deals.devilNet(q2, one, st(6, 2, false), D)
+  local c = Deals.devilNet(q2, one, st(6, 2, true), D)
+  local d = Deals.devilNet(q2, one, st(6, 6, false), D)
+  local e = Deals.devilNet(q4, { red = 4 }, st(3, 2, true), D)
+  local f = Deals.devilNet(q4, one, st(6, 2, true), D) > Deals.devilNet(q4, one, st(3, 2, true), D)
+  local g = Deals.devilNet(q4, { soul = 6 }, st(3, 3, true, 4), D)
+  check("deals: weighing devil items", a > 0 and b == 0 and c > 0 and d > 0 and e == 0 and f and g == 0,
+        fmt("Q4 floor 2: %s | Q2 floor 2: %s | Q2 after a deal: %s | Q2 floor 6: %s | 2 hearts at 3 containers: %s | " ..
+            "hearts dearer when fewer: %s | 3 soul with 2: %s", a > 0 and "buy" or "skip", b > 0 and "buy" or "skip",
+            c > 0 and "buy" or "skip", d > 0 and "buy" or "skip", e > 0 and "buy" or "skip", tostring(f),
+            g > 0 and "buy" or "skip"))
+end)
+
+-- 79. Deals, level 1: the walker never saw a deal door. Devil/angel rooms sit at room index -1 and doors to negative
+-- indexes were all ignored, so after a boss it walked past an open deal door to the trapdoor (no deal room entered in
+-- any run so far). A cleared boss room with an open devil door and a trapdoor: it heads for the devil door first.
+run("deals: walks into an open devil room after the boss", function()
+  local rows = {
+    "WWWWWWWDWWWWWWW",
+    "W.............W",
+    "W.............W",
+    "W.............W",
+    "D......T......W",
+    "W.............W",
+    "W.............W",
+    "W.............W",
+    "WWWWWWWDWWWWWWW",
+  }
+  Mock.floor({
+    [84] = { visited = true, type = 5, clear = true, rows = rows, doors = { [1] = { to = -1, type = 14 } } },
+    [-1] = { type = 14, doors = { [3] = 84 } },
+  })
+  Mock.enter(84, nil, Mock.tile(7, 6)); Nav.newRoom()
+  local move = Nav.update(Isaac.GetPlayer())
+  local goal = tostring(Nav.status.goal)
+  check("deals: walks into an open devil room after the boss", goal:find("deal room") ~= nil and move ~= nil and move.Y < -0.5,
+        fmt("goal %s, move %s", goal, tostring(move)))
 end)
 
 ------------------------------------------------------------------------ forecast plan step 3: the positioning brain

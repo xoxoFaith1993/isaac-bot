@@ -176,7 +176,11 @@ end
 -- A door the player can actually see. Secret-room doors stay hidden until something blows them open;
 -- the game tells mods where they are anyway, so we ignore them while they're shut (no peeking).
 local function visibleDoor(d)
-  if not d or not d.TargetRoomIndex or d.TargetRoomIndex < 0 then return false end
+  if not d or not d.TargetRoomIndex then return false end
+  -- Special rooms sit at negative indexes - and devil/angel rooms are one of them (index -1). Refusing every negative
+  -- index meant a deal door after a boss was never seen: in every run so far, no deal room entered (the deal report,
+  -- 2026-11-26). Deal doors count; the other special rooms (crawlspaces, error rooms...) still don't.
+  if d.TargetRoomIndex < 0 and not (R.room[d.TargetRoomType] or {}).deal then return false end
   if SECRET_TYPES[d.TargetRoomType] then
     -- a hidden secret door still reports "open"; what gives it away is that it's still solid wall
     if not d:IsOpen() then return false end

@@ -8,6 +8,8 @@
 --    (take one, the rest vanish): only the best one is wanted.
 -- The profile also nudges the risk layer: a strong build ends fights fast, a weak one plays it safer.
 local Strategy = { ratings = {}, profile = nil, lastProfile = -999 }
+local Deals = include("deals") -- devil/angel deal weighing (2026-11-26)
+Strategy.deals = Deals
 
 -- "id=rating,carry,tag,tag;..."  (tags = item_ratings.json tag_codes: dmg, tear, rng, ss, spd, hp, fly, spec, def...)
 function Strategy.loadRatings(text)
@@ -111,13 +113,11 @@ function Strategy.buyValue(p, pk, V, R)
     local cost = PRICE[price]
     if not cost or pk.Variant ~= PickupVariant.PICKUP_COLLECTIBLE then return 0 end
     local val = Strategy.itemValue(p, pk.SubType, V) or 0
-    if val < (D.min_value or 75) then return 0 end
-    local maxRed = p:GetMaxHearts()
-    local hp = p:GetHearts() + p:GetSoulHearts() + p:GetBoneHearts() * 2
-    if cost.red and (maxRed - cost.red) < 2 * (D.keep_containers or 2) then return 0 end
-    if cost.soul and p:GetSoulHearts() < cost.soul then return 0 end
-    if hp - (cost.red or 0) - (cost.soul or 0) < (D.keep_hp or 4) then return 0 end
-    return val
+    -- weighed in deals.lua (2026-11-26, the deal work levels 1-2): worth minus the hearts (dearer the fewer are left)
+    -- minus the angel rooms a first deal gives up; the old floors (2 containers, 2 hearts) stay
+    local net, why = Deals.devilNet(val, cost, Deals.state(p), D)
+    Deals.why = why
+    return net
   end
   if price > 0 then
     local coins = p:GetNumCoins()

@@ -23,7 +23,7 @@ local Options = include("options")
 -- handed to the watchdog so it can build the brain's multiple-choice menu
 local MODS = { Reflex = Reflex, Nav = Nav, Danger = Danger, Options = Options, Rescue = Rescue, json = json }
 
-local VERSION = "1.2.48"
+local VERSION = "1.2.49"
 Reflex.status.mode = "full" -- fight + walk + explore (Stage 3); "combat" = fights only, "off" = hands off
 local TAG = "IBOT|"
 local BOT_SLOT = 2
@@ -560,8 +560,45 @@ local function aimedFire(p, shoot)
   return shoot
 end
 
+-- Deals, level 1 (2026-11-26, deals.lua): one "deal" line per boss cleared on a deal floor (the game's chances and the
+-- door), and in a deal room every item with its price, its worth and the decision. tools/deals.py sums them per run.
+local dealLogged = {}
+local function dealWatch()
+  if bench or not botAllowed() then return end
+  local room = Game():GetRoom()
+  if room:GetType() ~= RoomType.ROOM_BOSS or not room:IsClear() then return end
+  local lv = Game():GetLevel()
+  local key = lv:GetStage() .. ":" .. lv:GetCurrentRoomIndex() .. ":" .. Game():GetSeeds():GetStartSeed()
+  if dealLogged[key] then return end
+  dealLogged[key] = true
+  if lv:GetStage() < 2 or lv:GetStage() > 8 then return end
+  send("deal", Reflex.strategy.deals.afterBossLine(Isaac.GetPlayer(0)))
+end
+local function dealRoomLine()
+  local room = Game():GetRoom()
+  local kind = Reflex.strategy.deals.TYPES[room:GetType()]
+  if not kind or bench or not botAllowed() then return end
+  local p = Isaac.GetPlayer(0)
+  local items = {}
+  for _, e in ipairs(Isaac.FindByType(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE)) do
+    local pk = e:ToPickup()
+    if pk and pk.SubType > 0 then
+      local V = Rules.value
+      local worth = Reflex.strategy.itemValue(p, pk.SubType, V) or -1
+      local buy = 0
+      Reflex.strategy.deals.why = nil
+      if (pk.Price or 0) < 0 then buy = Reflex.strategy.buyValue(p, pk, V, Rules) end
+      items[#items + 1] = string.format("item %d price %d worth %d -> %s%s", pk.SubType, pk.Price or 0, worth,
+        ((pk.Price or 0) < 0) and (buy > 0 and "BUY" or "skip") or "free",
+        Reflex.strategy.deals.why and (" (" .. Reflex.strategy.deals.why .. ")") or "")
+    end
+  end
+  send("deal", "entered " .. kind .. " room|" .. (#items > 0 and table.concat(items, "; ") or "no items"))
+end
+
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, function()
   pcall(benchCheck, send)
+  pcall(dealWatch)
   local f = Game():GetFrameCount()
 
   -- reflexes every update (bot's own slot only); when there's no fight, the navigator walks
@@ -740,6 +777,7 @@ mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, function()
   benchRoomStart()
   lastGrid = nil -- force a fresh map
   pcall(Nav.newRoom)
+  pcall(dealRoomLine)
   IsaacBotRoomEnter = Game():GetFrameCount()
 end)
 
