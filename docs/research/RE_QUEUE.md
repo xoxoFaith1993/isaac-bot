@@ -22,6 +22,14 @@ and ticks items off here.
 **Safety:** one Ghidra job at a time, 6 GB heap, the watchdog, low CPU priority while a benchmark gate is running.
 Only confirmed facts become bot rules (the main session folds them in).
 
+**Keep going (the author, 2026-11-26, after the E3 -> E4 stall):**
+- When a batch lands (commit + note), the next open batch goes to the Ghidra session in the same turn.
+- Stop only when the queue is empty, the author says stop, or we're blocked. When blocked, write `BLOCKED: <reason>` in
+  the log below so it shows up.
+- During a long batch, keep writing notes and partial reads to `runs/research/re/`. The watcher
+  (`brain/watcher.py`) files a "decompile stalled" problem when `[ ]` batches remain and nothing in `docs/research/`
+  or `runs/research/re/` has changed for an hour.
+
 **Order:** by tier, then by how often the source shows up in our hit logs. The counts are all-time hits from
 `runs/hits.jsonl` and the archived `runs/logs/`, so they cover old bot versions too. A death or a live report from
 the author can move an item up.
