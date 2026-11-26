@@ -188,6 +188,8 @@ shot range: no shots from more than 200 px.
 
 - **Time:** about 35 minutes from the download to both decompiles. The one-off setup (download, scripts, debugging
   them) was most of it. A new enemy now takes about 5-10 minutes to find and decompile, plus the reading.
+- **Done (2026-11-26, approved "Yes, do all 8"):** Gemini, the Blighted Ovum, Sloth, Pin, Monstro, Attack Fly, Trite and
+  Charger are in `RE_ENEMIES.md`.
 - **GO for the other 8.** The same steps cover Gemini (79.0, also the Blighted Ovum 79.2), Sloth (46.0), Pin (62.0),
   Monstro (20.0), Attack Fly (18.0), Trite (29.1) and Charger (23.0): look up the case byte at
   `0x6cbe5c + (Type - 10)`, decompile that call, then write a table like Dingle's. Each one is still a hypothesis
