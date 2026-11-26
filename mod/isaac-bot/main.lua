@@ -23,7 +23,7 @@ local Options = include("options")
 -- handed to the watchdog so it can build the brain's multiple-choice menu
 local MODS = { Reflex = Reflex, Nav = Nav, Danger = Danger, Options = Options, Rescue = Rescue, json = json }
 
-local VERSION = "1.2.11"
+local VERSION = "1.2.12"
 Reflex.status.mode = "full" -- fight + walk + explore (Stage 3); "combat" = fights only, "off" = hands off
 local TAG = "IBOT|"
 local BOT_SLOT = 2
@@ -575,7 +575,8 @@ mod:AddCallback(ModCallbacks.MC_POST_UPDATE, function()
       if math.abs(rk.level - (rk.lastSent or -1)) >= 0.1 then
         rk.lastSent = rk.level
         send("risk", string.format("%.2f|%s%s", rk.level, rk.why,
-          rk.invincible and ("|INVINCIBLE (" .. rk.invincible .. "): point-blank, no dodging") or ""))
+          (rk.invincible and ("|INVINCIBLE (" .. rk.invincible .. "): point-blank, no dodging") or "")
+          .. (rk.window and ("|boss window (" .. rk.window .. "): closing in to hit") or "")))
       end
       lastV2Err = Reflex.v2err
       reflexError = nil

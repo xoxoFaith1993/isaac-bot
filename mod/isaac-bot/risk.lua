@@ -43,6 +43,8 @@ local NEUTRAL = 0.25
 local INVINCIBLE = { m_hit = 0.02, m_soft = 0, m_edge_hit = 0, m_crowd = 0, m_pincer = 0, m_trap = 0, m_edge = 0,
                      m_corner = 0, m_charge_line = 0, plan_clearance = 0, still_clearance = 0, stand_safe_r = 0,
                      calm_r = 0, relax_s = 0.2, kite_r = 0 }
+local WINDOW = { m_aim = 2.5, loose_aim = 1.5, pref_dist = 0.65, boss_dist = 0.65, m_soft = 0.5, m_crowd = 0.3,
+                 m_trap = 0.5, m_corner = 0.5, m_edge = 0.5, m_center = 0.5, plan_clearance = 0.6, relax_s = 0.3 }
 local R = include("rules")
 function Risk.invincibleNow(p)
   local kind, left = nil, 0
@@ -69,6 +71,13 @@ function Risk.apply(S)
   for k, slope in pairs(Risk.KNOBS) do
     local b = Risk.base[k]
     if b then S[k] = b * math.max(0.2, 1 + slope * (r - NEUTRAL)) end
+  end
+  -- a boss attack window (boss tactics): line up and close in. Hits still cost in full (real shots still hurt), but
+  -- aiming is worth much more and the comfort costs (crowd, corners, ways out, margins) mostly drop.
+  if Risk.window and not Risk.invincible then
+    for k, mult in pairs(WINDOW) do
+      if Risk.base[k] then S[k] = S[k] * mult end
+    end
   end
   if Risk.invincible then
     for k, mult in pairs(INVINCIBLE) do

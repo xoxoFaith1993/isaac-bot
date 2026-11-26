@@ -350,8 +350,12 @@ def send_boss_tactics(pipe):
                     for a in d.get("tell_anim") or []:
                         if re.fullmatch(r"[A-Za-z0-9_ ]+", str(a)):
                             tells.add(str(a))
+            # attack windows: animations during which it's safe to pour damage in (not "always"/free text)
+            windows = sorted(str(a) for a in (b.get("attack_windows") or [])
+                             if re.fullmatch(r"[A-Za-z0-9_]+", str(a)) and str(a) != "always")
             pd = b.get("pref_dist")
-            parts.append(f"{key}={int(pd) if isinstance(pd, (int, float)) else ''},{flags},{adds}," + "|".join(sorted(tells)))
+            parts.append(f"{key}={int(pd) if isinstance(pd, (int, float)) else ''},{flags},{adds},"
+                         + "|".join(sorted(tells)) + "," + "|".join(windows))
         pipe.send("bosstactics", ";".join(parts))
     except (ValueError, OSError, TypeError):
         pass

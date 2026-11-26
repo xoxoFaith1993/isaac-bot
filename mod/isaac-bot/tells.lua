@@ -173,6 +173,12 @@ function Tells.warning(e)
   return total >= 3 and bad / total >= 0.5
 end
 
+-- The animation this enemy is playing right now (nil if not tracked).
+function Tells.animOf(e)
+  local c = Tells.cur[GetPtrHash(e)]
+  return c and c.anim or nil
+end
+
 -- Has this enemy TYPE been seen shooting at all? (any animation that produced a shot)
 function Tells.isShooter(etype)
   for _, r in pairs(Tells.book[etype] or {}) do

@@ -377,12 +377,15 @@ IsaacBotBossTactics = Reflex.bossTactics
 function Reflex.loadBossTactics(text)
   local n = 0
   for entry in string.gmatch(text or "", "[^;]+") do
-    local key, pd, flags, adds, tells = entry:match("^([%d%.]+)=(%d*),(%a*),([%a_]*),?(.*)$")
+    local key, pd, flags, adds, rest = entry:match("^([%d%.]+)=(%d*),(%a*),([%a_]*),?(.*)$")
     if key then
+      local tells, windows = (rest or ""):match("^([^,]*),?(.*)$")
       local t = { pd = tonumber(pd), diag = flags:find("d") ~= nil, row = flags:find("r") ~= nil,
                   col = flags:find("c") ~= nil, corners = flags:find("k") ~= nil, adds = adds ~= "" and adds or nil,
-                  tells = {} }
+                  tells = {}, windows = {} }
       for a in string.gmatch(tells or "", "[^|]+") do t.tells[a] = true end
+      -- attack windows: animations where it's safe to pour damage in (Dingle "Tired"/"Idle"/"Whistle")
+      for a in string.gmatch(windows or "", "[^|]+") do t.windows[a] = true; t.hasWindows = true end
       Reflex.bossTactics[key] = t
       n = n + 1
     end
@@ -564,7 +567,7 @@ local function planFire(player, room, w, targets, prefDist)
             if bossOn and t.IsBoss then
               if t:IsBoss() then
                 local tac = Reflex.tacticsOf(t)
-                local keep = (tac and tac.pd) or S.boss_dist
+                local keep = ((tac and tac.pd) or S.boss_dist) * (Risk.window and 0.65 or 1)
                 if c.dist < keep * 0.8 and not Risk.invincible then score = score + 300 end
               elseif bossAdds == "kill_first" then
                 score = score - 150
@@ -1204,6 +1207,25 @@ function Reflex.update(player)
     pcall(Risk.update, player, w.enemies)
     Risk.apply(S)
   end
+  -- boss attack window (boss tactics): the boss is in an animation where it's safe to hit it (Dingle tired after
+  -- its dashes). The author, 2026-11-25: "there are windows where he can lay damage and windows where he focuses on
+  -- dodging. He is sitting in the predicted safe spot and it limits the damage he puts on." In a window: close in and
+  -- pour damage in (risk.lua WINDOW); outside it, dodge as before. Checked every update: windows are short.
+  local win = nil
+  for _, e in ipairs(w.enemies) do
+    if e.Type ~= EntityType.ENTITY_FIREPLACE and e:IsBoss() then
+      local tac = Reflex.tacticsOf(e)
+      if tac and tac.hasWindows then
+        local a = Tells.animOf(e)
+        if a and tac.windows[a] then win = a; break end
+      end
+    end
+  end
+  if win ~= Risk.window then
+    Risk.window = win
+    Risk.apply(S)
+    Risk.lastSent = -1 -- log it
+  end
   -- invincible window (Unicorn Stump & co., rules.lua R.invincible): checked every update, it only lasts seconds
   local inv = Risk.invincibleNow(player)
   if inv ~= Risk.invincible then
@@ -1385,7 +1407,7 @@ function Reflex.update(player)
     -- fight bosses from farther out: the boss's own distance from the tactics file when there is one
     local tac = Reflex.tacticsOf(target)
     if Risk.invincible then prefDist = S.pref_dist -- untouchable right now: point-blank, whatever the boss
-    elseif tac and tac.pd then prefDist = math.min(tac.pd, player.TearRange * 0.85)
+    elseif tac and tac.pd then prefDist = math.min(tac.pd * (Risk.window and 0.65 or 1), player.TearRange * 0.85)
     else prefDist = math.max(prefDist, math.min(S.boss_dist, player.TearRange * 0.8)) end
   end
   -- A shielded enemy that opens when you come close (Hosts: "you gotta walk up for them to open, and then

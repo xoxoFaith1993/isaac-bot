@@ -449,6 +449,24 @@ run("invincible window: drops dodging, then back to normal", function()
         fmt("m_hit %.0f while invincible (pref %.0f), %.0f after", onHit, onDist, offHit))
 end)
 
+-- 39. 1.2.12 boss attack windows (the author: "there are windows where he can lay damage and windows where he focuses
+-- on dodging; he sits in the predicted safe spot and it limits the damage"): in a window, aim counts more, closer
+run("boss attack window: aim harder while the boss is tired", function()
+  local S, Risk = Reflex.S, Reflex.risk
+  Reflex.loadBossTactics("261.0=200,k,kill_close,Dance,Idle|Tired")
+  Mock.room(nil, { clear = false, player = Mock.tile(2, 6) })
+  local dingle = Mock.enemy(261, 0, Mock.tile(11, 3), { hp = 300, boss = true, anim = "Tired" })
+  local p = Isaac.GetPlayer()
+  Reflex.update(p); Reflex.update(p)
+  local inWin, aimIn = Risk.window, S.m_aim
+  dingle._anim = "Slide"
+  Reflex.update(p); Reflex.update(p)
+  local outWin, aimOut = Risk.window, S.m_aim
+  Reflex.bossTactics = {}; IsaacBotBossTactics = Reflex.bossTactics
+  check("boss attack window: aim harder while the boss is tired", inWin == "Tired" and outWin == nil and aimIn > aimOut,
+        fmt("window %s -> %s, m_aim %.0f -> %.0f", tostring(inWin), tostring(outWin), aimIn, aimOut))
+end)
+
 -- 37. 1.2.7 boss tactics (knowledge/boss_tactics.json via the helper): loads, finds the boss, adds policy decides
 run("boss tactics: loaded and used", function()
   Reflex.loadBossTactics("261.0=200,k,kill_close,BeforeSlide|Dance|Whistle;260.0=160,c,kill_first,")
