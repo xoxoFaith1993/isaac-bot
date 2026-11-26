@@ -547,6 +547,10 @@ priority of the core fundamentals." Core = no damage on floors 1-2, natural move
   every boss, not quite as the real ones, with projectiles everywhere). Not a cheat sheet for single bosses and not
   core (floor 11+), but a good later benchmark drill for pure dodging: a `bench_suite_delirium` once floors 1-2 pass
   the gate, scored on hits per minute survived.
+- **From outside sources, once the recorder has profiles** (2026-11-26, Gemini handoffs checked in
+  `docs/research/OUTSIDE_SOURCES.md`): dash lines from `V1`/`TargetPosition` during wind-ups, only where a profile
+  shows they predict the dash; tells on `NpcState` changes; the exact fall of lobbed shots (decompiled rule, checked
+  against `recshot` lines first); chasers blocked by rocks (`Room:CheckLine`), measured before changing anything.
 Done from this list: red fires are shot out like enemies (1.2.17).
 
 ### Situations to watch: surprise bombs (noted 2026-11-25)
