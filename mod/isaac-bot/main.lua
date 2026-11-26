@@ -23,7 +23,7 @@ local Options = include("options")
 -- handed to the watchdog so it can build the brain's multiple-choice menu
 local MODS = { Reflex = Reflex, Nav = Nav, Danger = Danger, Options = Options, Rescue = Rescue, json = json }
 
-local VERSION = "1.2.12"
+local VERSION = "1.2.13"
 Reflex.status.mode = "full" -- fight + walk + explore (Stage 3); "combat" = fights only, "off" = hands off
 local TAG = "IBOT|"
 local BOT_SLOT = 2
@@ -397,6 +397,15 @@ local function handle(seq, cmd, payload)
     -- reload this mod's code inside the running game (seconds, instead of closing and relaunching Isaac)
     send("reload", "reloading the bot's code")
     Isaac.ExecuteCommand("luamod isaac-bot")
+  elseif cmd == "lessons" then
+    -- the watcher's learned adjustments per enemy (brain\watcher.py): "type.var=margin,shotpad,bossdist;..."
+    local ok, n = pcall(Reflex.loadLessons, payload)
+    send("learned", "watcher lessons: " .. tostring(ok and n or 0) .. " enemies")
+  elseif cmd == "deadhop" and Isaac.IsInGame() and botAllowed() then
+    -- the watcher saw a bounce between two rooms: write that door off for a while ("here>there")
+    local a, b = payload:match("^(%-?%d+)>(%-?%d+)$")
+    local ok = a and pcall(Nav.blockDoor, tonumber(a), tonumber(b), "watcher: bouncing between these rooms")
+    send("nav", "watcher blocked door " .. payload .. (ok and "" or " (couldn't)"))
   elseif cmd == "bosstactics" then
     -- how good players beat each boss (knowledge/boss_tactics.json): distance, lines to avoid, adds, tells
     local ok, n = pcall(Reflex.loadBossTactics, payload)

@@ -476,6 +476,10 @@ def run_live(auto):
         kind, _, rest = text.partition(":")
         log(kind.split()[0][:6] if kind else "event", rest.strip() or text)
 
+    # the live watcher: loops, hit causes, lessons, the code-fix queue (brain\watcher.py)
+    import watcher as watcher_mod
+    watcher = watcher_mod.Watcher(ROOT, send=lambda c, b: pipe.send(c, b), note=lambda t: event(f"watch: {t}"))
+
     def ask_brain(report, snap, grid):
         # in the background: the model can take a few seconds and the dashboard must keep moving
         import threading
@@ -542,6 +546,10 @@ def run_live(auto):
     event("helper started" + (" (auto-start on)" if auto else ""))
     while True:
         for kind, frame, body in pipe.receive():
+            try:
+                watcher.on_event(kind, body)
+            except Exception as exc:  # the watcher must never stop the helper
+                log("error", f"watcher: {exc.__class__.__name__}: {exc}"[:200])
             if kind == "need" and auto and body.startswith("enter|"):
                 screen = body.split("|")[1].split(" ")[0]  # "title", "saves" or "gameover"
                 asks_per_screen[screen] = asks_per_screen.get(screen, 0) + 1
@@ -617,6 +625,10 @@ def run_live(auto):
             try:
                 state = json.loads(pipe.tail.state_text)
                 last_in_run = time.time()
+                try:
+                    watcher.on_state(state)
+                except Exception as exc:
+                    log("error", f"watcher: {exc.__class__.__name__}: {exc}"[:200])
                 p = state["p"]
                 log("eyes", f"frame {state['f']:>6}  @{p['x']},{p['y']}  hp {p['red']}/{p['max']}"
                             f"{'+' + str(p['soul']) if p['soul'] else ''}  enemies {len(state['e'])}"

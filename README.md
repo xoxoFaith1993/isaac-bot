@@ -94,6 +94,9 @@ plain Python, so most of it works unchanged. The Linux pieces are `start-bot.sh`
   this run (`knowledge\item_ratings.json` plus what fixes the build's weaknesses), choice pedestals, devil deals (only
   strong items, never below 2 heart containers), shop buys by need, and cards/pills
   (`knowledge\consumable_ratings.json`).
+- **Live watcher** (`brain\watcher.py`, inside the helper): spots loops as they happen and nudges the bot, sorts every
+  hit by cause, learns small capped per-enemy adjustments (kept only if they cut that cause's hits), and queues what
+  needs a code fix with the evidence (`runs\watch\`, `tools\queue.py`).
 - **Rescue watchdog** (`rescue.lua`): no progress for a while climbs a ladder: replan, shake, bomb, leave, report.
 - **Brain** (`brain\rescue_brain.py`, optional): when the watchdog runs out of ideas, the mod lists the real options
   and a local model picks one (`options.lua`, `knowledge\RULES.md`).

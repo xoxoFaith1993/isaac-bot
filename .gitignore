@@ -5,6 +5,7 @@ tools/*_window.json
 # run output (logs, hits, frames) and files the helper writes at run time
 runs/
 knowledge/gamedata.json
+knowledge/bestiary_game.json
 knowledge/telegraphs.txt
 knowledge/bench_rooms.json
 

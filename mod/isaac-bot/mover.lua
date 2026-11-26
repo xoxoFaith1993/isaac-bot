@@ -480,6 +480,9 @@ function Mover.choose(ctx)
             c = e.Position
             r = math.min(r, e.Size + 12 + t * 0.5)
           end
+          -- the watcher's lesson for this enemy: more berth after repeated body hits (brain\watcher.py)
+          local lz = ctx.lessonOf and ctx.lessonOf(e)
+          if lz and lz.margin then r = r + lz.margin end
           zs[#zs + 1] = { c = c, r = r, mover = true, base = base, drift = drift }
         end
       end
@@ -488,7 +491,9 @@ function Mover.choose(ctx)
         local d = player.Position - s.Position
         d = d:Length() > 1 and d:Normalized() or Vector(0, 0)
         local c, r = Mover.predict(s, t, d, nil)
-        ss[#ss + 1] = { c = c, r = r + S.hit_margin }
+        -- + the watcher's margin for this shooter's shots (after repeated shot hits from it)
+        local pad = ctx.shotPadOf and ctx.shotPadOf(s.SpawnerType) or 0
+        ss[#ss + 1] = { c = c, r = r + S.hit_margin + pad }
       end
       ctx.byT[t] = { z = zs, s = ss }
     end

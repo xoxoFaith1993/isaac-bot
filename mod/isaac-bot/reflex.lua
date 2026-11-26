@@ -392,6 +392,28 @@ function Reflex.loadBossTactics(text)
   end
   return n
 end
+-- The watcher's lessons (brain\watcher.py): per enemy, small capped adjustments it learned from repeated hits.
+-- "type.var=margin,shotpad,bossdist;type=..." (a bare type = its shots, by shooter type)
+Reflex.lessons = {}
+function Reflex.loadLessons(text)
+  Reflex.lessons = {}
+  local n = 0
+  for key, m, pad, dist in string.gmatch(text or "", "([%d%.]+)=(%d+),(%d+),(%d+)") do
+    Reflex.lessons[key] = { margin = tonumber(m), pad = tonumber(pad), dist = tonumber(dist) }
+    n = n + 1
+  end
+  return n
+end
+function Reflex.lessonOf(e)
+  if not e or e.kind or not e.Type then return nil end
+  return Reflex.lessons[e.Type .. "." .. e.Variant] or Reflex.lessons[tostring(e.Type)]
+end
+-- extra margin around shots fired by this shooter type (the watcher's "shot:<type>" lessons)
+function Reflex.shotPadOf(spawnerType)
+  local l = spawnerType and Reflex.lessons[tostring(spawnerType)]
+  return l and l.pad or 0
+end
+
 function Reflex.tacticsOf(e)
   if not e or e.kind or not e.Type then return nil end
   return Reflex.bossTactics[e.Type .. "." .. e.Variant] or Reflex.bossTactics[e.Type .. ".0"]
@@ -1406,9 +1428,10 @@ function Reflex.update(player)
   if target and not target.kind and target.IsBoss and target:IsBoss() then
     -- fight bosses from farther out: the boss's own distance from the tactics file when there is one
     local tac = Reflex.tacticsOf(target)
+    local extra = (Reflex.lessonOf(target) or {}).dist or 0 -- the watcher learned to keep farther from this boss
     if Risk.invincible then prefDist = S.pref_dist -- untouchable right now: point-blank, whatever the boss
-    elseif tac and tac.pd then prefDist = math.min(tac.pd * (Risk.window and 0.65 or 1), player.TearRange * 0.85)
-    else prefDist = math.max(prefDist, math.min(S.boss_dist, player.TearRange * 0.8)) end
+    elseif tac and tac.pd then prefDist = math.min((tac.pd + extra) * (Risk.window and 0.65 or 1), player.TearRange * 0.85)
+    else prefDist = math.max(prefDist, math.min(S.boss_dist + extra, player.TearRange * 0.8)) end
   end
   -- A shielded enemy that opens when you come close (Hosts: "you gotta walk up for them to open, and then
   -- they shoot. While they're shooting, that's your window to hit them." - the author): bait it from close range.
@@ -1475,7 +1498,8 @@ function Reflex.update(player)
     local okM, mi, mc = pcall(Mover.choose, { S = S, w = w, room = room, player = player, speed = speed, DIRS = DIRS,
       target = target, prefDist = prefDist, wayPos = wayPos, spot = plateSpot or navSpot or (plan.target and plan.cellPos) or nil, calm = calm, blocked = blocked, creepAt = creepAt,
       bounce = function(pos, r) return bounced(w, pos, r) end, lane = Reflex.lane, segDist = segDist,
-      laserEnd = laserEnd, playbookOf = playbookOf, tacticsOf = Reflex.tacticsOf, leadVel = Reflex.leadVel })
+      laserEnd = laserEnd, playbookOf = playbookOf, tacticsOf = Reflex.tacticsOf, leadVel = Reflex.leadVel,
+      lessonOf = Reflex.lessonOf, shotPadOf = Reflex.shotPadOf })
     Reflex.prof.move = Reflex.prof.move + (Isaac.GetTime() - tMove0)
     if okM and mi then best, bestCost, usedV2 = mi, mc, true; Reflex.v2err = nil
     else Reflex.v2err = tostring(mi) end -- falls back to the old core this update; main.lua reports it

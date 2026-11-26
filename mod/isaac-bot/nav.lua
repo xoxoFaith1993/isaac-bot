@@ -1066,6 +1066,17 @@ end
 
 function Nav.siegeActive() return siege ~= nil end
 
+-- The watcher (brain\watcher.py) saw the bot bounce between two rooms: write the door off like a failed one. The room
+-- indexes are the ones the "room" lines show (GetCurrentRoomIndex); written off as a weak reason, so it expires.
+function Nav.blockDoor(fromIdx, toIdx, why)
+  local here = safeIndex(fromIdx)
+  local hop = safeIndex(toIdx)
+  if not here or not hop then return false end
+  markDead(here, hop, why or "watcher")
+  keepState()
+  return true
+end
+
 -- What the bot thinks the floor looks like (the "map" command): room, type, visited?, cleared?, doors seen
 -- (x = written off). For diagnosing "nothing to do".
 function Nav.mapReport()

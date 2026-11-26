@@ -98,6 +98,21 @@ One run proves nothing: a strong item can make a bad bot look good. So:
 `PLAN.md` holds the plan and the history of what was tried, `test/FOUND_BUGS.md` the open bugs, `knowledge/*.md`
 the game knowledge. The next person (or the next AI session) starts from there.
 
+### 3h. The live watcher: the loop, automated
+`brain/watcher.py` runs inside the helper and does a first pass of this loop by itself while the bot plays:
+- **Loops:** a two-room bounce (it writes that door off), standing still while walking (it asks for a re-plan), a
+  fight where no enemy loses health for a minute, the same room entered 6+ times.
+- **Hits by cause:** every hit is sorted (`body:<enemy>`, `shot:<shooter type>`, creep, bomb, laser) and counted
+  against *encounters* (rooms where that enemy was present), so each cause has a rate.
+- **Lessons:** a cause that keeps hurting (3+ hits, 0.5+ per encounter) gets one small, capped change for just that
+  enemy: more berth from its body, more margin around its shots, more distance from a boss. After 4 more encounters
+  the change stays only if that cause's rate fell by a quarter. Otherwise it's undone. `knowledge/lessons.json`.
+- **The code-fix queue:** what a setting can't fix (a loop that repeats, a lesson that didn't help, causes like
+  creep or bombs) goes into `runs/watch/queue.jsonl` with the evidence. `python tools/queue.py wait` blocks until a
+  new problem arrives; an AI session (or you) then works it with the steps above and closes it with
+  `tools/queue.py done <id> "what changed"`. At most 3 new problems an hour.
+- Everything is summed up in `runs/watch/REPORT.md`; offline tests in `test/test_watcher.py`.
+
 ## 4. Knowledge beats learning on the spot
 
 Early on the bot learned everything by getting hit: how far each enemy reaches, which animations come before a shot.
