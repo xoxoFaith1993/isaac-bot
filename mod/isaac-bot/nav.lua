@@ -207,6 +207,14 @@ function Nav.recordDoors()
       graph[here][there] = true
       graph[there] = graph[there] or {}
       graph[there][here] = true
+      -- a locked door seen with no key is written off NOW, not when we walk back to try it (2026-11-26: it crossed
+      -- three rooms back to the start room to "find" the treasure door locked, then crossed back). A key forgives it
+      -- (edgeDead), as before.
+      local p = Isaac.GetPlayer(0)
+      if d:IsLocked() and p and p:GetNumKeys() == 0 and not deadEdge[here .. ">" .. there] then
+        deadEdge[here .. ">" .. there] = { keys = 0, bombs = p:GetNumBombs(), hp = p:GetHearts() + p:GetSoulHearts(),
+                                           why = "locked, no key", f = Game():GetFrameCount() }
+      end
     end
   end
 end

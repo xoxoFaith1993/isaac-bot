@@ -180,8 +180,13 @@ local function bounceFloor()
     [86] = { type = 4, doors = { [0] = { to = 85, locked = true } } },
     [83] = { doors = { [2] = 84 } },
   })
-  Mock.enter(84); Nav.newRoom()      -- been in both rooms already: the bot knows their doors
+  -- (seen while it still had a key, spent since: since 1.2.43 a locked door SEEN with no key is written off on sight,
+  -- so these tests cover the other case - one it only finds out about at the door)
+  Mock.enter(84)
+  Isaac.GetPlayer()._keys = 1
+  Nav.newRoom()                      -- been in both rooms already: the bot knows their doors
   Mock.enter(85, 0); Nav.newRoom()   -- ...and is now in B, next to the door it came in by
+  Isaac.GetPlayer()._keys = 0
 end
 
 -- 7. 1.0.8: floor 2, 25 minutes bouncing between two rooms. B's door was locked; B gave up and went back to A,
@@ -1604,8 +1609,11 @@ run("no bounce between two rooms with a locked door each", function()
     [86] = { type = 4, doors = { [0] = { to = 85, locked = true } } },
     [83] = { type = 4, doors = { [2] = { to = 84, locked = true } } },
   })
-  Mock.enter(84); Nav.newRoom()
+  Mock.enter(84)
+  Isaac.GetPlayer()._keys = 1 -- (seen with a key, spent since: see bounceFloor)
+  Nav.newRoom()
   Mock.enter(85, 0); Nav.newRoom()
+  Isaac.GetPlayer()._keys = 0
   local notes = 0
   local before = Nav.onNote
   Nav.onNote = function() notes = notes + 1 end
@@ -1821,6 +1829,25 @@ run("presses the button instead of fighting fires behind rocks", function()
   local goal = Reflex.status.active and tostring(Reflex.status.goalText) or tostring(Nav.status.goal)
   check("presses the button instead of fighting fires behind rocks", not active and goal:find("button") ~= nil,
         fmt("reflexes %s, goal: %s", active and "FIGHTING" or "off", goal))
+end)
+
+-- 71. 1.2.43 (2026-11-26: it walked three rooms back to the start room to find the treasure door locked, then walked
+-- back): a locked door it has already SEEN with no key isn't a goal. Start room 84 has a locked treasure room (83);
+-- the bot was in 84 with no key and is now in 85, with an unexplored room (86) on the far side.
+run("doesn't walk back to a locked door it already saw", function()
+  Mock.floor({
+    [84] = { visited = true, doors = { [0] = { to = 83, locked = true }, [2] = 85 } },
+    [83] = { type = 4, doors = { [2] = { to = 84, locked = true } } },
+    [85] = { visited = true, doors = { [0] = 84, [2] = 86 } },
+    [86] = { doors = { [0] = 85 } },
+  })
+  Mock.enter(84)
+  Isaac.GetPlayer()._keys = 0
+  Nav.newRoom()
+  Mock.enter(85, 0); Nav.newRoom()
+  local move = Nav.update(Isaac.GetPlayer())
+  check("doesn't walk back to a locked door it already saw", move ~= nil and move.X > 0.5,
+        fmt("move %s (right = on to the new room), goal %s", tostring(move), tostring(Nav.status.goal)))
 end)
 
 return table.concat(results, "\n")
