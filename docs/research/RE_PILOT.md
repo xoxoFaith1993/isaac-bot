@@ -42,6 +42,22 @@ REPENTOGON `libzhl` at commit `9da2f46`. A game update moves every address; re-r
 5. **Look things up:** `run_ghidra.py ... probe <cmd>` runs `tools/re/ghidra/Probe.java`: `xrefs:` (who references an
    address), `dump:` (read a vtable), `consts:` (functions using a number), `floats:` (float constants a function
    reads), `dis:` (raw instructions).
+6. **PC safety caps** (added 2026-11-26, after Ghidra's native `decompile.exe` reached 13.3 GB on one huge function
+   and pushed RAM to 99%; the JVM's `-Xmx` doesn't cap that process):
+   - **`DecompileFns.java`:**
+     - a decompiler payload cap of 256 MB and a 60 s timeout per function;
+     - it **skips functions over 30,000 bytes**, and anything on a never-decompile list (`0x5da490`, the effect
+       Update; `0x6d4ce0`, the NPC collision handler). Read those with `probe dis:` instead; it annotates constants
+       and calls, and blind readers can work from it;
+     - a free-RAM check (≥ 6 GB) before each function;
+     - failures are logged to `out/skipped.txt` and never retried.
+   - **`run_ghidra.py`:**
+     - pre-flight: free RAM and commit headroom ≥ 6 GB each;
+     - **one Ghidra run at a time**, enforced by a lock file;
+     - a **watchdog** thread for the whole run: it kills `decompile.exe` above 4 GB, stops the whole job if free RAM
+       or commit headroom falls below 6 GB, and logs to `logs/watchdog.log`;
+     - the JVM heap stays at `--maxmem 6G` (the default).
+   - The blind readers are just agents reading text, so they can run alongside. Ghidra itself runs serially.
 
 **How the AI was found** (repeat this after a game update):
 1. `Entity_NPC::Update`'s signature was stale, but `Entity_NPC::Init` matched (`0x6bfb50`). The NPC vtable holds it at

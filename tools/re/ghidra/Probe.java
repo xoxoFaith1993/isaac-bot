@@ -54,8 +54,24 @@ public class Probe extends GhidraScript {
                 // N instructions starting at ADDR
                 Instruction ins = getInstructionAt(toAddr(Long.decode(p[1])));
                 if (ins == null) ins = getInstructionAfter(toAddr(Long.decode(p[1])));
-                for (int k = 0; ins != null && k < Integer.parseInt(p[2]); k++, ins = ins.getNext())
-                    sb.append(ins.getAddress()).append(' ').append(ins).append('\n');
+                // annotated: data constants shown as float/int, calls shown with the callee's name
+                // (2026-11-26: lets blind readers work from assembly where the decompiler fails)
+                for (int k = 0; ins != null && k < Integer.parseInt(p[2]); k++, ins = ins.getNext()) {
+                    sb.append(ins.getAddress()).append(' ').append(ins);
+                    for (Reference r : ins.getReferencesFrom()) {
+                        if (r.getReferenceType().isCall()) {
+                            Function f = getFunctionAt(r.getToAddress());
+                            if (f != null) sb.append("   ; -> ").append(f.getName(true));
+                        } else if (r.getReferenceType().isData()) {
+                            try {
+                                int iv = getInt(r.getToAddress());
+                                sb.append("   ; [").append(r.getToAddress()).append("] = ").append(Float.intBitsToFloat(iv))
+                                  .append(" (int ").append(iv).append(')');
+                            } catch (Exception ex) { /* unreadable */ }
+                        }
+                    }
+                    sb.append('\n');
+                }
             } else if (p[0].equals("floats")) {
                 // every instruction in the function that reads a 4-byte constant from memory, shown as a float
                 Function fn = getFunctionContaining(toAddr(Long.decode(p[1])));

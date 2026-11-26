@@ -49,14 +49,37 @@ public class DecompileFns extends GhidraScript {
             if (rename != null) fn.setName(rename, SourceType.USER_DEFINED);
             todo.add(fn);
         }
+        // PC safety caps (2026-11-26): the native decompile.exe once grew to 13.3 GB on a huge function and pushed
+        // RAM to 99%. The JVM -Xmx does not cap it, so: small payload cap, short timeout, skip huge functions,
+        // and check free RAM before each function. A function that fails is logged and skipped, never retried.
+        final int TIMEOUT_S = 60, MAX_PAYLOAD_MB = 256;
+        final long MAX_BODY_BYTES = 30000, MIN_FREE_RAM = 6L << 30;
         DecompInterface di = new DecompInterface();
         DecompileOptions opts = new DecompileOptions();
+        opts.setMaxPayloadMBytes(MAX_PAYLOAD_MB);
         di.setOptions(opts);
         di.openProgram(currentProgram);
+        com.sun.management.OperatingSystemMXBean os =
+            (com.sun.management.OperatingSystemMXBean) java.lang.management.ManagementFactory.getOperatingSystemMXBean();
+        StringBuilder skipped = new StringBuilder();
         for (Function fn : todo) {
-            DecompileResults r = di.decompileFunction(fn, 300, monitor);
             String name = fn.getName(true).replace("::", "__").replaceAll("[^\\w]", "_");
             String file = name + "_" + fn.getEntryPoint() + ".c";
+            long body = fn.getBody().getNumAddresses();
+            String why = null;
+            // never decompile these again: 0x5da490 (Entity_Effect::Update, ~200 KB) drove decompile.exe to 13.3 GB;
+            // 0x6d4ce0 (Entity_NPC::HandleCollision) always fails. Read both with Probe dis: instead.
+            String ep = fn.getEntryPoint().toString();
+            if (ep.endsWith("5da490") || ep.endsWith("6d4ce0")) why = "on the never-decompile list; use Probe dis:";
+            else if (body > MAX_BODY_BYTES) why ="too big (" + body + " bytes > " + MAX_BODY_BYTES + "); read it with Probe dis: instead";
+            else if (os.getFreeMemorySize() < MIN_FREE_RAM) why = "free RAM below 6 GB (" + (os.getFreeMemorySize() >> 20) + " MB)";
+            if (why != null) {
+                skipped.append(fn.getEntryPoint()).append(' ').append(fn.getName(true)).append(": ").append(why).append('\n');
+                Files.writeString(out.resolve(file), "// " + fn.getName(true) + " @ " + fn.getEntryPoint() + "\n// skipped: " + why + "\n");
+                println("skipped " + file + ": " + why);
+                continue;
+            }
+            DecompileResults r = di.decompileFunction(fn, TIMEOUT_S, monitor);
             String c = (r != null && r.decompileCompleted()) ? r.getDecompiledFunction().getC()
                                                              : "// decompile failed: " + (r == null ? "" : r.getErrorMessage());
             Files.writeString(out.resolve(file), "// " + fn.getName(true) + " @ " + fn.getEntryPoint() + "\n" + c);
@@ -67,6 +90,8 @@ public class DecompileFns extends GhidraScript {
         }
         di.dispose();
         Files.writeString(out.resolve("callees.txt"), callees.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        if (skipped.length() > 0)
+            Files.writeString(out.resolve("skipped.txt"), skipped.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 
     Function findTarget(String t) {

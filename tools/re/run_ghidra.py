@@ -15,7 +15,12 @@ project to <work_dir>/proj, logs to <work_dir>/logs. Optional --safety-dir point
 PC's safety.py watchdog (pause on low memory or disk); without it the job runs unwatched.
 """
 import argparse
+import csv
+import ctypes
 import os
+import re
+import threading
+import time
 import shutil
 import subprocess
 import sys
@@ -64,15 +69,100 @@ def main():
                         '-log', str(work / 'logs' / (a.mode + '.log')),
                         '-scriptlog', str(work / 'logs' / (a.mode + '_script.log'))]
 
-    if a.safety_dir:
-        sys.path.insert(0, a.safety_dir)
-        import safety
-        with safety.HeavyJob('isaac-re ghidra ' + a.mode, status_file=str(work / 'logs' / 'status.json')) as job:
-            rc = job.run(cmd, env=env)
-    else:
-        rc = subprocess.call(cmd, env=env)
+    lock = work / 'logs' / 'ghidra.lock'
+    if lock.exists() and _pid_alive(lock.read_text().strip()):
+        print('another Ghidra run is active (one at a time); not starting')
+        return 2
+    ok, why = _memory_ok()
+    if not ok:
+        print('pre-flight failed:', why)
+        return 3
+    lock.write_text(str(os.getpid()))
+    try:
+        if a.safety_dir:
+            sys.path.insert(0, a.safety_dir)
+            import safety
+            with safety.HeavyJob('isaac-re ghidra ' + a.mode, status_file=str(work / 'logs' / 'status.json')) as job:
+                rc = job.run(cmd, env=env)
+        else:
+            p = subprocess.Popen(cmd, env=env)
+            stop = threading.Event()
+            t = threading.Thread(target=_watchdog, args=(p, a.ghidra, work / 'logs' / 'watchdog.log', stop), daemon=True)
+            t.start()
+            rc = p.wait()
+            stop.set()
+    finally:
+        lock.unlink(missing_ok=True)
     print('exit', rc)
     return rc if isinstance(rc, int) else 0
+
+
+# ---- PC safety watchdog (2026-11-26) ----------------------------------------------------------------------
+# Ghidra's native decompile.exe once reached 13.3 GB and pushed RAM to 99%; the JVM -Xmx doesn't cap it.
+# Rules (from the PC stability rules): kill decompile.exe above 4 GB; stop the whole job when free RAM or
+# commit headroom falls below 6 GB; log everything it does. Uses only the standard library.
+DECOMPILER_MAX_MB = 4096
+MIN_FREE_GB = 6.0
+
+
+class _MemStatus(ctypes.Structure):
+    _fields_ = [('dwLength', ctypes.c_ulong), ('dwMemoryLoad', ctypes.c_ulong),
+                ('ullTotalPhys', ctypes.c_ulonglong), ('ullAvailPhys', ctypes.c_ulonglong),
+                ('ullTotalPageFile', ctypes.c_ulonglong), ('ullAvailPageFile', ctypes.c_ulonglong),
+                ('ullTotalVirtual', ctypes.c_ulonglong), ('ullAvailVirtual', ctypes.c_ulonglong),
+                ('ullAvailExtendedVirtual', ctypes.c_ulonglong)]
+
+
+def _memory():
+    m = _MemStatus()
+    m.dwLength = ctypes.sizeof(_MemStatus)
+    ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m))
+    return m.ullAvailPhys / 2**30, m.ullAvailPageFile / 2**30   # free RAM, commit headroom (GB)
+
+
+def _memory_ok():
+    free, commit = _memory()
+    if free < MIN_FREE_GB or commit < MIN_FREE_GB:
+        return False, f'free RAM {free:.1f} GB, commit headroom {commit:.1f} GB (need {MIN_FREE_GB} each)'
+    return True, ''
+
+
+def _pid_alive(pid):
+    try:
+        out = subprocess.run(['tasklist', '/FI', f'PID eq {int(pid)}', '/FO', 'CSV', '/NH'],
+                             capture_output=True, text=True).stdout
+        return str(int(pid)) in out
+    except (ValueError, OSError):
+        return False
+
+
+def _decompilers():
+    """(pid, MB) of every decompile.exe (Ghidra's native decompiler)."""
+    out = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq decompile.exe', '/FO', 'CSV', '/NH'],
+                         capture_output=True, text=True).stdout
+    procs = []
+    for row in csv.reader(out.splitlines()):
+        if len(row) >= 5 and row[0].lower() == 'decompile.exe':
+            procs.append((int(row[1]), int(re.sub(r'[^\d]', '', row[4]) or 0) // 1024))
+    return procs
+
+
+def _watchdog(proc, ghidra_dir, log_path, stop):
+    def log(msg):
+        with open(log_path, 'a', encoding='utf-8') as f:
+            f.write(time.strftime('%Y-%m-%d %H:%M:%S ') + msg + '\n')
+    while not stop.wait(2.0):
+        for pid, mb in _decompilers():
+            if mb > DECOMPILER_MAX_MB:
+                subprocess.run(['taskkill', '/F', '/PID', str(pid)], capture_output=True)
+                log(f'killed decompile.exe pid {pid} at {mb} MB (cap {DECOMPILER_MAX_MB} MB)')
+        free, commit = _memory()
+        if free < MIN_FREE_GB or commit < MIN_FREE_GB:
+            log(f'stopping the job: free RAM {free:.1f} GB, commit headroom {commit:.1f} GB')
+            subprocess.run(['taskkill', '/F', '/T', '/PID', str(proc.pid)], capture_output=True)
+            for pid, _ in _decompilers():
+                subprocess.run(['taskkill', '/F', '/PID', str(pid)], capture_output=True)
+            return
 
 
 if __name__ == '__main__':
