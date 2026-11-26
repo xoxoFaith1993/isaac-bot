@@ -22,8 +22,7 @@ The sections below are the working history: what was tried, what was measured, a
    stats, so it never decides from fuzzy memory.
 4. **Checked answers.** If the brain's pick contradicts the guide badly (for example skipping a top-tier item),
    it gets one retry with the reason, then autopilot decides.
-5. **Room to grow.** If gemma3:12b is the weak link, try a bigger local model that still fits a 16 GB GPU,
-   or a cloud brain (Stage 8).
+5. **Room to grow.** If gemma3:12b is the weak link, try a bigger local model that still fits a 16 GB GPU.
 
 **Yardstick (what "average" means here):** an average player beats Mom fairly often but dies a lot after that.
 Targets: Level 2 beats Mom; Level 3 regularly beats Mom's Heart / It Lives; stretch goal: Satan or ??? (Blue Baby).
@@ -36,13 +35,13 @@ Targets: Level 2 beats Mom; Level 3 regularly beats Mom's Heart / It Lives; stre
 |---|---|---|---|
 | Reflexes | Every frame (60x/s) | Lua code in the Isaac mod | Dodge tears and enemies, walk around rocks and pits, aim and shoot |
 | Tactics | Every 1–2 s | Rules in the mod | Pick the target, when to bomb, grab a heart when hurt, which way to circle a boss |
-| Strategy | Once per room or choice | LLM (local Ollama, or a cloud model) | Items, doors, shops, devil/angel deals, pills and cards, plus the commentary |
+| Strategy | Once per room or choice | Rules, plus a local LLM (Ollama) for odd cases | Items, doors, shops, devil/angel deals, pills and cards |
 | Learning | After each death | The smartest model we choose | Reads the run log and retunes the reflex settings for the next run |
 
 **Pieces:**
 - `mod\isaac-bot\`: the Lua mod (eyes, reflexes, tactics). It's linked into the game's `mods` folder.
-- `brain\`: a Python helper on the PC. It talks to Ollama, speaks the commentary, runs the learning loop, and draws
-  the live terminal dashboard.
+- `brain\`: a Python helper on the PC. It talks to Ollama, runs the watcher and the learning loop, and draws the live
+  terminal dashboard.
 - `runs\`: one log per run (seed, character, items, every hit taken, how it died).
 - `settings\`: the reflex tuning file the learning loop edits, plus "best so far" copies.
 
@@ -58,7 +57,7 @@ Targets: Level 2 beats Mom; Level 3 regularly beats Mom's Heart / It Lives; stre
 - The game folder (`game_dir` in `config.json`) has REPENTOGON (Workshop mod + `Repentogon\` folder), and the game is
   launched through the REPENTOGON launcher.
 - 15 Workshop mods were on in the test setup, including **External Item Descriptions** (EID), which is the brain's item knowledge.
-- Ollama has `gemma3:12b` (brain) and `qwen3-vl:8b-instruct`. Kokoro TTS is the planned voice.
+- Ollama has `gemma3:12b` (brain) and `qwen3-vl:8b-instruct`.
 
 ---
 
@@ -460,18 +459,12 @@ single enemy":**
 ### Stage 4: The brain (about 1 session)
 - Pull every item's description out of EID's files into one lookup table.
 - At each choice, the helper builds a short text briefing (character, stats, health, items held, consumables, floor
-  map, the options with their EID descriptions) and asks `gemma3:12b` for a JSON answer: the choice, a one-line
-  reason, and a commentary line.
+  map, the options with their EID descriptions) and asks `gemma3:12b` for a JSON answer: the choice and a one-line
+  reason.
 - Choices it makes: take or skip items, shop buys, devil and angel deals, route, when to use pills, cards and active
   items.
 - Safety net: if the answer is invalid or takes over 3 s, autopilot decides instead.
 - **Milestone:** a run where every big choice came from the brain, with its reasons shown on the dashboard.
-
-### Stage 5: Streamer voice (about ½ session)
-- Kokoro speaks the commentary. Reactions for big moments: a great item, near death, boss kill, death.
-- A talk limit so it doesn't narrate nonstop.
-- **To decide:** which voice and personality.
-- **Milestone (Level 2 done):** a full hands-free run with commentary.
 
 ### Stage 6: Run logs (about ½ session)
 - Every run saves its seed, character, items, rooms, every hit taken (what hit it and where it was standing), cause
@@ -487,13 +480,8 @@ single enemy":**
   checks. **Each overnight session is approved first.**
 - **Milestone:** the run board shows floors reached going up over a night of runs.
 
-### Stage 8: Progress board + race (about 1 session)
+### Stage 8: Progress board (about ½ session)
 - A run-history board: floors reached per run, deaths by cause, best run, items it loves.
-- **Race mode:** the same seed played by the local brain and a cloud brain, results side by side, each with its own
-  commentary voice.
-- **To decide:** whether the cloud brain is worth paying for (API costs per decision). We measure the real cost
-  on one test run before any race.
-- **Milestone (Level 3 done):** the first race.
 
 ---
 
@@ -598,9 +586,7 @@ scripted room in a seed. But it's something to make note of. Things like that ca
 |---|---|
 | Stage 0 | ✅ Decided 2026-11-25: bot uses **save slot 2** (empty); Steam achievements are fine |
 | Stage 2 | Check-in: fun to watch? Keep going? |
-| Stage 5 | Voice and personality |
 | Stage 7 | OK each overnight session |
-| Stage 8 | Pay for a cloud brain or not |
 
 ## Risks and honest limits
 - **Dodging is the hard part.** Bullet-hell bosses (Delirium, Hush, Mega Satan) may stay out of reach for a rule-based
@@ -612,6 +598,6 @@ scripted room in a seed. But it's something to make note of. Things like that ca
 - **The PC:** Ollama on a GPU plus the game is light, but long overnight runs need a stable machine.
 
 ## Working rules
-- Build in stage order; don't skip ahead to commentary before the bot can fight.
+- Build in stage order; fighting well comes before everything else.
 - Never change the player's own save slot or normal mod setup without asking. Anything switched off for bot runs gets
   switched back.

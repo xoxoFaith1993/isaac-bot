@@ -248,8 +248,9 @@ Commits land every 5-20 minutes, and each often bundles 3-5 behaviour changes (s
 gates a change nor is attributed to one. "Fix the category, not the room" is a good principle, but in the code it
 mostly shows up as a new term, knob or special case per watched incident (corner rule, pincer rule, burrow rule,
 no-lane rule, ring-kite...). This is overfitting to whatever the author happened to watch, and to the four
-Basement bosses the gauntlet uses. The roadmap also spends effort on streamer voice, cloud-vs-local races, Linux
-support and LLM exams while the core still dies on floor 1-2 in most runs. About 150 runs are recorded in
+Basement bosses the gauntlet uses. The roadmap also spends effort on side features, Linux support and LLM exams
+while the core still dies on floor 1-2 in most runs. (Since this review, the side features have been dropped from
+the plan.) About 150 runs are recorded in
 `runs/runs.jsonl`. Every one ended in death, one reached floor 4 and one floor 3 (test deaths are mixed in,
 because tagging is broken).
 
