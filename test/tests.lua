@@ -484,6 +484,25 @@ run("boss attack window: aim harder while the boss is tired", function()
         fmt("window %s -> %s, m_aim %.0f -> %.0f", tostring(inWin), tostring(outWin), aimIn, aimOut))
 end)
 
+-- 41. 1.2.17 (the author: "make it so it hits the red fire if it's a threat. You can shoot the red fire to prevent it
+-- from shooting you"): a lit red fire is a target, even in a cleared room; a plain (orange) fire stays a hazard only
+run("puts out a red fire, leaves a plain fire alone", function()
+  Mock.room(nil, { clear = true, player = Mock.tile(2, 4) })
+  local red = Mock.enemy(EntityType.ENTITY_FIREPLACE, 1, Mock.tile(9, 4), { hp = 5, size = 13 })
+  red._enemy = false
+  local p = Isaac.GetPlayer()
+  Reflex.plan.at = -999
+  Reflex.update(p)
+  local redTarget = Reflex.status.active and (Reflex.status.target == red or Reflex.plan.target == red)
+  Mock.room(nil, { clear = true, player = Mock.tile(2, 4) })
+  Mock.fire(Mock.tile(9, 4))
+  Reflex.plan.at = -999
+  Reflex.update(Isaac.GetPlayer())
+  local plainFight = Reflex.status.active
+  check("puts out a red fire, leaves a plain fire alone", redTarget and not plainFight,
+        fmt("red fire targeted: %s, plain fire made a fight: %s", tostring(redTarget), tostring(plainFight)))
+end)
+
 -- 37. 1.2.7 boss tactics (knowledge/boss_tactics.json via the helper): loads, finds the boss, adds policy decides
 run("boss tactics: loaded and used", function()
   Reflex.loadBossTactics("261.0=200,k,kill_close,BeforeSlide|Dance|Whistle;260.0=160,c,kill_first,")

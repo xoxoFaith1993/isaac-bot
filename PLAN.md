@@ -538,6 +538,19 @@ hearts so I don't lose my devil deal chance? Will playing risky kill me? Risky d
   (`Danger.cost`: a hit with soul hearts in front, or no deal to lose, is cheap for good loot).
 - Tests: 9 offline risk checks. `risk|0.25` pins it (A/B), `risk|auto` lets it think.
 
+### To do later (not core)
+The author, 2026-11-25: "some of them are not priority and can be added at a later date to not mess with the true
+priority of the core fundamentals." Core = no damage on floors 1-2, natural movement, no loops. These wait:
+- **Purple fires:** they shoot homing tears and tears don't put them out (a bomb does, the author thinks). Bomb one
+  when it's a threat and the bomb budget allows (a new `R.bombs.fire_purple`).
+- **Blue fires:** a small chance of soul hearts when put out (bomb only). "Always worth bombing if you have enough
+  bombs": a cleared-room goal with its own bomb minimum (`R.bombs.fire_blue`, about 3).
+- **Burrowers:** plan the firing spot on the hole where a burrowed enemy last surfaced (Round Worms; mirror chat).
+- **Play style per item:** like the invincible window, e.g. homing tears = spray freely, flight = ignore pits.
+- **Two-input active items** (Bob's Rotten Head and similar).
+- **Laptop as a second test machine** (parked: usage cost).
+Done from this list: red fires are shot out like enemies (1.2.17).
+
 ### Situations to watch: surprise bombs (noted 2026-11-25)
 The author: "In that TNT room... I don't know what spawns the random troll bomb and how often, if it's RNG or a
 scripted room in a seed. But it's something to make note of. Things like that can happen."

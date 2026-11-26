@@ -414,6 +414,7 @@ local function total(ctx, plan)
     -- the bait distance then), don't stand across the room plinking tears off it.
     local t = ctx.target
     local hurtable = t.kind or not t.IsVulnerableEnemy or (t:IsVulnerableEnemy() and not t:IsInvincible())
+                     or (IsaacBotRedFire and IsaacBotRedFire(t)) -- a red fire: tears put it out
     if plan.aimT and hurtable then c = c - S.m_aim * (1 - plan.aimT / 30) end
     if ctx.prefDist then
       local tp = ctx.targetAt(SEG_END[1])

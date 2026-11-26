@@ -11,6 +11,13 @@
 -- (A global table so danger.lua and eyes.lua share the same memory.)
 IsaacBotSolidSeen = IsaacBotSolidSeen or {}
 
+-- A lit RED fire: it shoots at Isaac, and tears put it out (the author, 2026-11-25: "make it so it hits the red fire
+-- if it's a threat. You can shoot the red fire to prevent it from shooting you"). So it's a target, not just a hazard.
+-- (Purple fires need a bomb and blue ones are loot: PLAN.md "To do later".)
+function IsaacBotRedFire(e)
+  return e.Type == EntityType.ENTITY_FIREPLACE and e.Variant == 1 and e.HitPoints > 1
+end
+
 -- A troll bomb lying as a PICKUP (bomb pickup, troll / super troll / golden troll subtype): it explodes by itself a
 -- moment after it appears, like a lit bomb. Shared with danger.lua and main.lua's bomb logger.
 function IsaacBotTrollPickup(e)
@@ -801,8 +808,13 @@ local function pickTarget(player, enemies, room)
   end
   local crowded = close >= 2
   for _, e in ipairs(enemies) do
-    if e.Type == EntityType.ENTITY_FIREPLACE then
-      -- a fire is a hazard to avoid, not a target (unless it shields something; see breakables below)
+    if IsaacBotRedFire(e) then
+      -- a red fire shoots at us and tears put it out: a target. Close ones first; a far one waits behind enemies.
+      local d = (e.Position - player.Position):Length()
+      local score = (d < 260) and (d - 40) or (d + 60)
+      if score < bestScore then best, bestScore = e, score end
+    elseif e.Type == EntityType.ENTITY_FIREPLACE then
+      -- other fires are hazards to avoid, not targets (unless one shields something; see breakables below)
     elseif bossOn and e:IsVulnerableEnemy() and not e:IsInvincible() then
       local d = (e.Position - player.Position):Length()
       local score
@@ -1308,6 +1320,9 @@ function Reflex.update(player)
     if e.Type ~= EntityType.ENTITY_FIREPLACE then
       real = real + 1
       if e:IsVulnerableEnemy() and not e:IsInvincible() then hurtable = hurtable + 1 end
+    elseif IsaacBotRedFire(e) then
+      -- a lit red fire keeps shooting: put it out, even in a cleared room
+      real, hurtable = real + 1, hurtable + 1
     end
   end
   -- fires alone don't make a fight; and once the room counts as cleared, leftover unkillable things
@@ -1355,7 +1370,8 @@ function Reflex.update(player)
   -- targets the planner may choose from: hurtable enemies, nearest first (or what shields them)
   local targets = {}
   for _, e in ipairs(w.enemies) do
-    if e.Type ~= EntityType.ENTITY_FIREPLACE and e:IsVulnerableEnemy() and not e:IsInvincible() then
+    if (e.Type ~= EntityType.ENTITY_FIREPLACE and e:IsVulnerableEnemy() and not e:IsInvincible())
+       or IsaacBotRedFire(e) then
       targets[#targets + 1] = e
     end
   end
