@@ -576,3 +576,12 @@ All match. ChatGPT's blind read (round 5) is next.
 - **Gaper:** recorded at 4.8 px/update (not decisive). The Gaper speed table matches the community `Gaper.lua`
   exactly.
 - **Not recorded yet:** Spiders, flying vs creep, Trite and Monstro contact while airborne.
+**Ghidra batches C and D, checked here** (`RE_ENEMIES.md` bd6ce81, `RE_CORE.md` 8d48fc3):
+- **Batch C** (Dart Fly, Ring Fly, Swarm, Squirt, Globin, Widow): constants spot-checked in the C (the Dart Fly's
+  cap 8, friction 0.95 and 0.188 rad wobble; the Globin's revive at HP 10). None of these enemies is recorded yet.
+- **Batch D's physics step** (velocity × friction, then position += velocity): **confirmed by recording for
+  enemies**.
+  - For 8 recorded types, position change per update ÷ |Velocity| = 0.97-1.03, so one step per update.
+  - The recorded Gaper speed (4.78) matches the derived angry speed (4.8).
+- **Isaac's "two steps per update":** still open. His velocity isn't in the recording yet (asked the main session to
+  log it).
