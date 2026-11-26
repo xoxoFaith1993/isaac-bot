@@ -426,6 +426,29 @@ run("doesn't park in a corner against chasing flies", function()
   check("doesn't park in a corner against chasing flies", cornerFrames < 40, cornerFrames .. " of 150 updates in a corner")
 end)
 
+-- 38. 1.2.9 invincible windows (the author: Unicorn Stump "makes you invincible, but you can walk into enemies whilst
+-- it's active"): during the effect, no hit cost, no gaps, point-blank; back to normal when it ends
+run("invincible window: drops dodging, then back to normal", function()
+  local Risk = Reflex.risk
+  local S = Reflex.S
+  Mock.room(nil, { clear = false, player = Mock.tile(7, 4) })
+  local p = Isaac.GetPlayer()
+  local fxOn = true
+  p.GetEffects = function()
+    return { HasCollectibleEffect = function(_, id) return fxOn and id == 298 end,
+             GetCollectibleEffect = function() return { Cooldown = 150 } end }
+  end
+  Mock.enemy(EntityType.ENTITY_GAPER, 0, Mock.tile(9, 4), { hp = 20 })
+  Reflex.update(p)
+  local onHit, onDist = S.m_hit, S.pref_dist
+  fxOn = false
+  Reflex.update(p)
+  local offHit = S.m_hit
+  p.GetEffects = nil
+  check("invincible window: drops dodging, then back to normal", onHit < 50 and onDist <= 60 and offHit >= 900,
+        fmt("m_hit %.0f while invincible (pref %.0f), %.0f after", onHit, onDist, offHit))
+end)
+
 -- 37. 1.2.7 boss tactics (knowledge/boss_tactics.json via the helper): loads, finds the boss, adds policy decides
 run("boss tactics: loaded and used", function()
   Reflex.loadBossTactics("261.0=200,k,kill_close,BeforeSlide|Dance|Whistle;260.0=160,c,kill_first,")

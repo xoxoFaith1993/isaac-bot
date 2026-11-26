@@ -32,8 +32,32 @@ Risk.KNOBS = {
   pref_dist = -0.4,      -- fight closer (more tears land)
   m_aim = 0.9,           -- lining up a shot is worth more
   loose_aim = 0.9,       -- spray at things roughly in line
+  -- not scaled by risk (slope 0), but switched off during an invincible window (below)
+  m_corner = 0, m_charge_line = 0, boss_dist = 0, kite_r = 0,
 }
 local NEUTRAL = 0.25
+
+-- Invincible window (Unicorn Stump, Book of Shadows, My Little Unicorn, Gamekid: rules.lua R.invincible): nothing can
+-- hurt us for a few seconds, so dodging is wasted time. These settings go to (almost) zero; "ram" items also fight
+-- at point-blank range on purpose (contact hurts the enemy). The last few updates it plays normal again.
+local INVINCIBLE = { m_hit = 0.02, m_soft = 0, m_edge_hit = 0, m_crowd = 0, m_pincer = 0, m_trap = 0, m_edge = 0,
+                     m_corner = 0, m_charge_line = 0, plan_clearance = 0, still_clearance = 0, stand_safe_r = 0,
+                     calm_r = 0, relax_s = 0.2, kite_r = 0 }
+local R = include("rules")
+function Risk.invincibleNow(p)
+  local kind, left = nil, 0
+  pcall(function()
+    local fx = p:GetEffects()
+    for id, k in pairs(R.invincible or {}) do
+      if fx:HasCollectibleEffect(id) then
+        local e = fx:GetCollectibleEffect(id)
+        local cd = (e and e.Cooldown) or 999
+        if cd > (R.invincible_stop or 20) then kind, left = k, cd end
+      end
+    end
+  end)
+  return kind, left
+end
 
 -- settings that are not in Reflex.S get skipped; base values come from S the first time (and Reflex.set updates them)
 function Risk.apply(S)
@@ -45,6 +69,13 @@ function Risk.apply(S)
   for k, slope in pairs(Risk.KNOBS) do
     local b = Risk.base[k]
     if b then S[k] = b * math.max(0.2, 1 + slope * (r - NEUTRAL)) end
+  end
+  if Risk.invincible then
+    for k, mult in pairs(INVINCIBLE) do
+      if Risk.base[k] then S[k] = Risk.base[k] * mult end
+    end
+    if Risk.base.pref_dist then S.pref_dist = (Risk.invincible == "ram") and 10 or 60 end -- point-blank
+    if Risk.base.boss_dist then S.boss_dist = 60 end
   end
 end
 

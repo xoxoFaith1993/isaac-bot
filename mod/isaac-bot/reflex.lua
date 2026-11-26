@@ -549,7 +549,7 @@ local function planFire(player, room, w, targets, prefDist)
               if t:IsBoss() then
                 local tac = Reflex.tacticsOf(t)
                 local keep = (tac and tac.pd) or S.boss_dist
-                if c.dist < keep * 0.8 then score = score + 300 end
+                if c.dist < keep * 0.8 and not Risk.invincible then score = score + 300 end
               elseif bossAdds == "kill_first" then
                 score = score - 150
               else
@@ -1185,6 +1185,14 @@ function Reflex.update(player)
     pcall(Risk.update, player, w.enemies)
     Risk.apply(S)
   end
+  -- invincible window (Unicorn Stump & co., rules.lua R.invincible): checked every update, it only lasts seconds
+  local inv = Risk.invincibleNow(player)
+  if inv ~= Risk.invincible then
+    Risk.invincible = inv
+    Risk.apply(S)
+    Risk.lastSent = -1 -- log the change
+    if Risk.onInvincible then Risk.onInvincible(inv) end
+  end
   st.threats = #w.shots + #w.lasers + #w.bombs
   Reflex.trackSpeeds(w.enemies, player)
   pcall(Mover.observe, w.enemies, player, Game():GetFrameCount(), w.shots) -- learning runs whichever core drives
@@ -1357,7 +1365,8 @@ function Reflex.update(player)
   if target and not target.kind and target.IsBoss and target:IsBoss() then
     -- fight bosses from farther out: the boss's own distance from the tactics file when there is one
     local tac = Reflex.tacticsOf(target)
-    if tac and tac.pd then prefDist = math.min(tac.pd, player.TearRange * 0.85)
+    if Risk.invincible then prefDist = S.pref_dist -- untouchable right now: point-blank, whatever the boss
+    elseif tac and tac.pd then prefDist = math.min(tac.pd, player.TearRange * 0.85)
     else prefDist = math.max(prefDist, math.min(S.boss_dist, player.TearRange * 0.8)) end
   end
   -- A shielded enemy that opens when you come close (Hosts: "you gotta walk up for them to open, and then

@@ -102,6 +102,12 @@ R.risk = { half_heart = 6, full_hp = 12, per_hit = 25 }
 ---------------------------------------------------------------- Level 3: buying (strategy.lua buyValue)
 -- Devil deals: pay hearts only for a strong item for THIS run, and never below 2 heart containers / 2 hearts after.
 -- (Taking a devil deal stops angel rooms later in the run; that's accepted for a strong item.)
+-- Invincible windows (the author, 2026-11-25: "it makes you invincible yes, but you can walk into enemies whilst it's
+-- active"). Active items whose effect makes Isaac untouchable for a few seconds: while it runs, the bot drops all
+-- dodging and gaps and fights point-blank ("ram" items also hurt enemies on contact: walk straight into them).
+-- Ids = CollectibleType. The last `invincible_stop` updates of the effect it plays normal again (it ends mid-crowd).
+R.invincible = { [298] = "stump", [77] = "ram", [93] = "ram", [58] = "shield" } -- Unicorn Stump, My Little Unicorn, Gamekid, Book of Shadows
+R.invincible_stop = 20
 R.buy = true
 R.deals = { take = true, min_value = 75, keep_containers = 2, keep_hp = 4 }
 -- Shop: an item when its run value beats its price; keys/bombs/hearts only when short; keep a few coins otherwise.
