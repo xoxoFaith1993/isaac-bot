@@ -17,35 +17,28 @@ The bot is two programs that run side by side:
 
 ```mermaid
 flowchart TB
-    subgraph game["Inside the game: mod/isaac-bot (Lua)"]
-        main["main.lua<br/>wiring: callbacks, inputs, menus, pipe"]
-        subgraph decide["Every update"]
-            reflex["reflex.lua<br/>reflexes: dodge, aim, targets"]
-            mover["mover.lua<br/>movement core (beam search)"]
-            forecast["forecast.lua + cards.lua<br/>where enemies will be"]
-            nav["nav.lua<br/>walker: rooms, doors, pickups"]
-            rescue["rescue.lua<br/>unstuck ladder"]
-        end
-        run["strategy.lua, risk.lua, deals.lua<br/>the whole run: items, deals, how bold"]
-        eyes["eyes.lua<br/>the room packed as data"]
-        main --> reflex --> mover --> forecast
+    subgraph game["1. Inside the game: mod/isaac-bot (Lua)"]
+        main["main.lua<br/>wiring, button presses"]
+        reflex["Reflexes (fighting)<br/>reflex, mover, forecast"]
+        nav["Walker (not fighting)<br/>nav, rescue"]
+        run["Run strategy<br/>strategy, risk, deals"]
+        eyes["eyes<br/>room as data"]
+        main --> reflex
         main --> nav
-        main --> rescue
-        reflex --> run
         main --> eyes
+        reflex --> run
+        nav --> run
     end
-    subgraph pc["On the PC: brain/ (Python)"]
+    subgraph pc["2. On the PC: brain/ (Python)"]
         helper["helper.py<br/>pipe, logs, dashboard"]
-        watcher["watcher.py<br/>loops, hit causes, small lessons"]
+        watcher["watcher.py<br/>loops, repeated hits"]
         llm["rescue_brain.py<br/>local AI (optional)"]
+        data[("knowledge/<br/>game facts, learned numbers")]
         helper --> watcher
         helper --> llm
+        helper <--> data
     end
-    data[("knowledge/<br/>game facts and learned numbers")]
-    eyes -- "game → PC: save file" --> helper
-    helper -- "PC → game: save file" --> main
-    helper <--> data
-    tools["tools/<br/>benchmarks, tests, reload"] -- "runs/send.txt" --> helper
+    game <-->|"small save files, both directions"| pc
 ```
 
 ### Inside the game (`mod/isaac-bot/`)
