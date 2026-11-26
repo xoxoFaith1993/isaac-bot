@@ -1,17 +1,37 @@
 # Isaac Bot
 
-A bot that plays **The Binding of Isaac: Repentance+** by itself. It is a REPENTOGON Lua mod (eyes, reflexes,
-movement and floor autopilot) plus a small Python helper on the PC, with an optional local LLM (through
-[Ollama](https://ollama.com)) that steps in when the bot gets stuck.
+[![CI](https://github.com/xoxoFaith1993/isaac-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/xoxoFaith1993/isaac-bot/actions/workflows/ci.yml)
 
-**Status: work in progress.** It has played through to floor 4 on its own and fights most regular Basement
-enemies without being hit, but bosses still hurt it and many items and characters aren't handled yet. The author's goal
-for now: no damage on floors 1-2. See [PLAN.md](PLAN.md) for the full technical history and what's next.
+A bot that plays **The Binding of Isaac: Repentance+** by itself. It is a REPENTOGON Lua mod (eyes, reflexes,
+movement and floor autopilot) plus a small Python helper on the PC, with an optional local AI model (through
+[Ollama](https://ollama.com)) that steps in when the bot gets stuck. It presses the same buttons a controller would.
+
+**Status: work in progress.** It has beaten Mom, but it still takes hits it shouldn't, and many items and characters
+aren't handled yet. The goal right now: **no damage on floors 1-2**. See the [roadmap](ROADMAP.md).
 
 > **Save slots:** the bot only ever plays on **save slot 2**. It never loads, continues or starts a run on slot 1,
 > so your own save stays untouched. Its deaths and unlocks land on slot 2.
 
-## Requirements
+## Find your way around
+
+| | |
+|---|---|
+| **[docs/START_HERE.md](docs/START_HERE.md)** | **One-page map: the pieces, how they talk, how to test, how a change gets in** |
+| [docs/HOW_WE_WORK.md](docs/HOW_WE_WORK.md) | The method used to improve the bot, and game modding in ten minutes |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Rules for changes |
+| [ROADMAP.md](ROADMAP.md) | Goals and the current plan |
+| [CHANGELOG.md](CHANGELOG.md) | What changed, version by version |
+| [docs/BACKLOG.md](docs/BACKLOG.md) | Known work that is waiting |
+
+## Try the tests (no game needed)
+
+With Python 3 and Lua 5.3 or 5.4 installed:
+
+```bash
+python3 test/run.py
+```
+
+## Requirements to run the bot
 
 - Windows, or Linux with Steam + Proton (see [Linux](#linux))
 - The Binding of Isaac: Repentance+ (Steam)
@@ -49,7 +69,7 @@ launch and the helper saves it there.
 ## Linux
 
 The game runs through Steam's Proton; the bot's mod runs inside the game the same as on Windows, and the helper is
-plain Python, so most of it works unchanged. The Linux pieces are `start-bot.sh`, `test/run.sh` and `tools/check.sh`.
+plain Python, so most of it works unchanged. The Linux pieces are `start-bot.sh`, `test/run.py` and `tools/check.sh`.
 
 1. **The game with REPENTOGON under Proton.** Install the game in Steam (Proton is picked automatically) and start
    it once. Then install REPENTOGON following [its own instructions](https://repentogon.com) for Linux/Steam Deck,
@@ -76,57 +96,19 @@ plain Python, so most of it works unchanged. The Linux pieces are `start-bot.sh`
 
 `tools/overnight.py` works on Linux too (run it as `systemd-inhibit python3 tools/overnight.py` to keep the PC awake).
 
-## How it works
+## Measuring and debugging with the game running
 
-- **Eyes** (`eyes.lua`): ten snapshots a second of Isaac, enemies, shots, lasers, pickups, doors and the room grid.
-- **Reflexes and movement core** (`reflex.lua`, `mover.lua`): learns how far each enemy type can reach in 0.2-1.5 s
-  from what it sees (saved to `knowledge\motion.dat`), then runs a short beam search over move sequences (~1.2 s
-  ahead) with one safety cost; lining up a shot is a reward inside the same search. Learned attack wind-ups
-  (`tells.lua`) and a danger map of spikes, creep, fires and bombs (`danger.lua`) feed into it.
-- **Navigation** (`nav.lua`): pathfinding around rocks, pits and spikes, a floor map, door choice, pickups weighed by
-  value against the risk of getting hit (`rules.lua`), bombs used sparingly.
-- **Risk layer** (`risk.lua`): one number, careful (0) to bold (1), from the whole run: would a hit kill us, would it
-  cost the floor's devil/angel deal (only red-heart damage does; soul hearts and Holy Mantle go first), how many hits
-  of buffer we have, and whether a room is taking far longer than our damage says it should. It scales the movement
-  core's safety settings, makes a hit cheaper for good loot when nothing is at stake, and opens curse and challenge
-  rooms only when we can afford them. `risk|0.25` pins the old careful play, `risk|auto` lets it decide.
-- **Run strategy** (`strategy.lua`): a profile of the build (strength for this floor, weaknesses), items valued for
-  this run (`knowledge\item_ratings.json` plus what fixes the build's weaknesses), choice pedestals, devil deals (only
-  strong items, never below 2 heart containers), shop buys by need, and cards/pills
-  (`knowledge\consumable_ratings.json`).
-- **Live watcher** (`brain\watcher.py`, inside the helper): spots loops as they happen and nudges the bot, sorts every
-  hit by cause, learns small capped per-enemy adjustments (kept only if they cut that cause's hits), and queues what
-  needs a code fix with the evidence (`runs\watch\`, `tools\queue.py`).
-- **Rescue watchdog** (`rescue.lua`): no progress for a while climbs a ladder: replan, shake, bomb, leave, report.
-- **Brain** (`brain\rescue_brain.py`, optional): when the watchdog runs out of ideas, the mod lists the real options
-  and a local model picks one (`options.lua`, `knowledge\RULES.md`).
-- **Helper** (`brain\helper.py`): the pipe between the game and the PC (through the mods' save files), the live
-  dashboard and log, run logs in `runs\`, and saving what the bot learned (`knowledge\*.dat`, `tuned.json`).
-
-## Testing
-
-- **Offline logic tests:** `test\run.ps1` runs the bot's real Lua code against scripted rooms (`test\mock.lua`,
-  `test\tests.lua`) inside Isaac's own Lua DLL, no game needed. The DLL is 32-bit, so use 32-bit PowerShell:
-  ```
-  C:\Windows\SysWOW64\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -File test\run.ps1
-  ```
-  `-Prove` checks that every fix's test fails without the fix (`test\mutants.lua`). `tools\luacheck.ps1` compiles
-  every Lua file the same way; `tools\reload.ps1` runs both, then reloads the mod in the running game.
-  On Linux: `bash test/run.sh` (system Lua 5.3) and `bash tools/check.sh`.
-- **Real-room bench:** `tools\rooms.py collect` saves every room where the bot took a hit (by layout ID);
-  `tools\rooms.py run` replays them in the game, worst first.
-- **Gauntlet and A/B:** `tools\gauntlet.py` (every common Basement enemy plus bosses), `tools\ab_test.py`,
-  `tools\tune.py`.
-- **See the game:** `tools\look.py` grabs frames from Steam's background recording; the helper saves a few after
-  every hit in `runs\hitframes\`.
+- **Benchmark:** `tools\bench.py` plays a locked set of rooms before and after a change and gives a pass/fail gate.
+- **Real-room bench:** `tools\rooms.py collect` saves every room where the bot took a hit; `tools\rooms.py run` replays
+  them, worst first.
+- **Gauntlet and A/B:** `tools\gauntlet.py` (common Basement enemies plus bosses), `tools\ab_test.py`, `tools\tune.py`.
+- **See the game:** `tools\look.py` grabs frames from Steam's background recording; the helper saves a few after every
+  hit in `runs\hitframes\`.
 
 ## Contributing
 
-Ideas, bug reports and pull requests are welcome, from players and programmers alike. **Start with
-[docs/HOW_WE_WORK.md](docs/HOW_WE_WORK.md)**: how the bot is built and the method used to improve it (watch, diagnose
-from logs and frames, fix the category, add a test, reload safely, measure on the bench). Then
-[CONTRIBUTING.md](CONTRIBUTING.md) for the rules. Run the offline tests (`test\run.ps1`) before opening a PR, and add
-a test for any bug you fix.
+Ideas, bug reports and pull requests are welcome, from players and programmers alike. Start with
+[docs/START_HERE.md](docs/START_HERE.md), then [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Thinking of reading the game's code to answer a question the bot can't? Read
 [docs/REVERSE_ENGINEERING_LESSONS.md](docs/REVERSE_ENGINEERING_LESSONS.md) first: the method we ended up with and the

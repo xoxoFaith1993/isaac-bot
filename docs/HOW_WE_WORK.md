@@ -1,5 +1,7 @@
 # How we work on the Isaac Bot
 
+New to the repo? [START_HERE.md](START_HERE.md) is the one-page map; this is the longer story.
+
 This is the guide to *how* the bot gets better, not just what the code does. It's written for someone new: maybe a
 software engineer who has never modded a game, or an Isaac player who has never written code. Most of this
 project was built by one person who knows the game very well, directing an AI coding assistant (Claude Code). The
@@ -79,8 +81,8 @@ without knowing what it fixed.
 
 ### 3d. Lock the fix in with an offline test
 `test/tests.lua` runs the bot's real Lua code against scripted rooms (`test/mock.lua` is a fake game). A good test
-recreates the bug in miniature and fails without the fix. `test/mutants.lua` + `run.ps1 -Prove` check that each test
-still guards its fix. A real bug found but not fixed yet goes in as a `known(...)` test and in `test/FOUND_BUGS.md`.
+recreates the bug in miniature and fails without the fix. `test/mutants.lua` + `test/run.py --prove` (or `run.ps1 -Prove`) check
+that each test still guards its fix. A real bug found but not fixed yet goes in as a `known(...)` test and in `test/FOUND_BUGS.md`.
 
 ### 3e. Reload safely
 `tools/reload.ps1` (Windows) or `bash tools/check.sh --reload` (Linux) compiles every Lua file and runs the tests
@@ -112,8 +114,9 @@ behaviour change is judged on **the benchmark** (`tools/bench.py`), and has to p
 - `knowledge/ITEMS.md` gives every item a "carry" score, so results can say what the bot was holding.
 
 ### 3g. Write it down
-`PLAN.md` holds the plan and the history of what was tried, `test/FOUND_BUGS.md` the open bugs, `knowledge/*.md`
-the game knowledge. The next person (or the next AI session) starts from there.
+`CHANGELOG.md` says what changed, `ROADMAP.md` where it's going, `docs/BACKLOG.md` what's waiting,
+`test/FOUND_BUGS.md` the open bugs, `knowledge/*.md` the game knowledge. The next person (or the next AI session)
+starts from there.
 
 ### 3h. The live watcher: the loop, automated
 `brain/watcher.py` runs inside the helper and does a first pass of this loop by itself while the bot plays:

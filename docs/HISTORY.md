@@ -1,42 +1,9 @@
-# Isaac Bot: plan and history
+# History: how the bot was built
 
-**Current goal:** no damage on floors 1-2, bosses included (so devil deals stay open), with natural, fast-but-safe
-play and quick boss kills. Every behaviour change is measured on a locked benchmark and has to pass its gate
-(`tools/bench.py`, see `docs/HOW_WE_WORK.md`).
-
-**Why floors 1-2 are strict, and later floors aren't** (the author, 2026-11-26): "you don't have many resources to
-protect yourself from losing the devil or angel deal... Soul hearts allow you to take damage without losing your devil
-deal chance... you typically don't get a lot of those in the first 2 floors. You get a lot of resources as you progress
-floors. Using abilities, checking secret rooms, the shop... So I can allow getting hit. But it can't be often." So:
-floors 1-2 no damage; later floors, hits are rare and only when protection is up (soul hearts, Holy Mantle: `risk.lua`
-already reasons about these).
-
-**The measure we push to zero: avoidable hits per room** on the locked benchmark (agreed with the author,
-2026-11-26). There's no "good enough at 90%": we keep going until the hits left are the unavoidable kind.
-
-**The far goal (the author, 2026-11-26): The Lost and Tainted Lost, the perfect run.** "The Lost can only get hit once
-per room. Tainted Lost can only get hit once... If you get hit twice in 1 room, you're dead... It's sort of what I want
-to strive for, the perfect run. Only, I want this to be superhuman... insanely fast reflexes, faster than any human can
-have. The only negative caveat to this is logic... I want to make it as intelligent as it is fast and agile." It's the
-same metric with zero tolerance everywhere, so all the hit-avoidance work carries straight over. Fact for then (game
-code, `docs/research/RE_CORE.md`): after a hit Isaac is invincible for 60 updates (half heart) or 120 (full heart), and
-a Holy Mantle break gives 60, so for the Lost the 2 s after a mantle break is the only grace.
-
-**Longer term:** whole runs on its own, played better than an average player, and a reusable method for building bots
-for other games.
-
-**The long goal (the author, 2026-11-26): beat Delirium, and post a proof video** (game + the bot's live log and
-helper on screen, repo link in the description; failed attempts included). The road: no damage on floors 1-2 ->
-beat Mom -> Mom's Heart in real runs -> an early Delirium drill on the bench (dropped into his room with set items,
-measured like any other room) -> a full run that ends with Delirium dead.
-
-**The new base (agreed 2026-11-26):** forecast cards per enemy + a few fixed goals + a positioning brain over the
-reflexes, replacing the growing pile of hand weights. Full plan and steps: `docs/FORECAST_PLAN.md`. The author's live
-notes while watching: `docs/LIVE_NOTES.md`.
-
-The sections below are the working history: what was tried, what was measured, and what's next.
-
----
+The working log of the early plan (it was `PLAN.md`): the first design, each stage, what was tried, what was
+measured and what was rejected. It is a record, not a to-do list, and some of it is out of date (the settings,
+tools and test counts have moved on). For today's picture read [START_HERE.md](START_HERE.md),
+[../ROADMAP.md](../ROADMAP.md), [BACKLOG.md](BACKLOG.md) and [../CHANGELOG.md](../CHANGELOG.md).
 
 ## Smarter than the average player: how
 1. **Superhuman reflexes.** The bot knows the exact position and speed of every tear and reacts with no delay.
@@ -554,15 +521,6 @@ hearts so I don't lose my devil deal chance? Will playing risky kill me? Risky d
   (`Danger.cost`: a hit with soul hearts in front, or no deal to lose, is cheap for good loot).
 - Tests: 9 offline risk checks. `risk|0.25` pins it (A/B), `risk|auto` lets it think.
 
-### Big rooms with many fast enemies: indecision (the author, 2026-11-26)
-"These bigger rooms, especially the 4x4s with many mobs, especially fast moving ones like spiders... how indecisive he
-is from the risk factors. He could be a mile away and be scared... and if you bring a shitty terrain, it is a perfect
-storm for him to just do nothing." Likely cause: the learned "could be here" circles of hop-and-stop movers (spiders)
-grow large over the 1.2 s look-ahead, so many of them cover most of a big room and every option looks equally bad.
-Fix with data, not tuning: the recorder's measured hop range/timing per enemy (behaviour profiles) to size those
-circles, and danger from far enemies that can't reach us within the look-ahead counting less. Measure on big-room
-bench rooms (time spent not shooting, hits).
-
 ### Best run so far (2026-11-26, 1.2.38): Depths I, floor 5 - 20 hits
 The author: "note where he took damage on the last 2 floors... that is the best run we've had".
 - **Caves II:** 3 hits, all Gurdy's shots (boss). **Depths I:** 5 hits: a Pooter shot, a trap-room spike, and 3 spikes
@@ -570,91 +528,6 @@ The author: "note where he took damage on the last 2 floors... that is the best 
 - **Whole run:** spikes 5 of 20 (trap rooms, the item-on-spikes walk, the Maw), bosses 8 (Gurdy 3, Blighted Ovum 3,
   Duke's flies 2), then Gapers 2, a spider, shooters 3.
 - Fixes since: no corner-cutting past spikes (1.2.38); outside pushes measured and simulated (suction, currents).
-
-### Next behaviour change: "future space" (the author, 2026-11-26)
-The author's way of seeing a fight: judge a spot by the space you'll have AFTER the next attack, not the space you
-have now. "When you aggro those gurglings, they will chase after you in a straight or sideways line... the creep
-effectively cuts you off. If you're in a bad position when the gurgling goes off, it's inevitable you will take damage."
-- **Predicted creep:** enemies tagged charges_on_line/dashes + leaves_creep (Gurglings first) project creep along the
-  row/column they'll charge down; that strip counts as soon-to-be floor danger, and `waysOut` counts it too, so a spot
-  that will be boxed in scores like a corner.
-- **Aggro on our terms:** only line up with a Gurgling when the sidestep after its charge still leaves open floor.
-- **Knockback (the author: "you can also affect the gurglings' sideways and straight lines... by shooting it because
-  of the knockback"):** never lock a predicted line in; re-predict from its real position and speed every update.
-  And use it: shooting a charge head-on slows it, from the side bends it, so aim so the creep lands away from the
-  open side of the room and our escape route.
-- **Dead-end pockets** (the author, 2026-11-26: "stuck in the pot... going right into the bottom pot in this gurgling
-  fight"): it hugged the bottom wall, sliding right while shooting left, with the Gurglings chasing along the wall,
-  into the pocket between the bottom-right pot and the corner, and was hit there. The 1.2 s look-ahead can't see that
-  a wall run ends in a pocket; count a pocket (wall + obstacle + corner) ahead on the current run as a closed way.
-- Same principle covers Gemini (where you'll be when he wakes), Gluttony's laser and Dingle's dash. Measured with
-  the benchmark like everything else.
-
-### To do later (not core)
-The author, 2026-11-25: "some of them are not priority and can be added at a later date to not mess with the true
-priority of the core fundamentals." Core = no damage on floors 1-2, natural movement, no loops. These wait:
-- **Purple fires:** they shoot homing tears and tears don't put them out (a bomb does, the author thinks). Bomb one
-  when it's a threat and the bomb budget allows (a new `R.bombs.fire_purple`).
-- **Blue fires:** a small chance of soul hearts when put out (bomb only). "Always worth bombing if you have enough
-  bombs": a cleared-room goal with its own bomb minimum (`R.bombs.fire_blue`, about 3).
-- **Burrowers:** plan the firing spot on the hole where a burrowed enemy last surfaced (Round Worms; mirror chat).
-- **Play style per item:** like the invincible window, e.g. homing tears = spray freely, flight = ignore pits.
-- **Two-input active items** (Bob's Rotten Head and similar).
-- **Mom's Hand in deal rooms** (the author, 2026-11-26 14:33, the bot's first devil room: "Took damage in the devil deal
-  room because of Mom's hands... Mom's hand grabs you and pulls you out of the devil room"; hit by 213.0). Once the
-  deal decision is made (nothing worth buying), leave right away instead of lingering; and dodge the hand's shadow
-  (it marks where the hand lands). A card for 213.0 from the decompile queue gives the timing.
-- **Use the "manual" cards smartly** (the author, 2026-11-26, Depths I: "I haven't seen him use one... those cards
-  really do change the game... he dropped a Joker card for a different card, and now he has a Moon card that he won't
-  use"). 23 cards are `use: manual` in `knowledge/consumable_ratings.json`, so they are never used: mostly the
-  teleports (Emperor = boss room, Hermit = shop, Stars = treasure room, Moon = secret room, Joker = devil/angel room)
-  plus Perthro, Chaos Card, Credit Card, ? Card, Dice Shard, Cracked Key, Wild Card, some reversed tarots and Souls.
-  Needs: (1) each card's "when it pays" rule (Joker when a deal is affordable and the deal is still live; Stars on
-  a floor whose treasure room is far or locked; Emperor to skip a long floor when the bot is strong...); (2) the walker
-  handling a teleport (new room, then carry on); (3) the swap rule: Joker and Moon have the same rating (2), so the bot
-  saw an even swap - rate them by what they're worth on THIS floor, and never drop a card for an equal one.
-- **Pre-seed tells from the game's animation events** (bestiary: e.g. Dingle Spit Shoot@3, Haunt LaserNoSkin
-  Shoot@17) so the bot knows when each attack fires before it ever gets hit; kept in a gitignored file.
-- **Check the 201 draft playbook entries** (local AI from wiki text) before the helper sends them.
-- **Leading shots on the Haunt:** still not strong (the author, 2026-11-25: "doesn't have to change immediately").
-  It slides and turns at the walls; the lead uses a settled average velocity clamped to the room.
-- **Laptop as a second test machine** (parked: usage cost).
-- **Flying items: rocks and pits are open terrain** (the author, 2026-11-26: "when he gets flying items, he can walk
-  over the terrain, just not fire"). Today `blocked()` only lets a flier over pits; with flight, rocks (and spikes)
-  are passable too, but lit fires still burn. Part of "play style per item".
-- **Shoot chargers from just outside their trigger range** (watcher, 2026-11-26: a minute with no damage dealt vs
-  Chargers at one heart). They only charge within 200 px of their row/column (R.charge_reach), so a firing spot in
-  their line at 210-250 px is safe; the planner skips moving dashers, so it never plans one.
-- **Curse rooms: open the red chest** (the author, 2026-11-26: "skipped the red chest, which is typically a reason
-  why you go into the curse room to begin with"). The entry/exit spike hit is the price; the chest is the reward, so
-  once inside, opening it is part of the deal (Risk.allows already decides whether to go in at all). Seen again
-  2026-11-26 14:25 ("When entering cursed rooms, he still doesn't grab the chest"). Cause: `PICKUP_REDCHEST` is in
-  `R.pickups.never` (rules.lua) for every room. Fix: allow it inside curse rooms only, with its own small value, and
-  dodge what comes out (troll bombs, spiders).
-- **Delirium as a reflex stress test** (the author, 2026-11-25: the hardest boss, "the unfair": it shifts into almost
-  every boss, not quite as the real ones, with projectiles everywhere). Not a cheat sheet for single bosses and not
-  core (floor 11+), but a good later benchmark drill for pure dodging: a `bench_suite_delirium` once floors 1-2 pass
-  the gate, scored on hits per minute survived.
-- **From outside sources, once the recorder has profiles** (2026-11-26, Gemini handoffs checked in
-  `docs/research/OUTSIDE_SOURCES.md`): dash lines from `V1`/`TargetPosition` during wind-ups, only where a profile
-  shows they predict the dash; tells on `NpcState` changes; the exact fall of lobbed shots (decompiled rule, checked
-  against `recshot` lines first); chasers blocked by rocks (`Room:CheckLine`), measured before changing anything.
-Done from this list: red fires are shot out like enemies (1.2.17).
-
-### Situations to watch: surprise bombs (noted 2026-11-25)
-The author: "In that TNT room... I don't know what spawns the random troll bomb and how often, if it's RNG or a
-scripted room in a seed. But it's something to make note of. Things like that can happen."
-- **What happened:** 2026-11-25, floor 1, a trap room (layout 765, "trap room (copy)"): 3 s after walking in, a hit
-  for a full heart with no enemy as the source (`hit 0.0|2`), i.e. an explosion. Most likely a troll bomb.
-- **What we know about where they come from:** the game's room files list each layout's spawns (some entries have
-  weighted random alternatives, so a layout can have a bomb only sometimes). Troll bombs also drop from chests,
-  beggars and some pickups, and certain enemies and plates can spawn them. So it can be either.
-- **Collecting the answer:** from 1.2.8 every bomb the player didn't drop is logged as a `bomb` line (variant, what
-  spawned it, how many updates after entering the room, the room layout). After a few runs that shows which layouts
-  spawn them, how soon, and whether it repeats.
-- **To check in the bot:** troll bombs are live bombs, so the movement core already avoids their blast. But one that
-  appears the moment Isaac walks in (or under him) gives about 1.5 s to react; the first update after entering a room
-  must already count it. If a layout spawns them reliably, add it to the knowledge so the bot steps away on entry.
 
 ### Level 3: whole-run strategy (next, in this order)
 1. **Run profile** each floor: stats, items (rating, carry and tags from `item_ratings.json`), hearts, consumables,
@@ -693,4 +566,3 @@ scripted room in a seed. But it's something to make note of. Things like that ca
 - Build in stage order; fighting well comes before everything else.
 - Never change the player's own save slot or normal mod setup without asking. Anything switched off for bot runs gets
   switched back.
-
