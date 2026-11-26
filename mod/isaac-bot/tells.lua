@@ -176,7 +176,7 @@ function Tells.shotComing(e)
   -- 4 Horfs drew 4 permanent danger lines and the bot circled the far wall, scared (2026-11-25). Only in the last
   -- ~half second before this animation usually ends.
   local d = (Tells.dur[c.type] or {})[c.anim]
-  if d and d.n >= 3 then
+  if Tells.timing ~= false and d and d.n >= 3 then -- (Tells.timing: reflex.lua S.tell_timing, for A/B tests)
     local into = Game():GetFrameCount() - c.start
     return into >= d.sum / d.n - 15
   end

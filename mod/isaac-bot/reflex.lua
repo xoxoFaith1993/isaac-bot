@@ -118,7 +118,9 @@ Reflex.S = {
   m_corner = 500,       -- v2: cost of ending in a corner (wall on a side AND above/below), x0.5-2.5 by movers near
   m_nolane = 150,       -- v2: cost of standing still when the plan never lines up a shot (rock pockets vs worms)
   boss_aim = 1.8,       -- boss fights: lining up a shot is worth this much more (finish it, don't chip at it)
+  plant_feet = 1,       -- 1: re-check sure shots with the real move and plant for them (0 = off, for A/B tests)
   plant_r = 90,         -- px: "plant your feet" for a sure shot unless an enemy is closer than this
+  tell_timing = 1,      -- 1: a learned "shot coming" only near the end of the animation's usual length (0 = always)
   m_line_escape = 160,  -- v2: in a dasher's line / a coming shot's line, cost per blocked sidestep (half each side)
   escape_step = 45,     -- v2: px of one sidestep (checked at 1 and 2 steps)
   finish_w = 220,       -- target choice: bonus for an enemy our next 1 shot kills, fading to 0 at 5 shots
@@ -1382,6 +1384,7 @@ function Reflex.update(player)
   local st = Reflex.status
   local room = Game():GetRoom()
   Danger.build(player)
+  Tells.timing = (S.tell_timing ~= 0)
   Reflex.spectral = hasSpectral(player)
   pcall(Reflex.calibrateCurve, player) -- learn how much our tears bend
   local w = gather(player)
@@ -1773,7 +1776,7 @@ function Reflex.update(player)
   -- fights a moving enemy is nearly always within stand_safe_r, so it kept running and the tear curved off with
   -- Isaac's movement. Re-check with the move we'll really make. If it only lands standing: stop for this shot,
   -- unless something is right on top of us or standing costs far more; otherwise it's not a sure shot.
-  if lands and shoot and st.target and best ~= 0 then
+  if S.plant_feet ~= 0 and lands and shoot and st.target and best ~= 0 then
     local t = st.target
     local pvNow = player.Velocity * 0.5 + DIRS[best] * speed * 0.5
     if not shotCanHitAt(room, player, shoot, ledPos or t.Position, t.Size, pvNow) then
