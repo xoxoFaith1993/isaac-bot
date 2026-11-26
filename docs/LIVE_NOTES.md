@@ -33,3 +33,5 @@ or a one-tile gap can pass them. The new map is made once per update over the ro
 
 A plan then pays for ending where there's little of our floor around it (corners, tunnels, dead-end pockets) and, inside
 a line attack's row or column, for having no room to step out of that line.
+
+| 9 | 2026-11-26 13:40 | 1.2.45 | "right now Isaac is stuck on the host. He is sitting super far away and won't aggro him for him to open." | nav + aim | **fixed** 1.2.47: a shielded target's firing spot within bait distance; the spot pull follows the walking path past pits (test 5b + 2 mutants) |
