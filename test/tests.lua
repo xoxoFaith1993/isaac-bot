@@ -48,6 +48,8 @@ local Rules = include("rules")
 local Nav = include("nav")
 local Reflex = include("reflex")
 Reflex.status.mode = "full"
+-- the behaviour tests below were written for the fixed, careful settings: risk pinned there (risk tests unpin it)
+Reflex.risk.pin = 0.25
 
 local results = {}
 local function check(name, ok, detail)
@@ -387,6 +389,61 @@ run("targets the spawner before its spiders", function()
   local t = Reflex.plan.target
   check("targets the spawner before its spiders", t == sack,
         "planned target: " .. (t and (t == sack and "the Sack" or ("type " .. tostring(t.Type))) or "none"))
+end)
+
+-- 17b. 1.2.7 (mirror chat + the author's rule): Mega Fatty's small adds scored better than the boss (low HP), and the
+-- boss got ~0.8 damage a second for 4 minutes. With a boss alive: the boss first; harmless adds don't steal the aim.
+run("boss first over harmless adds", function()
+  Mock.room(nil, { clear = false, player = Mock.tile(2, 6) })
+  local boss = Mock.enemy(EntityType.ENTITY_GAPER, 0, Mock.tile(11, 2), { hp = 500, boss = true })
+  Mock.enemy(EntityType.ENTITY_SPIDER, 0, Mock.tile(7, 6), { hp = 4 })
+  Mock.enemy(EntityType.ENTITY_SPIDER, 0, Mock.tile(7, 3), { hp = 4 })
+  Reflex.plan.at = -999
+  Reflex.update(Isaac.GetPlayer())
+  local t = Reflex.plan.target
+  check("boss first over harmless adds", t == boss,
+        "planned target: " .. (t and (t == boss and "the boss" or ("type " .. tostring(t.Type))) or "none"))
+end)
+
+-- 36. 1.2.7 (the author: "it still parks itself in the corner when coming close to flies"; bench d.1109, 7 Dart Flies):
+-- chasers home in on wherever Isaac goes, and corners cost more the more movers are about. Behaviour check.
+run("doesn't park in a corner against chasing flies", function()
+  Reflex.loadPlaybook("18.0=flies,chases,k3,d3")
+  Mock.room(nil, { clear = false, player = Mock.tile(1, 1) })
+  for _, xy in ipairs({ { 6, 3 }, { 9, 2 }, { 8, 6 }, { 11, 5 } }) do
+    Mock.enemy(18, 0, Mock.tile(xy[1], xy[2]), { hp = 5, chase = 1.2, size = 8 })
+  end
+  local cornerFrames = 0
+  for _ = 1, 150 do
+    local move = Reflex.update(Isaac.GetPlayer())
+    Mock.step(move)
+    local p = Isaac.GetPlayer().Position
+    local nearX = p.X < Mock.tile(0, 0).X + 50 or p.X > Mock.tile(13, 0).X - 50
+    local nearY = p.Y < Mock.tile(0, 0).Y + 50 or p.Y > Mock.tile(0, 7).Y - 50
+    if nearX and nearY then cornerFrames = cornerFrames + 1 end
+  end
+  Reflex.playbook = {}
+  check("doesn't park in a corner against chasing flies", cornerFrames < 40, cornerFrames .. " of 150 updates in a corner")
+end)
+
+-- 37. 1.2.7 boss tactics (knowledge/boss_tactics.json via the helper): loads, finds the boss, adds policy decides
+run("boss tactics: loaded and used", function()
+  Reflex.loadBossTactics("261.0=200,k,kill_close,BeforeSlide|Dance|Whistle;260.0=160,c,kill_first,")
+  Mock.room(nil, { clear = false, player = Mock.tile(2, 6) })
+  local dingle = Mock.enemy(261, 0, Mock.tile(11, 2), { hp = 300, boss = true })
+  local tac = Reflex.tacticsOf(dingle)
+  check("boss tactics: Dingle's distance and tells load", tac and tac.pd == 200 and tac.tells.Dance and tac.corners,
+        tac and ("pd " .. tostring(tac.pd)) or "no tactic")
+  -- a "kill_first" boss (the Haunt): its adds come first even when they're harmless and far
+  Mock.room(nil, { clear = false, player = Mock.tile(2, 6) })
+  Mock.enemy(260, 0, Mock.tile(11, 2), { hp = 300, boss = true })
+  local lil = Mock.enemy(260, 10, Mock.tile(9, 6), { hp = 13 })
+  Reflex.plan.at = -999
+  Reflex.update(Isaac.GetPlayer())
+  local t = Reflex.plan.target
+  check("boss tactics: 'kill the adds first' boss -> adds first", t == lil,
+        "planned target: " .. (t and (t == lil and "the add" or ("type " .. tostring(t.Type) .. "." .. tostring(t.Variant))) or "none"))
+  Reflex.bossTactics = {}; IsaacBotBossTactics = Reflex.bossTactics
 end)
 
 -- 18. 1.0.16-22: the relax ladder had dropped the gap around fires to 0; it planned a firing spot next to a
@@ -865,6 +922,133 @@ run("sprays down a corridor at a target roughly in line", function()
     Mock.step(move)
   end
   check("sprays down a corridor at a target roughly in line", shots >= 3, shots .. " of 6 updates fired")
+end)
+
+-- R. Risk layer (1.2.6, the author: "if you are above a certain threshold on hearts, is it worth playing risky? Do I
+-- have soul hearts so I don't lose my devil deal chance? Will playing risky kill me?")
+run("risk: careful only when it matters", function()
+  local Risk = Reflex.risk
+  local Danger = include("danger")
+  local lvl = Game():GetLevel()
+  Mock.room(nil, { player = Mock.tile(7, 4) })
+  local p = Isaac.GetPlayer()
+  Risk.pin = nil
+  local oldStage = lvl.stage
+  local function at(stage, red, soul)
+    lvl.stage, p._hearts, p._soul = stage, red, soul
+    Risk.update(p, {})
+    return Risk.level
+  end
+  local stake = at(2, 6, 0)          -- floor 2, red hearts next: the deal is at stake
+  local stakeCost = Danger.cost(p, 1)
+  local soul = at(2, 6, 4)           -- same floor, two soul hearts in front
+  local soulCost = Danger.cost(p, 1)
+  local floor1 = at(1, 6, 0)         -- floor 1: no deal to lose
+  local dying = at(1, 1, 0)          -- half a heart left
+  local twoLeft = at(1, 2, 0)        -- two hits left
+  check("risk: deal at stake stays careful (0.25)", math.abs(stake - 0.25) < 0.01, fmt("%.2f", stake))
+  check("risk: soul hearts in front -> bolder", soul >= 0.45 and soul > stake, fmt("%.2f vs %.2f", soul, stake))
+  check("risk: floor 1 has no deal -> bolder", floor1 >= 0.45, fmt("%.2f", floor1))
+  check("risk: one hit from death -> fully careful", dying == 0, fmt("%.2f", dying))
+  check("risk: two hits left -> careful", twoLeft <= 0.15, fmt("%.2f", twoLeft))
+  check("risk: a hit is cheaper with soul hearts in front", soulCost < stakeCost, fmt("%.1f vs %.1f", soulCost, stakeCost))
+  -- the settings follow the level: bold = smaller hit cost and gaps, 0.25 = exactly the old values
+  local S = Reflex.S
+  Risk.level = 0.25; Risk.apply(S)
+  local baseHit, baseGap = S.m_hit, S.plan_clearance
+  Risk.level = 0.9; Risk.apply(S)
+  check("risk: bold play shrinks hit cost and gaps", S.m_hit < baseHit and S.plan_clearance < baseGap,
+        fmt("m_hit %.0f->%.0f, gap %.0f->%.0f", baseHit, S.m_hit, baseGap, S.plan_clearance))
+  Risk.level = 0.25; Risk.apply(S)
+  check("risk: 0.25 gives back the old settings", S.m_hit == baseHit, fmt("%.0f", S.m_hit))
+  -- Level 2, pace: a tough enemy for far longer than our damage says it should take -> push
+  lvl.stage, p._hearts, p._soul = 2, 6, 0
+  local e = Mock.enemy(10, 0, Mock.tile(12, 4), { hp = 200 })
+  Risk.update(p, { e })
+  local before = Risk.level
+  for _ = 1, 30 * 120 do Mock.step(nil) end
+  Risk.update(p, { e })
+  check("risk: a slow room pushes harder (but the deal cap holds)", Risk.level > before and Risk.level <= 0.45,
+        fmt("%.2f -> %.2f (%s)", before, Risk.level, Risk.why))
+  lvl.stage, p._hearts, p._soul = oldStage, 6, 0
+  Risk.pin = 0.25
+  Risk.update(p, {}); Risk.apply(S)
+end)
+
+-- S. Level 3 run strategy (1.2.7): items valued for THIS bot and THIS run; rating 0 = never; choice pedestals = best one
+run("strategy: run-aware item value", function()
+  local St = Reflex.strategy
+  local V = Rules.value
+  St.ratings = {}
+  St.loadRatings("1=3,1,tear;2=0,0;3=4,2,def;4=2,0,rng;5=2,0,dmg")
+  Mock.room(nil, { player = Mock.tile(2, 4) })
+  local p = Isaac.GetPlayer()
+  St.lastProfile = -999; St.update(p)
+  check("strategy: rated items get a value, unrated fall back", (St.itemValue(p, 1, V) or 0) > 0 and St.itemValue(p, 99, V) == nil)
+  check("strategy: an item rated 0 (hurts this bot) is worth nothing", St.itemValue(p, 2, V) == 0)
+  -- the same rating is worth more when it fixes the build's weakness: short range -> a range item beats a dmg item
+  p.TearRange = 160; St.lastProfile = -999; St.update(p)
+  local rngV, dmgV = St.itemValue(p, 4, V), St.itemValue(p, 5, V)
+  p.TearRange = 260; St.lastProfile = -999; St.update(p)
+  check("strategy: an item that fixes a weakness is worth more", rngV > dmgV, fmt("range item %d vs damage item %d", rngV, dmgV))
+  -- never walks to a rating-0 item
+  Mock.pickup(PickupVariant.PICKUP_COLLECTIBLE, 2, Mock.tile(10, 4))
+  Nav.newRoom()
+  Nav.update(p)
+  check("strategy: doesn't walk to an item rated 0", not tostring(Nav.status.goal):find("item"), "goal: " .. tostring(Nav.status.goal))
+  -- choice pedestals: two in one group -> walks toward the better one (id 3, rating 4), not the nearer id 1
+  Mock.room(nil, { player = Mock.tile(7, 4) })
+  local a = Mock.pickup(PickupVariant.PICKUP_COLLECTIBLE, 1, Mock.tile(4, 4))
+  local b = Mock.pickup(PickupVariant.PICKUP_COLLECTIBLE, 3, Mock.tile(12, 4))
+  a.OptionsPickupIndex, b.OptionsPickupIndex = 1, 1
+  Nav.newRoom()
+  local move = Nav.update(Isaac.GetPlayer())
+  check("strategy: choice pedestals -> goes for the better item", move and move.X > 0,
+        "goal: " .. tostring(Nav.status.goal) .. (move and fmt(", move x %.2f", move.X) or ""))
+  St.ratings = {}
+end)
+
+-- S2. Level 3 buying: devil deals only for strong items and never below 2 containers; shop by need; risky rooms
+run("strategy: deals, shop and risky rooms", function()
+  local St, Risk = Reflex.strategy, Reflex.risk
+  local V = Rules.value
+  St.ratings = {}
+  St.loadRatings("10=4,3,dmg;11=1,0,spd")
+  Mock.room(nil, { player = Mock.tile(7, 4) })
+  local p = Isaac.GetPlayer()
+  St.lastProfile = -999; St.update(p)
+  local function priced(id, price, variant)
+    return { Price = price, Variant = variant or PickupVariant.PICKUP_COLLECTIBLE, SubType = id }
+  end
+  p.GetMaxHearts = function() return 6 end
+  check("deal: a strong item for 1 heart container (3 -> 2 left) is taken", St.buyValue(p, priced(10, -1), V, Rules) > 0)
+  check("deal: a weak item is never worth hearts", St.buyValue(p, priced(11, -1), V, Rules) == 0)
+  p.GetMaxHearts = function() return 4 end
+  check("deal: never below 2 heart containers", St.buyValue(p, priced(10, -1), V, Rules) == 0)
+  p.GetMaxHearts = nil
+  p.GetNumCoins = function() return 20 end
+  check("shop: a good item it can afford is bought", St.buyValue(p, priced(10, 15), V, Rules) > 0)
+  p._keys = 0
+  check("shop: a key when it has none", St.buyValue(p, priced(1, 5, PickupVariant.PICKUP_KEY), V, Rules) > 0)
+  p._keys = 3
+  check("shop: no key when it has some", St.buyValue(p, priced(1, 5, PickupVariant.PICKUP_KEY), V, Rules) == 0)
+  p.GetNumCoins = nil
+  check("shop: nothing without the coins", St.buyValue(p, priced(10, 15), V, Rules) == 0)
+  -- risky rooms: curse room with the deal at stake and red hearts only = no; with soul hearts in front = yes
+  local lvl = Game():GetLevel()
+  local oldStage = lvl.stage
+  Risk.pin = nil
+  lvl.stage, p._hearts, p._soul = 2, 6, 0
+  Risk.update(p, {})
+  local curseStake = Risk.allows("curse", p)
+  p._soul = 4
+  Risk.update(p, {})
+  local curseSoul = Risk.allows("curse", p)
+  check("risky rooms: curse room only with soul hearts in front when the deal is at stake", not curseStake and curseSoul)
+  lvl.stage, p._hearts, p._soul = oldStage, 6, 0
+  Risk.pin = 0.25
+  Risk.update(p, {})
+  St.ratings = {}
 end)
 
 return table.concat(results, "\n")

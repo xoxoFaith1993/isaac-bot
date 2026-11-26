@@ -23,7 +23,7 @@ local Options = include("options")
 -- handed to the watchdog so it can build the brain's multiple-choice menu
 local MODS = { Reflex = Reflex, Nav = Nav, Danger = Danger, Options = Options, Rescue = Rescue, json = json }
 
-local VERSION = "1.2.4"
+local VERSION = "1.2.7"
 Reflex.status.mode = "full" -- fight + walk + explore (Stage 3); "combat" = fights only, "off" = hands off
 local TAG = "IBOT|"
 local BOT_SLOT = 2
@@ -102,6 +102,7 @@ local function controlValue(action)
   end
   if action == ButtonAction.ACTION_BOMB then return ctl.bomb and 1 or 0 end
   if action == ButtonAction.ACTION_ITEM then return ctl.item and 1 or 0 end
+  if action == ButtonAction.ACTION_PILLCARD then return ctl.pocket and 1 or 0 end
   return nil
 end
 
@@ -112,7 +113,8 @@ mod:AddCallback(ModCallbacks.MC_INPUT_ACTION, function(_, ent, hook, action)
   if hook == InputHook.GET_ACTION_VALUE then return v end
   if hook == InputHook.IS_ACTION_PRESSED then return v > 0.3 end
   if hook == InputHook.IS_ACTION_TRIGGERED then
-    return (action == ButtonAction.ACTION_BOMB or action == ButtonAction.ACTION_ITEM) and v > 0.5
+    return (action == ButtonAction.ACTION_BOMB or action == ButtonAction.ACTION_ITEM
+            or action == ButtonAction.ACTION_PILLCARD) and v > 0.5
   end
   return nil
 end)
@@ -242,7 +244,13 @@ local function endArena(result, f)
 end
 
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, function(_, ent, amount, flags, source)
-  if ent.Type ~= EntityType.ENTITY_PLAYER then return nil end
+  if ent.Type ~= EntityType.ENTITY_PLAYER then
+    -- our tear hit an enemy: counts toward real accuracy (Reflex.acc)
+    if source and source.Type == EntityType.ENTITY_TEAR and source.Entity and ent:IsVulnerableEnemy() then
+      pcall(Reflex.tearHit, source.Entity)
+    end
+    return nil
+  end
   local src = source and (tostring(source.Type) .. "." .. tostring(source.Variant)) or "?"
   local p = ent.Position
   -- what actually touched Isaac: the game credits a shot to its shooter ("46.0" for Sloth's shot), so also log the
@@ -264,8 +272,11 @@ mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, function(_, ent, amount, flags,
     via = via .. string.format("|shot %d d=%.0f size=%.0f scale=%.2f height=%.0f speed=%.1f from=%d", best.Variant, bd,
       best.Size or 0, pr and pr.Scale or -1, pr and pr.Height or 0, best.Velocity:Length(), best.SpawnerType or 0)
   end
+  local pl = ent:ToPlayer()
+  if pl then pcall(Reflex.risk.onHit, pl) end
   send("hit", src .. "|" .. tostring(amount) .. "|" .. math.floor(p.X) .. "," .. math.floor(p.Y)
-       .. "|move " .. tostring(Reflex.status.move) .. via)
+       .. "|move " .. tostring(Reflex.status.move) .. via
+       .. string.format("|risk %.2f%s", Reflex.risk.level, Reflex.risk.atStake and " deal" or ""))
   if arena then arena.hits = arena.hits + 1; arena.dmg = arena.dmg + amount end
   if bench and bench.started then bench.hits = bench.hits + 1 end
   if source and source.Type and source.Type > 0 then pcall(Reflex.learnHit, source.Type, amount) end
@@ -311,6 +322,11 @@ local function handle(seq, cmd, payload)
     -- live tuning: "key=value"
     local k, v = payload:match("^([%w_]+)=([%d%.%-]+)$")
     send("set", payload .. (k and Reflex.set(k, v) and " ok" or " unknown"))
+  elseif cmd == "risk" then
+    -- "risk|0.25" pins the risk level (0.25 = the old careful play; A/B on the bench), "risk|auto" lets it think
+    Reflex.risk.pin = tonumber(payload)
+    Reflex.risk.lastSent = -1
+    send("risk", Reflex.risk.pin and ("pinned " .. Reflex.risk.pin) or "auto")
   elseif cmd == "do" and Isaac.IsInGame() and botAllowed() then
     -- the multiple-choice brain picked option <id> from the menu the watchdog sent
     local o = Rescue.options and Rescue.options[payload]
@@ -376,6 +392,18 @@ local function handle(seq, cmd, payload)
     -- reload this mod's code inside the running game (seconds, instead of closing and relaunching Isaac)
     send("reload", "reloading the bot's code")
     Isaac.ExecuteCommand("luamod isaac-bot")
+  elseif cmd == "bosstactics" then
+    -- how good players beat each boss (knowledge/boss_tactics.json): distance, lines to avoid, adds, tells
+    local ok, n = pcall(Reflex.loadBossTactics, payload)
+    send("learned", "loaded boss tactics: " .. tostring(ok and n or 0) .. " bosses")
+  elseif cmd == "consumables" then
+    -- Level 3: when to use each card / pill effect (knowledge/consumable_ratings.json)
+    local ok, n = pcall(Reflex.strategy.loadConsumables, payload)
+    send("learned", "loaded card/pill ratings: " .. tostring(ok and n or 0))
+  elseif cmd == "itemratings" then
+    -- Level 3: each item's rating for this bot (knowledge/item_ratings.json): "id=rating,carry,tag,...;..."
+    local ok, n = pcall(Reflex.strategy.loadRatings, payload)
+    send("learned", "loaded item ratings: " .. tostring(ok and n or 0) .. " items")
   elseif cmd == "playbook" then
     local ok, n = pcall(Reflex.loadPlaybook, payload)
     send("learned", "loaded the enemy playbook: " .. tostring(ok and n or 0) .. " enemy types")
@@ -521,8 +549,28 @@ mod:AddCallback(ModCallbacks.MC_POST_UPDATE, function()
     if ok then
       ctl.move, ctl.shoot, ctl.bomb = move, shoot, bomb and true or false
       ctl.item = Reflex.status.active and Reflex.status.mode == "full" and wantActive(p)
+      -- Level 3: cards and pills (strategy.lua wantPocket; needs knowledge/consumable_ratings.json)
+      ctl.pocket = false
+      if Reflex.status.mode == "full" and not ctl.item then
+        local okP, want = pcall(Reflex.strategy.wantPocket, p, {
+          enemies = Isaac.CountEnemies(),
+          boss = Game():GetRoom():GetType() == RoomType.ROOM_BOSS,
+          missingRed = p:GetEffectiveMaxHearts() - p:GetHearts() })
+        if okP and want then
+          ctl.pocket = true
+          send("pocket", "using " .. (p:GetCard(0) > 0 and ("card " .. p:GetCard(0)) or ("pill " .. p:GetPill(0))))
+        end
+      end
       if Reflex.v2err and Reflex.v2err ~= lastV2Err then send("error", "mover: " .. Reflex.v2err) end
       if f % 30 == 0 and Reflex.status.active and Reflex.mover.debug then send("why", Reflex.mover.debug) end
+      -- real accuracy every 20 s of fighting
+      if f % 600 == 0 and Reflex.acc and Reflex.acc.fired >= 10 then send("aim", Reflex.accReport()) end
+      -- the risk level, whenever it moves by 0.1 or more (and why)
+      local rk = Reflex.risk
+      if math.abs(rk.level - (rk.lastSent or -1)) >= 0.1 then
+        rk.lastSent = rk.level
+        send("risk", string.format("%.2f|%s", rk.level, rk.why))
+      end
       lastV2Err = Reflex.v2err
       reflexError = nil
     else
@@ -627,8 +675,13 @@ mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, function()
     for id = 1, 800 do
       if cfg:GetCollectible(id) and p:HasCollectible(id) then ids[#ids + 1] = id end
     end
-    send("power", string.format("dmg %.2f|tears %.2f|speed %.2f|range %.0f|items %s", p.Damage,
-      30 / (p.MaxFireDelay + 1), p.MoveSpeed, p.TearRange, table.concat(ids, ",")))
+    send("power", string.format("dmg %.2f|tears %.2f|speed %.2f|range %.0f|shotspeed %.2f|spectral %s|items %s",
+      p.Damage, 30 / (p.MaxFireDelay + 1), p.MoveSpeed, p.TearRange, p.ShotSpeed, tostring(Reflex.spectral),
+      table.concat(ids, ",")))
+    -- Level 3: the run profile (strength for this floor, what the build needs)
+    Reflex.strategy.lastProfile = -999
+    Reflex.strategy.update(p)
+    send("run", Reflex.strategy.report())
   end)
   pcall(Nav.newLevel)
 end)

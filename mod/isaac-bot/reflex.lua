@@ -22,7 +22,13 @@ end
 local Danger = include("danger")
 local Tells = include("tells")
 local Mover = include("mover") -- movement core v2 (learned reach + deeper search); S.core picks which one drives
+local Risk = include("risk")   -- how bold to play right now (hearts, deal at stake, buffer, pace): scales S
+IsaacBotRisk = Risk            -- shared with danger.lua / nav.lua / main.lua
+local Strategy = include("strategy") -- Level 3: the run's profile (strengths, needs) and run-aware item value
+IsaacBotStrategy = Strategy
 local Reflex = {}
+Reflex.risk = Risk
+Reflex.strategy = Strategy
 Reflex.mover = Mover
 Reflex.tells = Tells
 
@@ -94,6 +100,8 @@ Reflex.S = {
   m_trap = 45,          -- v2: cost per closed way out (of 8) where a plan ends: corners close 3-5
   m_escape = 120,       -- v2: px of open floor a way out needs (about a second of running)
   m_turn = 90,          -- v2: cost of turning (half-turn = full cost, slight bend ~0): flow, not twitching
+  m_corner = 500,       -- v2: cost of ending in a corner (wall on a side AND above/below), x0.5-2.5 by movers near
+  corner_gap = 60,      -- v2: px to a wall on both axes that counts as a corner
   fire_pad = 14,        -- px: extra no-touch distance around lit fires
   deep_k = 6,           -- how many of the best moves get the expensive checks (speed: the rest are cut early)
   deep_w = 0.5,         -- weight of the best follow-up move's cost (2-step look-ahead; 0 = off)
@@ -168,6 +176,7 @@ buildDirs(Reflex.S.dirs)
 function Reflex.set(key, value)
   if Reflex.S[key] ~= nil and tonumber(value) then
     Reflex.S[key] = tonumber(value)
+    Risk.setBase(key, tonumber(value)) -- risk-scaled settings: the live value is the base, scaled again next tick
     if key == "dirs" then buildDirs(math.floor(Reflex.S.dirs)) end
     return true
   end
@@ -187,7 +196,27 @@ end
 -- Line of fire (reading the room): walks the straight line from a to b in 20 px steps.
 --   0 = clear, 1 = soft (poop or a lit fire in the way: our shots break it), 2 = blocked (rock, block, wall)
 -- Tears fly over pits, so pits don't count.
+-- Our OWN tears' lane. Spectral tears (Continuum, Ouija Board, The Wiz...) fly through rocks and poop
+-- (2026-11-25: with Continuum in a room full of rocks and pits it saw almost no open line and hardly fired at the last
+-- enemy for minutes). Enemy shots keep using the solid lane below.
+Reflex.spectral = false
 function Reflex.lane(room, a, b)
+  if Reflex.spectral then return 0 end
+  return Reflex.solidLane(room, a, b)
+end
+local function hasSpectral(player)
+  local ok, yes = pcall(function()
+    return player:HasTearFlags(TearFlags.TEAR_SPECTRAL)
+  end)
+  if ok then return yes end
+  ok, yes = pcall(function()
+    return (player.TearFlags & TearFlags.TEAR_SPECTRAL) == TearFlags.TEAR_SPECTRAL
+  end)
+  return ok and yes or false
+end
+
+-- 0 = open, 1 = only poop in the way, 2 = blocked (rocks, walls)
+function Reflex.solidLane(room, a, b)
   local d = b - a
   local len = d:Length()
   if len < 1 then return 0 end
@@ -331,6 +360,32 @@ function Reflex.loadPlaybook(text)
   end
   return n
 end
+-- Boss tactics (knowledge/boss_tactics.json, from wiki pages, guides and boss-guide videos; the author: "look up how
+-- people beat them... the little cheeky things it can do to avoid taking damage"). Sent by the helper as
+-- "type.variant=pd,flags,adds,tell|tell;..." flags: d = stay diagonal, r = avoid its row, c = avoid its column,
+-- k = avoid corners. adds: ignore / kill_close / kill_first. tells: animations right before an aimed attack.
+Reflex.bossTactics = {}
+IsaacBotBossTactics = Reflex.bossTactics
+function Reflex.loadBossTactics(text)
+  local n = 0
+  for entry in string.gmatch(text or "", "[^;]+") do
+    local key, pd, flags, adds, tells = entry:match("^([%d%.]+)=(%d*),(%a*),([%a_]*),?(.*)$")
+    if key then
+      local t = { pd = tonumber(pd), diag = flags:find("d") ~= nil, row = flags:find("r") ~= nil,
+                  col = flags:find("c") ~= nil, corners = flags:find("k") ~= nil, adds = adds ~= "" and adds or nil,
+                  tells = {} }
+      for a in string.gmatch(tells or "", "[^|]+") do t.tells[a] = true end
+      Reflex.bossTactics[key] = t
+      n = n + 1
+    end
+  end
+  return n
+end
+function Reflex.tacticsOf(e)
+  if not e or e.kind or not e.Type then return nil end
+  return Reflex.bossTactics[e.Type .. "." .. e.Variant] or Reflex.bossTactics[e.Type .. ".0"]
+end
+
 local function playbookOf(e)
   if not e or e.kind or not e.Type then return nil end
   return Reflex.playbook[e.Type .. "." .. e.Variant] or Reflex.playbook[e.Type .. ".0"]
@@ -462,6 +517,8 @@ local function planFire(player, room, w, targets, prefDist)
   local range = math.max(120, player.TearRange * 0.9)
   local best, bestScore = nil, math.huge
   local forced = plan.forced and f < plan.forced.untilF and plan.forced.idx or nil
+  local bossOn = Reflex.bossAliveIn and Reflex.bossAliveIn(w.enemies)
+  local bossAdds = Reflex.addsPolicy and Reflex.addsPolicy(w.enemies)
   for _, t in ipairs(targets) do
     local hash = t.Exists and GetPtrHash(t) or nil
     -- only for targets that (nearly) stand still: a chaser's square goes stale and the plan walked Isaac
@@ -486,12 +543,27 @@ local function planFire(player, room, w, targets, prefDist)
           if safe then
             local score = steps * 40 + c.lane * 80 + math.abs(c.dist - prefDist) * 0.3
             if hash and w.spawners and w.spawners[hash] then score = score - S.spawner_w end
+            -- boss fights (pickTarget's rule): the boss first, an add only when it's the threat; and keep
+            -- boss_dist from the boss (Mega Fatty's blood bursts hit twice from 85-92 px, 2026-11-25)
+            if bossOn and t.IsBoss then
+              if t:IsBoss() then
+                local tac = Reflex.tacticsOf(t)
+                local keep = (tac and tac.pd) or S.boss_dist
+                if c.dist < keep * 0.8 then score = score + 300 end
+              elseif bossAdds == "kill_first" then
+                score = score - 150
+              else
+                score = score + math.max(0, 300 - Reflex.minionThreat(t, player, false))
+              end
+            end
             -- most danger per hit point first: weak things that keep hurting us die first (Sloth's Chargers did
             -- 9 of 18 hits while it chipped at Sloth's 90+ HP). Danger = learned respect (rises with hits taken).
             local pbt = playbookOf(t) -- the playbook's kill priority (0-3)
-            if pbt and t.HitPoints and t.HitPoints > 0 then score = score - S.pb_kill_w * pbt.k * math.min(1, 20 / t.HitPoints) end
+            -- (with a boss alive the "low HP first" pull is small: the threat rule above already decides adds)
+            local lowHpW = (bossOn and t.IsBoss and not t:IsBoss()) and 0.3 or 1
+            if pbt and t.HitPoints and t.HitPoints > 0 then score = score - lowHpW * S.pb_kill_w * pbt.k * math.min(1, 20 / t.HitPoints) end
             if hash and t.HitPoints and t.HitPoints > 0 and S.kill_w > 0 then
-              score = score - S.kill_w * (respectOf(t) - 0.9) * math.min(1, 20 / t.HitPoints)
+              score = score - lowHpW * S.kill_w * (respectOf(t) - 0.9) * math.min(1, 20 / t.HitPoints)
             end
             -- boxed-in squares are bad places to stand (the author: "it goes to the corner deliberately, like its
             -- pathfinding tells it to"): every wall/rock touching the square costs, a corner touches 5
@@ -510,7 +582,7 @@ local function planFire(player, room, w, targets, prefDist)
             for _, sh in ipairs(w.shooters or {}) do -- a firing square in ANOTHER shooter's open line is worse
               if sh ~= t then
                 local rel = c.pos - sh.Position
-                if (math.abs(rel.X) < 22 or math.abs(rel.Y) < 22) and Reflex.lane(room, sh.Position, c.pos) < 2 then
+                if (math.abs(rel.X) < 22 or math.abs(rel.Y) < 22) and Reflex.solidLane(room, sh.Position, c.pos) < 2 then
                   score = score + 90
                 end
               end
@@ -634,15 +706,71 @@ local function breakables(room)
   return list
 end
 
+-- Boss fights (the author, 2026-11-25, after Mega Fatty: the bot shot its little adds for 4 minutes because low HP
+-- scored better than the boss's big pool): "Staying alive comes first, but kill the boss before it kills you."
+-- With a boss alive the boss is the target, and an add only wins when IT is the threat: close or closing in,
+-- a dangerous type (playbook kill priority / danger, shooters, chargers), or we're in a tight spot.
+local function bossAliveIn(enemies)
+  for _, e in ipairs(enemies) do
+    if e.Type ~= EntityType.ENTITY_FIREPLACE and e:IsBoss() and e:IsVulnerableEnemy() then return true end
+  end
+  return false
+end
+-- the boss tactics' adds policy for this fight (kill_first: the Haunt's Lil Haunts; ignore: Gemini's), or nil
+local function addsPolicy(enemies)
+  for _, e in ipairs(enemies) do
+    if e.Type ~= EntityType.ENTITY_FIREPLACE and e:IsBoss() then
+      local tac = Reflex.tacticsOf(e)
+      if tac and tac.adds then return tac.adds end
+    end
+  end
+  return nil
+end
+Reflex.addsPolicy = addsPolicy
+local function minionThreat(e, player, crowded)
+  local rel = player.Position - e.Position
+  local d = rel:Length()
+  local threat = 0
+  if d < 160 then threat = threat + 260 * (1 - d / 160) end                       -- close
+  local v = e.Velocity or Vector.Zero
+  if d > 1 and v:Length() > 1 and v:Dot(rel / d) > 0.6 * v:Length() then         -- closing in on us
+    threat = threat + 80
+  end
+  local pb = playbookOf(e)
+  if pb then
+    threat = threat + 45 * pb.k + 25 * math.max(0, pb.d - 1)
+    if pb.tags.shoots_single or pb.tags.shoots_spread or pb.tags.charges_on_line or pb.tags.dashes_at_isaac
+       or pb.tags.explodes_on_contact then threat = threat + 60 end
+  end
+  if crowded then threat = threat + 120 end                                        -- tight spot: clear room to move
+  return threat
+end
+Reflex.bossAliveIn, Reflex.minionThreat = bossAliveIn, minionThreat
+
 local function pickTarget(player, enemies, room)
   local best, bestScore = nil, math.huge
   local shielded = nil
+  local bossOn = bossAliveIn(enemies)
+  local close = 0
+  for _, e in ipairs(enemies) do
+    if e.Type ~= EntityType.ENTITY_FIREPLACE and (e.Position - player.Position):Length() < 130 then close = close + 1 end
+  end
+  local crowded = close >= 2
   for _, e in ipairs(enemies) do
     if e.Type == EntityType.ENTITY_FIREPLACE then
       -- a fire is a hazard to avoid, not a target (unless it shields something; see breakables below)
+    elseif bossOn and e:IsVulnerableEnemy() and not e:IsInvincible() then
+      local d = (e.Position - player.Position):Length()
+      local score
+      local policy = addsPolicy(enemies)
+      if e:IsBoss() then score = d * 0.5 - 100
+      elseif policy == "kill_first" then score = d - 250                      -- the adds shield or feed the boss
+      elseif policy == "ignore" then score = 150 + d - minionThreat(e, player, crowded) * (d < 90 and 1 or 0.4)
+      else score = 150 + d - minionThreat(e, player, crowded) end
+      if score < bestScore then best, bestScore = e, score end
     elseif e:IsVulnerableEnemy() and not e:IsInvincible() then
       local d = (e.Position - player.Position):Length()
-      local score = d + (e:IsBoss() and -60 or 0) + e.HitPoints * 0.5
+      local score = d + (e:IsBoss() and -60 or 0) + math.min(e.HitPoints, 40) * 0.5
       -- most danger per hit point first (see planFire): Sloth's Chargers before Sloth
       local pbe = playbookOf(e)
       if pbe and e.HitPoints > 0 then score = score - Reflex.S.pb_kill_w * 0.5 * pbe.k * math.min(1, 20 / e.HitPoints) end
@@ -806,7 +934,7 @@ local function score(player, room, w, d, speed, target, prefDist, center, choice
     if e ~= target then
       local rel = last - e.Position
       local inLine = math.abs(rel.X) < 22 or math.abs(rel.Y) < 22
-      if inLine and rel:Length() < 400 and Reflex.lane(room, e.Position, last) < 2 then
+      if inLine and rel:Length() < 400 and Reflex.solidLane(room, e.Position, last) < 2 then
         cost = cost + S.shooter_line_w
       end
     end
@@ -975,10 +1103,28 @@ local function shotCanHitAt(room, player, shoot, pos, size, pv)
   return Reflex.lane(room, player.Position, pos) < 2
 end
 
+-- Real accuracy (the author, 2026-11-25: "it feels like it's just shooting randomly"): tears fired vs tears that
+-- hit an enemy (main.lua counts the hits). Reported as an `aim` line.
+Reflex.acc = { fired = 0, hit = 0, hitTears = {} }
+function Reflex.tearHit(tear)
+  if not tear then return end
+  local h = GetPtrHash(tear)
+  if Reflex.acc.hitTears[h] then return end -- piercing tears count once
+  Reflex.acc.hitTears[h] = true
+  Reflex.acc.hit = Reflex.acc.hit + 1
+end
+function Reflex.accReport()
+  local a = Reflex.acc
+  local s = string.format("%d%% of %d tears hit", a.fired > 0 and math.floor(100 * a.hit / a.fired) or 0, a.fired)
+  Reflex.acc = { fired = 0, hit = 0, hitTears = {} }
+  return s
+end
+
 -- Watch our own fresh tears: compare their sideways speed with Isaac's sideways speed when fired.
 local lastPlayerVel = Vector.Zero
 function Reflex.calibrateCurve(player)
   for _, e in ipairs(Isaac.FindByType(EntityType.ENTITY_TEAR)) do
+    if e.FrameCount == 1 and e.SpawnerType == EntityType.ENTITY_PLAYER then Reflex.acc.fired = Reflex.acc.fired + 1 end
     if e.FrameCount <= 1 and e.SpawnerType == EntityType.ENTITY_PLAYER then
       local v = e.Velocity
       local horizontal = math.abs(v.X) > math.abs(v.Y) -- fired left/right: sideways is Y
@@ -1031,8 +1177,14 @@ function Reflex.update(player)
   local st = Reflex.status
   local room = Game():GetRoom()
   Danger.build(player)
+  Reflex.spectral = hasSpectral(player)
   pcall(Reflex.calibrateCurve, player) -- learn how much our tears bend
   local w = gather(player)
+  -- how bold to play (risk.lua): twice a second, then the safety settings follow it
+  if Game():GetFrameCount() % 15 == 0 or not Risk.base then
+    pcall(Risk.update, player, w.enemies)
+    Risk.apply(S)
+  end
   st.threats = #w.shots + #w.lasers + #w.bombs
   Reflex.trackSpeeds(w.enemies, player)
   pcall(Mover.observe, w.enemies, player, Game():GetFrameCount(), w.shots) -- learning runs whichever core drives
@@ -1203,7 +1355,10 @@ function Reflex.update(player)
   local target = plan.target or fallback
   if st.dodgeOnly then target = nil end -- cleared room, only unkillable shooters left: just dodge, don't aim
   if target and not target.kind and target.IsBoss and target:IsBoss() then
-    prefDist = math.max(prefDist, math.min(S.boss_dist, player.TearRange * 0.8)) -- fight bosses from farther out
+    -- fight bosses from farther out: the boss's own distance from the tactics file when there is one
+    local tac = Reflex.tacticsOf(target)
+    if tac and tac.pd then prefDist = math.min(tac.pd, player.TearRange * 0.85)
+    else prefDist = math.max(prefDist, math.min(S.boss_dist, player.TearRange * 0.8)) end
   end
   -- A shielded enemy that opens when you come close (Hosts: "you gotta walk up for them to open, and then
   -- they shoot. While they're shooting, that's your window to hit them." - the author): bait it from close range.
@@ -1269,7 +1424,7 @@ function Reflex.update(player)
     local okM, mi, mc = pcall(Mover.choose, { S = S, w = w, room = room, player = player, speed = speed, DIRS = DIRS,
       target = target, prefDist = prefDist, wayPos = wayPos, spot = plateSpot or navSpot or (plan.target and plan.cellPos) or nil, calm = calm, blocked = blocked, creepAt = creepAt,
       bounce = function(pos, r) return bounced(w, pos, r) end, lane = Reflex.lane, segDist = segDist,
-      laserEnd = laserEnd, playbookOf = playbookOf })
+      laserEnd = laserEnd, playbookOf = playbookOf, tacticsOf = Reflex.tacticsOf })
     Reflex.prof.move = Reflex.prof.move + (Isaac.GetTime() - tMove0)
     if okM and mi then best, bestCost, usedV2 = mi, mc, true; Reflex.v2err = nil
     else Reflex.v2err = tostring(mi) end -- falls back to the old core this update; main.lua reports it

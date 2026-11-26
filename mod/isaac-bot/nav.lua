@@ -58,6 +58,11 @@ end
 local function visitWeight(t)
   local r = R.room[t]
   if not r then return nil end
+  -- Level 3: risky rooms only when the risk layer says we can afford them (risk.lua Risk.allows)
+  if r.when then
+    local Risk = IsaacBotRisk
+    if not (Risk and Risk.allows and Risk.allows(r.when, Isaac.GetPlayer(0))) then return nil end
+  end
   if r.visit then return r.visit end
   if r.last_resort and Nav.lastResort then return 5 end
   return nil
@@ -422,7 +427,14 @@ end
 local V = R.value
 local function value(p, e)
   local pk = e:ToPickup()
-  if not pk or pk.Price ~= 0 or pk:IsShopItem() then return 0 end -- buying is Stage 4's call
+  if not pk then return 0 end
+  -- things with a price (shop coins, devil-deal hearts): Level 3 decides (strategy.lua buyValue, rules R.deals/R.shop)
+  if pk.Price ~= 0 or pk:IsShopItem() then
+    local St = IsaacBotStrategy
+    if not (St and R.buy) then return 0 end
+    local ok, val = pcall(St.buyValue, p, pk, V, R)
+    return ok and val or 0
+  end
   local v, s = e.Variant, e.SubType
   if P.never[v] then return 0 end
   if v == PickupVariant.PICKUP_HEART then
@@ -451,8 +463,25 @@ local function value(p, e)
   if P.key_chests[v] then return (s ~= 0 and p:GetNumKeys() > 0) and V.locked_chest or 0 end
   if v == PickupVariant.PICKUP_COLLECTIBLE then
     if s == 0 or pk.Touched then return 0 end
-    local cfg = Isaac.GetItemConfig():GetCollectible(s)
-    return V.item_base + V.item_per_quality * ((cfg and cfg.Quality) or 1)
+    -- Level 3: worth to THIS run (rating for this bot + fixes the build's weaknesses); quality if unrated
+    local St = IsaacBotStrategy
+    local val = St and St.itemValue(p, s, V)
+    if not val then
+      local cfg = Isaac.GetItemConfig():GetCollectible(s)
+      val = V.item_base + V.item_per_quality * ((cfg and cfg.Quality) or 1)
+    end
+    -- choice pedestals (take one, the others vanish): only the best of the group is wanted
+    local okO, group = pcall(function() return pk.OptionsPickupIndex end)
+    if val > 0 and okO and group and group ~= 0 then
+      for _, o in ipairs(Isaac.FindByType(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE)) do
+        local op = o:ToPickup()
+        if op and o.SubType ~= 0 and GetPtrHash(o) ~= GetPtrHash(e) and op.OptionsPickupIndex == group then
+          local ov = (St and St.itemValue(p, o.SubType, V)) or 0
+          if ov > val or (ov == val and GetPtrHash(o) < GetPtrHash(e)) then return 0 end
+        end
+      end
+    end
+    return val
   end
   return 0
 end
@@ -569,6 +598,19 @@ local function chooseGoal(p, room)
   -- 2. after the boss: the trapdoor
   local desc = level():GetCurrentRoomDesc()
   if desc.Data and (R.room[desc.Data.Type] or {}).boss then
+    -- Level 3: a devil/angel door opened after the fight -> look inside before the trapdoor (strategy.lua decides
+    -- what to take; the bot comes back here for the trapdoor afterwards)
+    for slot = 0, 7 do
+      local d = room:GetDoor(slot)
+      if visibleDoor(d) and d:IsOpen() and (R.room[d.TargetRoomType] or {}).deal then
+        local info = roomInfo(d.TargetRoomIndex)
+        if not (info and info.visited > 0) and not skip["deal" .. slot] then
+          local g = doorGoal(room, p, safeIndex(d.TargetRoomIndex), "deal room")
+          if g then g.key = "deal" .. slot; return g end
+          skip["deal" .. slot] = true
+        end
+      end
+    end
     for i = 0, room:GetGridSize() - 1 do
       local ge = room:GetGridEntity(i)
       if ge and ge:GetType() == GridEntityType.GRID_TRAPDOOR and not skip["trap"] then

@@ -131,7 +131,13 @@ local function cost_at(ctx, p, si, t)
   local pr = ctx.pr
   local at = ctx.byT[t]
   for _, z in ipairs(at.z) do
-    local margin = (p - z.c):Length() - z.r - pr
+    local zc = z.c
+    if z.base then -- a chaser: it drifts toward THIS plan's spot (as far as it can get in time t)
+      local to = p - z.base
+      local len = to:Length()
+      zc = (len > 1) and (z.base + to * (math.min(z.drift, len) / len)) or z.base
+    end
+    local margin = (p - zc):Length() - z.r - pr
     if margin < 0 then
       -- graded: full cost near the enemy, fading to m_edge_hit at the circle's edge (a 95% circle's edge is a small
       -- chance). With 3-4 flies the whole room sat inside flat full-cost circles, every option looked equally bad
@@ -178,7 +184,9 @@ local function cost_at(ctx, p, si, t)
   -- shot). In a shooter's line: a little cost always, nearly a hit's cost while it's winding up to fire.
   for _, ln in ipairs(ctx.lines) do
     local rel = p - ln.pos
-    if (math.abs(rel.X) < ln.half or math.abs(rel.Y) < ln.half) and rel:Length() < 420 then
+    local inRow, inCol = math.abs(rel.Y) < ln.half, math.abs(rel.X) < ln.half
+    local hit = (ln.only == "row" and inRow) or (ln.only == "col" and inCol) or (not ln.only and (inRow or inCol))
+    if hit and rel:Length() < 420 then
       if ln.charge then c = c + S.m_charge_line * wt
       elseif ln.eta and t >= ln.eta - 6 then c = c + S.m_hit * 0.8 * wt
       else c = c + S.m_line * wt end
@@ -307,6 +315,27 @@ local function total(ctx, plan)
   local trapW = S.m_trap
   if ctx.spot and (plan.p - ctx.spot):Length() < 45 then trapW = trapW * 0.2 end
   c = c + waysOut(ctx, plan.p) * trapW
+  -- Cornered: a wall close on a left/right side AND on an up/down side. With fast movers about, the middle often looks
+  -- as "closed" as a corner (their circles fill it), so the plain ways-out count stopped telling them apart and it
+  -- parked in corners against flies (2026-11-25). This cost grows with the number of movers within 400 px.
+  if S.m_corner > 0 and not (ctx.spot and (plan.p - ctx.spot):Length() < 45) then
+    local ck = (plan.p.X // 16) * 4096 + (plan.p.Y // 16)
+    local corner = ctx.cornerMemo[ck]
+    if corner == nil then
+      local r = S.corner_gap
+      local side = blockedAt(ctx, plan.p + Vector(r, 0)) or blockedAt(ctx, plan.p + Vector(-r, 0))
+      local vert = blockedAt(ctx, plan.p + Vector(0, r)) or blockedAt(ctx, plan.p + Vector(0, -r))
+      corner = side and vert
+      ctx.cornerMemo[ck] = corner
+    end
+    if corner then
+      local movers = 0
+      for _, z in ipairs(ctx.byT[20].z) do
+        if z.mover and (z.c - plan.p):Length() < 400 then movers = movers + 1 end
+      end
+      c = c + S.m_corner * math.min(2.5, 0.5 + movers / 2)
+    end
+  end
   -- steady pull to the room's middle and a cost near walls (the old core had these; A/B 2026-11-25: no deaths vs 2/4).
   -- Not at a planned firing spot by a wall (the planner chose it).
   if not (ctx.spot and (plan.p - ctx.spot):Length() < 45) then
@@ -422,6 +451,17 @@ function Mover.choose(ctx)
           local d = player.Position - e.Position
           d = d:Length() > 1 and d:Normalized() or Vector(0, 0)
           local c, r = Mover.predict(e, t, d, ctx.bounce)
+          -- Chasers and dashers (playbook) home in on wherever Isaac GOES, not where he is now. Measured toward the
+          -- current spot, a far corner looked safe from a room of Dart Flies, and it parked there and got hit
+          -- (2026-11-25, the author: "it still parks itself in the corner when coming close to flies"). For these
+          -- the drift is re-aimed at each plan's own position in cost_at.
+          local pbz = ctx.playbookOf and ctx.playbookOf(e)
+          local home = pbz and (pbz.tags.chases or pbz.tags.dashes_at_isaac) and not (w.pushed and w.pushed[GetPtrHash(e)])
+          local base, drift = nil, 0
+          if home then
+            base = Mover.predict(e, t, Vector(0, 0), ctx.bounce)
+            drift = (c - base):Length()
+          end
           -- mid-"that" animation (one that has hurt us before, like a charge): give it more room
           if w.hurtful and w.hurtful[GetPtrHash(e)] then r = r * S.m_hurtful end
           -- the author's rule: flies get knocked back by tears. A light enemy in our line of fire won't reach us, so it
@@ -430,7 +470,7 @@ function Mover.choose(ctx)
             c = e.Position
             r = math.min(r, e.Size + 12 + t * 0.5)
           end
-          zs[#zs + 1] = { c = c, r = r, mover = true }
+          zs[#zs + 1] = { c = c, r = r, mover = true, base = base, drift = drift }
         end
       end
       for _, s in ipairs(w.shots) do
@@ -454,7 +494,7 @@ function Mover.choose(ctx)
   end
 
   ctx.NEXT = NEXT
-  ctx.wallMemo, ctx.waysMemo, ctx.hazMemo = {}, {}, {}
+  ctx.wallMemo, ctx.waysMemo, ctx.hazMemo, ctx.cornerMemo = {}, {}, {}, {}
   -- shooters' lines (from the learned tells): with an open lane, and when it's winding up, how soon it fires
   -- hidden enemies: no collision right now (underground or in the air), not fires
   ctx.hidden = 0
@@ -476,6 +516,12 @@ function Mover.choose(ctx)
       local pb = ctx.playbookOf(e)
       if pb and (pb.tags.charges_on_line or pb.tags.dashes_at_isaac) and e.Position then
         ctx.lines[#ctx.lines + 1] = { pos = e.Position, half = (e.Size or 13) + 16, charge = true }
+      end
+      -- boss tactics: "stay diagonal" / "never in its row" / "never in its column" (Gurglings, Gluttony, The Fallen...)
+      local tac = ctx.tacticsOf and ctx.tacticsOf(e)
+      if tac and e.Position and (tac.diag or tac.row or tac.col) then
+        local only = (tac.diag or (tac.row and tac.col)) and nil or (tac.row and "row" or "col")
+        ctx.lines[#ctx.lines + 1] = { pos = e.Position, half = (e.Size or 13) + 18, charge = true, only = only }
       end
     end
   end

@@ -140,6 +140,9 @@ end
 function Tells.shotComing(e)
   local c = Tells.cur[GetPtrHash(e)]
   if not c then return false end
+  -- known from the boss tactics file (guides: Dingle's "Dance"/"Whistle" before "Spit"), no learning needed
+  local tac = IsaacBotBossTactics and (IsaacBotBossTactics[e.Type .. "." .. e.Variant] or IsaacBotBossTactics[e.Type .. ".0"])
+  if tac and tac.tells and tac.tells[c.anim] then return true end
   local book = Tells.book[c.type] or {}
   local function shoots(anim)
     local r = book[anim]

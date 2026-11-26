@@ -1,6 +1,13 @@
 # Contributing
 
-Thanks for helping! A few rules keep the bot safe to run and the repo clean.
+Thanks for helping! **New here? Start with [docs/HOW_WE_WORK.md](docs/HOW_WE_WORK.md)**: the big picture, game
+modding in ten minutes, the improvement loop (watch, diagnose, fix the category, test, reload, measure), and where to
+start depending on whether you know the game, code, or both. You don't need to write code to help: game knowledge
+in `knowledge/` (enemy playbook, item ratings, boss tactics) makes the bot smarter too.
+
+Using an AI coding assistant? `CLAUDE.md` gives it this repo's rules and method.
+
+A few rules keep the bot safe to run and the repo clean.
 
 - **Run the offline tests before a pull request:**
   `C:\Windows\SysWOW64\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -File test\run.ps1`

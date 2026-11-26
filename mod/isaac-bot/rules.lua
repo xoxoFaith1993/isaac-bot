@@ -15,12 +15,13 @@ R.room = {
   [7]  = { name = "secret",       visit = 0 },
   [8]  = { name = "super secret", visit = 0 },
   [9]  = { name = "arcade",       visit = 3 },
-  [10] = { name = "curse",        visit = nil, last_resort = true }, -- door hurts going in; only if nothing else is left
-  [11] = { name = "challenge",    visit = nil },                    -- ambush waves; Stage 4 decides
+  -- Level 3 (2026-11-25): risky rooms open up when the risk layer says we can afford them (`when` = risk.lua test)
+  [10] = { name = "curse",        visit = 3, when = "curse" },      -- door hurts going in: soul hearts first or nothing at stake
+  [11] = { name = "challenge",    visit = 3, when = "challenge" },  -- ambush waves: strong, healthy, deal not at stake
   [12] = { name = "library",      visit = 1 },
   [13] = { name = "sacrifice",    visit = nil },
-  [14] = { name = "devil",        visit = nil },                    -- deals are Stage 4's call
-  [15] = { name = "angel",        visit = nil },
+  [14] = { name = "devil",        visit = 0, deal = true },         -- strategy.lua buyValue decides what to take
+  [15] = { name = "angel",        visit = 0, deal = true },         -- angel items are free
   [20] = { name = "chest",        visit = 2 },
   [21] = { name = "dice",         visit = nil },
   [24] = { name = "planetarium",  visit = 0 },
@@ -97,6 +98,14 @@ R.danger = {
 -- Plus a fixed price per HIT, whatever the health: taking damage lowers the floor's devil/angel deal chance
 -- (the author, 2026-11-25: "the goal is to just not get hit at all"). A curse room (hit in + hit out) now costs ~50+.
 R.risk = { half_heart = 6, full_hp = 12, per_hit = 25 }
+
+---------------------------------------------------------------- Level 3: buying (strategy.lua buyValue)
+-- Devil deals: pay hearts only for a strong item for THIS run, and never below 2 heart containers / 2 hearts after.
+-- (Taking a devil deal stops angel rooms later in the run; that's accepted for a strong item.)
+R.buy = true
+R.deals = { take = true, min_value = 75, keep_containers = 2, keep_hp = 4 }
+-- Shop: an item when its run value beats its price; keys/bombs/hearts only when short; keep a few coins otherwise.
+R.shop = { reserve = 5, key_if_none = 12, bomb_if_none = 10, heart_if_missing = 12 }
 
 -- Value of things, in points (a penny = 1). Items use the game's own quality rating (0-4).
 R.value = {

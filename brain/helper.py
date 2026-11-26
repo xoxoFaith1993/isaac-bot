@@ -307,6 +307,82 @@ def send_playbook(pipe):
         pass
 
 
+def send_item_ratings(pipe):
+    """Level 3 (run strategy): each item's rating for this bot, carry and tags (knowledge\\item_ratings.json).
+    Compact: "id=rating,carry,tag,tag;..." """
+    fp = KNOWLEDGE / "item_ratings.json"
+    if not fp.exists():
+        return
+    try:
+        items = json.loads(fp.read_text(encoding="utf-8")).get("items", {})
+        parts = []
+        for key, it in items.items():
+            tags = [t for t in (it.get("tag_codes") or []) if re.fullmatch(r"[a-z_]+", t)]
+            parts.append(f"{key}={it.get('rating', 2)},{it.get('carry', 0)}" + ("," + ",".join(tags) if tags else ""))
+        pipe.send("itemratings", ";".join(parts))
+    except (ValueError, OSError):
+        pass
+
+
+def send_boss_tactics(pipe):
+    """How good players beat each boss (knowledge\\boss_tactics.json, from wiki pages, guides and videos).
+    Compact: "type.variant=pref_dist,flags,adds,tell|tell;..."  flags: d diagonal, r avoid row, c avoid column,
+    k avoid corners; tells = animations right before an attack you dodge sideways (aimed at Isaac)."""
+    fp = KNOWLEDGE / "boss_tactics.json"
+    if not fp.exists():
+        return
+    try:
+        bosses = json.loads(fp.read_text(encoding="utf-8")).get("bosses", {})
+        parts = []
+        for key, b in bosses.items():
+            if not re.fullmatch(r"\d+\.\d+", key):
+                continue
+            flags = ("d" if b.get("stay_diagonal") else "") + \
+                    ("r" if b.get("avoid_row_col") or b.get("avoid_row") else "") + \
+                    ("c" if b.get("avoid_row_col") or b.get("avoid_col") else "") + \
+                    ("k" if b.get("avoid_corners") else "")
+            adds = b.get("adds") if b.get("adds") in ("ignore", "kill_close", "kill_first") else ""
+            tells = set()
+            for d in b.get("dodge") or []:
+                if isinstance(d, dict) and str(d.get("how", "")).startswith("sideways"):
+                    for a in d.get("tell_anim") or []:
+                        if re.fullmatch(r"[A-Za-z0-9_ ]+", str(a)):
+                            tells.add(str(a))
+            pd = b.get("pref_dist")
+            parts.append(f"{key}={int(pd) if isinstance(pd, (int, float)) else ''},{flags},{adds}," + "|".join(sorted(tells)))
+        pipe.send("bosstactics", ";".join(parts))
+    except (ValueError, OSError, TypeError):
+        pass
+
+
+def send_consumables(pipe):
+    """Level 3: when to use each card and pill effect (knowledge\\consumable_ratings.json).
+    Compact: "c<id>=<use>,<rating>;p<effect>=<use>,<rating>,<bad 0/1>;..." """
+    fp = KNOWLEDGE / "consumable_ratings.json"
+    if not fp.exists():
+        return
+    try:
+        data = json.loads(fp.read_text(encoding="utf-8"))
+        parts = []
+        for key, prefix in (("cards", "c"), ("pills", "p")):
+            rows = data.get(key) or []
+            rows = rows.values() if isinstance(rows, dict) else rows
+            for r in rows:
+                if not isinstance(r, dict) or r.get("id") is None:
+                    continue
+                use = str(r.get("use", "never")).lower()
+                use = use if use in ("now", "fight", "boss", "hurt", "clear", "never", "manual") else "never"
+                rating = max(0, min(4, int(r.get("rating", 0) or 0)))
+                part = f"{prefix}{int(r['id'])}={use},{rating}"
+                if prefix == "p":
+                    part += ",1" if (r.get("bad") or r.get("bad_for_bot")) else ",0"
+                parts.append(part)
+        if parts:
+            pipe.send("consumables", ";".join(parts))
+    except (ValueError, OSError, TypeError):
+        pass
+
+
 HITFRAMES = RUNS / "hitframes"
 HITFRAMES_KEEP = 15  # newest hits kept (3 small JPGs each, ~4 MB in all); older ones are deleted
 _last_capture = [0.0]
@@ -509,6 +585,9 @@ def run_live(auto):
                 continue
             if kind == "start":  # a run (or the game) started: hand back what was learned before
                 send_playbook(pipe)  # each enemy's known behaviour (knowledge\enemy_playbook.json)
+                send_item_ratings(pipe)  # each item's rating for this bot (knowledge\item_ratings.json)
+                send_consumables(pipe)  # when to use cards and pills (knowledge\consumable_ratings.json)
+                send_boss_tactics(pipe)  # how players beat each boss (knowledge\boss_tactics.json)
                 for name, cmd in (("tells.dat", "tellsload"), ("respect.dat", "respectload"), ("motion.dat", "motionload")):
                     fp = KNOWLEDGE / name
                     if fp.exists() and fp.read_text(encoding="utf-8").strip():

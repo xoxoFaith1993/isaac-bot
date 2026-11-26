@@ -526,6 +526,35 @@ full 100% (Dead God). That's a huge goal, so scope it once the bot can beat Mom.
 
 Still open: walls counted as a sandwich side (test K3), Sloth item-free, devil/angel deals, two-input active items.
 
+### Risk layer (bot 1.2.6, 2026-11-25): play risky when it's safe to
+The author: "it is taking such a safe route that it's unbearable to watch... Is it worth playing risky? Do I have soul
+hearts so I don't lose my devil deal chance? Will playing risky kill me? Risky does not mean reckless."
+- **Level 1** (`risk.lua`): one number, 0 careful .. 1 bold, worked out twice a second from the whole run: a hit that
+  would kill or leave one hit -> careful; the deal at stake (deal floor 2-8, red hearts next, no red damage yet this
+  floor) -> the old careful play (0.25); otherwise bolder with every hit of buffer (soul/black/bone hearts go first,
+  Holy Mantle blocks one). It scales 16 safety settings (hit cost, gaps, corner and crowd costs, relax time, fighting
+  distance, aim reward). 0.25 = exactly the old settings. Logged as `risk` lines; hits log the level.
+- **Level 2:** pace (a room taking much longer than our damage says -> push harder, inside the caps) and "worth a hit"
+  (`Danger.cost`: a hit with soul hearts in front, or no deal to lose, is cheap for good loot).
+- Tests: 9 offline risk checks. `risk|0.25` pins it (A/B), `risk|auto` lets it think.
+
+### Level 3: whole-run strategy (next, in this order)
+1. **Run profile** each floor: stats, items (rating, carry and tags from `item_ratings.json`), hearts, consumables,
+   curses, floor. Works out the build's weaknesses (low damage, slow tears, short range, no flight, no defence) and
+   strength. Logged as a `run` line; a strong build lets the risk layer play bolder, a weak one more careful.
+2. **Run-aware item value:** an item's worth = its rating for this bot, plus how well it fixes this run's weaknesses,
+   plus synergy tags. Used for choice pedestals (taking one removes the others), whether to pick up items with
+   downsides, and swapping actives.
+3. **Devil and angel deals:** visit the rooms; angel items are free; a devil item's heart price is paid only if its
+   run value is high and 2+ full hearts stay after paying. Deal chance itself is managed by the risk layer.
+4. **Shop:** spend coins by need (keys for locked rooms and chests seen, bombs for likely secret rooms, hearts when
+   low, items by run value), keeping a small reserve.
+5. **Optional rooms by risk and strength:** challenge rooms (strong, healthy, deal not at stake), curse rooms (soul
+   hearts in front or nothing at stake), sacrifice rooms (only when no deal is at stake and health is high), arcades
+   and beggars with spare coins.
+6. **Consumables:** cards and pills by known effects; unknown pills only when healthy and nothing is at stake.
+7. **Measure:** run logs record floor reached, time per floor, hits, red hits per floor, items (with carry) and deals.
+
 ## Open decisions
 | When | Decision |
 |---|---|

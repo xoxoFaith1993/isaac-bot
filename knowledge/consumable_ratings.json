@@ -1,0 +1,1551 @@
+{
+ "about": "Card, rune, soul stone and pill-effect ratings for the Isaac bot (careful, no red-heart damage). Same style as item_ratings.json.",
+ "made": "2026-11-25",
+ "game_data_made": 70952606,
+ "scales": {
+  "rating": "0 = never use, 1 = weak or situational, 2 = fine, 3 = good, 4 = excellent",
+  "unsure": "true = mechanic or description not certain; test before trusting"
+ },
+ "use_glossary": {
+  "now": "use as soon as it is picked up (hearts, coins, stats, mapping)",
+  "fight": "in a room with 3+ enemies or a boss",
+  "boss": "save for a boss room",
+  "hurt": "only when missing health",
+  "clear": "after the room is cleared",
+  "never": "never use automatically (harmful, useless, or kept for a passive effect)",
+  "manual": "needs a choice or targeting (Stage 4 brain decides)"
+ },
+ "pill_rules": {
+  "ids": "PillEffect enum 0-49 (Repentance+). Pill colours are shuffled each run; map colour -> effect only for colours already identified (ItemPool:IsPillIdentified), never by peeking at unidentified ones.",
+  "identified": "Use the effect's `use` field. bad / bad_for_bot pills: never eat; leave them on the floor.",
+  "unknown_pill": "A gamble (Bad Trip costs a heart, Health Down a container, Telepills/Paralysis/Amnesia hurt the run). Eat one only when: the room is cleared, no enemies, health is at least 3 full hearts (red or soul), and the floor's boss is already beaten or far away. Otherwise keep it or leave it.",
+  "safe_unknown": "With PHD, Lucky Foot or Virgo, bad pills turn into good ones: unknown pills become safe to eat. With False PHD it is the reverse: never eat unknown pills.",
+  "horse_pills": "Horse pills double the effect, good or bad. Same rules, but rate the downside twice."
+ },
+ "card_rules": {
+  "pocket": "Cards and pills share one pocket slot (RULES.md): using a card frees it.",
+  "never_against_satan": [
+   71
+  ],
+  "keep_in_pocket": [
+   89
+  ],
+  "teleports": "Teleport cards (1, 5, 10, 18, 19, 31, 60, 74) are never used in a fight; outside a fight they are route decisions (manual)."
+ },
+ "cards": {
+  "1": {
+   "id": 1,
+   "name": "0 - The Fool",
+   "kind": "tarot",
+   "rating": 1,
+   "use": "never",
+   "reason": "Teleports to the floor's first room; no use for a bot that walks.",
+   "unsure": false
+  },
+  "2": {
+   "id": 2,
+   "name": "I - The Magician",
+   "kind": "tarot",
+   "rating": 2,
+   "use": "fight",
+   "reason": "Homing and range for the room.",
+   "unsure": false
+  },
+  "3": {
+   "id": 3,
+   "name": "II - The High Priestess",
+   "kind": "tarot",
+   "rating": 2,
+   "use": "fight",
+   "reason": "Mom's Foot stomps an enemy; it stomps Isaac if the room is empty, so only with enemies alive.",
+   "unsure": false
+  },
+  "4": {
+   "id": 4,
+   "name": "III - The Empress",
+   "kind": "tarot",
+   "rating": 3,
+   "use": "boss",
+   "reason": "Damage and speed for the room.",
+   "unsure": false
+  },
+  "5": {
+   "id": 5,
+   "name": "IV - The Emperor",
+   "kind": "tarot",
+   "rating": 1,
+   "use": "manual",
+   "reason": "Teleports to the boss room: skips the rest of the floor.",
+   "unsure": false
+  },
+  "6": {
+   "id": 6,
+   "name": "V - The Hierophant",
+   "kind": "tarot",
+   "rating": 3,
+   "use": "now",
+   "reason": "Two soul hearts.",
+   "unsure": false
+  },
+  "7": {
+   "id": 7,
+   "name": "VI - The Lovers",
+   "kind": "tarot",
+   "rating": 2,
+   "use": "hurt",
+   "reason": "Two red hearts; only worth it when hurt.",
+   "unsure": false
+  },
+  "8": {
+   "id": 8,
+   "name": "VII - The Chariot",
+   "kind": "tarot",
+   "rating": 2,
+   "use": "fight",
+   "reason": "6 s invincibility, but Isaac can't shoot.",
+   "unsure": false
+  },
+  "9": {
+   "id": 9,
+   "name": "VIII - Justice",
+   "kind": "tarot",
+   "rating": 2,
+   "use": "now",
+   "reason": "One heart, coin, bomb and key.",
+   "unsure": false
+  },
+  "10": {
+   "id": 10,
+   "name": "IX - The Hermit",
+   "kind": "tarot",
+   "rating": 1,
+   "use": "manual",
+   "reason": "Teleports to the shop.",
+   "unsure": false
+  },
+  "11": {
+   "id": 11,
+   "name": "X - Wheel of Fortune",
+   "kind": "tarot",
+   "rating": 1,
+   "use": "never",
+   "reason": "Spawns a slot machine; the bot doesn't gamble.",
+   "unsure": false
+  },
+  "12": {
+   "id": 12,
+   "name": "XI - Strength",
+   "kind": "tarot",
+   "rating": 3,
+   "use": "boss",
+   "reason": "Big stat boost for the room.",
+   "unsure": false
+  },
+  "13": {
+   "id": 13,
+   "name": "XII - The Hanged Man",
+   "kind": "tarot",
+   "rating": 2,
+   "use": "fight",
+   "reason": "Flight for the room.",
+   "unsure": false
+  },
+  "14": {
+   "id": 14,
+   "name": "XIII - Death",
+   "kind": "tarot",
+   "rating": 3,
+   "use": "fight",
+   "reason": "40 damage to every enemy.",
+   "unsure": false
+  },
+  "15": {
+   "id": 15,
+   "name": "XIV - Temperance",
+   "kind": "tarot",
+   "rating": 1,
+   "use": "never",
+   "reason": "Spawns a blood donation machine: using it costs health.",
+   "unsure": false
+  },
+  "16": {
+   "id": 16,
+   "name": "XV - The Devil",
+   "kind": "tarot",
+   "rating": 3,
+   "use": "boss",
+   "reason": "+2 damage for the room.",
+   "unsure": false
+  },
+  "17": {
+   "id": 17,
+   "name": "XVI - The Tower",
+   "kind": "tarot",
+   "rating": 0,
+   "use": "never",
+   "reason": "Six troll bombs: they hurt Isaac.",
+   "unsure": false
+  },
+  "18": {
+   "id": 18,
+   "name": "XVII - The Stars",
+   "kind": "tarot",
+   "rating": 1,
+   "use": "manual",
+   "reason": "Teleports to the treasure room (or planetarium); route decision.",
+   "unsure": false
+  },
+  "19": {
+   "id": 19,
+   "name": "XVIII - The Moon",
+   "kind": "tarot",
+   "rating": 2,
+   "use": "manual",
+   "reason": "Teleports to the secret room: saves bombs, but the bot's map must handle the jump.",
+   "unsure": false
+  },
+  "20": {
+   "id": 20,
+   "name": "XIX - The Sun",
+   "kind": "tarot",
+   "rating": 4,
+   "use": "boss",
+   "reason": "Full health, 100 damage to all, maps the floor. Also good whenever badly hurt.",
+   "unsure": false
+  },
+  "21": {
+   "id": 21,
+   "name": "XX - Judgement",
+   "kind": "tarot",
+   "rating": 1,
+   "use": "never",
+   "reason": "Spawns a beggar.",
+   "unsure": false
+  },
+  "22": {
+   "id": 22,
+   "name": "XXI - The World",
+   "kind": "tarot",
+   "rating": 2,
+   "use": "now",
+   "reason": "Maps the floor.",
+   "unsure": false
+  },
+  "23": {
+   "id": 23,
+   "name": "2 of Clubs",
+   "kind": "playing card",
+   "rating": 2,
+   "use": "now",
+   "reason": "Doubles bombs; best when holding 5 or more.",
+   "unsure": false
+  },
+  "24": {
+   "id": 24,
+   "name": "2 of Diamonds",
+   "kind": "playing card",
+   "rating": 2,
+   "use": "now",
+   "reason": "Doubles coins; best when holding 10 or more.",
+   "unsure": false
+  },
+  "25": {
+   "id": 25,
+   "name": "2 of Spades",
+   "kind": "playing card",
+   "rating": 2,
+   "use": "now",
+   "reason": "Doubles keys; best when holding 3 or more.",
+   "unsure": false
+  },
+  "26": {
+   "id": 26,
+   "name": "2 of Hearts",
+   "kind": "playing card",
+   "rating": 2,
+   "use": "hurt",
+   "reason": "Doubles red hearts (not containers): use when about half full.",
+   "unsure": false
+  },
+  "27": {
+   "id": 27,
+   "name": "Ace of Clubs",
+   "kind": "playing card",
+   "rating": 3,
+   "use": "fight",
+   "reason": "Turns non-boss enemies and pickups into bombs: clears the room.",
+   "unsure": false
+  },
+  "28": {
+   "id": 28,
+   "name": "Ace of Diamonds",
+   "kind": "playing card",
+   "rating": 3,
+   "use": "fight",
+   "reason": "Turns non-boss enemies and pickups into coins: clears the room.",
+   "unsure": false
+  },
+  "29": {
+   "id": 29,
+   "name": "Ace of Spades",
+   "kind": "playing card",
+   "rating": 3,
+   "use": "fight",
+   "reason": "Turns non-boss enemies and pickups into keys: clears the room.",
+   "unsure": false
+  },
+  "30": {
+   "id": 30,
+   "name": "Ace of Hearts",
+   "kind": "playing card",
+   "rating": 3,
+   "use": "fight",
+   "reason": "Turns non-boss enemies and pickups into hearts: clears the room.",
+   "unsure": false
+  },
+  "31": {
+   "id": 31,
+   "name": "Joker",
+   "kind": "playing card",
+   "rating": 2,
+   "use": "manual",
+   "reason": "Teleports to the devil/angel room: a deal decision.",
+   "unsure": false
+  },
+  "32": {
+   "id": 32,
+   "name": "Hagalaz",
+   "kind": "rune",
+   "rating": 1,
+   "use": "clear",
+   "reason": "Breaks every rock (tinted rocks hide loot).",
+   "unsure": false
+  },
+  "33": {
+   "id": 33,
+   "name": "Jera",
+   "kind": "rune",
+   "rating": 2,
+   "use": "clear",
+   "reason": "Duplicates every pickup in the room.",
+   "unsure": false
+  },
+  "34": {
+   "id": 34,
+   "name": "Ehwaz",
+   "kind": "rune",
+   "rating": 1,
+   "use": "never",
+   "reason": "Trapdoor to the next floor: skips the floor.",
+   "unsure": false
+  },
+  "35": {
+   "id": 35,
+   "name": "Dagaz",
+   "kind": "rune",
+   "rating": 3,
+   "use": "now",
+   "reason": "Soul heart and removes curses.",
+   "unsure": false
+  },
+  "36": {
+   "id": 36,
+   "name": "Ansuz",
+   "kind": "rune",
+   "rating": 2,
+   "use": "now",
+   "reason": "Maps the floor.",
+   "unsure": false
+  },
+  "37": {
+   "id": 37,
+   "name": "Perthro",
+   "kind": "rune",
+   "rating": 1,
+   "use": "manual",
+   "reason": "Rerolls pedestal items: an item decision.",
+   "unsure": false
+  },
+  "38": {
+   "id": 38,
+   "name": "Berkano",
+   "kind": "rune",
+   "rating": 2,
+   "use": "fight",
+   "reason": "Three locusts for the room.",
+   "unsure": false
+  },
+  "39": {
+   "id": 39,
+   "name": "Algiz",
+   "kind": "rune",
+   "rating": 4,
+   "use": "boss",
+   "reason": "20 s invincibility.",
+   "unsure": false
+  },
+  "40": {
+   "id": 40,
+   "name": "Blank Rune",
+   "kind": "rune",
+   "rating": 1,
+   "use": "never",
+   "reason": "Random rune effect; could be a trapdoor or a reroll.",
+   "unsure": true
+  },
+  "41": {
+   "id": 41,
+   "name": "Black Rune",
+   "kind": "rune",
+   "rating": 2,
+   "use": "fight",
+   "reason": "40 damage to all, but also turns pedestal items into stat ups: only with no pedestal in the room.",
+   "unsure": false
+  },
+  "42": {
+   "id": 42,
+   "name": "Chaos Card",
+   "kind": "special card",
+   "rating": 2,
+   "use": "manual",
+   "reason": "Thrown in the movement direction, kills anything it touches: needs aiming.",
+   "unsure": false
+  },
+  "43": {
+   "id": 43,
+   "name": "Credit Card",
+   "kind": "special card",
+   "rating": 3,
+   "use": "manual",
+   "reason": "Makes a shop or devil room free: save it for the best shop.",
+   "unsure": false
+  },
+  "44": {
+   "id": 44,
+   "name": "Rules Card",
+   "kind": "special card",
+   "rating": 1,
+   "use": "now",
+   "reason": "Does nothing useful; use it to free the pocket.",
+   "unsure": false
+  },
+  "45": {
+   "id": 45,
+   "name": "A Card Against Humanity",
+   "kind": "special card",
+   "rating": 0,
+   "use": "never",
+   "reason": "Fills the room with poop: blocks movement and shots.",
+   "unsure": false
+  },
+  "46": {
+   "id": 46,
+   "name": "Suicide King",
+   "kind": "special card",
+   "rating": 0,
+   "use": "never",
+   "reason": "Kills Isaac.",
+   "unsure": false
+  },
+  "47": {
+   "id": 47,
+   "name": "Get Out Of Jail Free Card",
+   "kind": "special card",
+   "rating": 2,
+   "use": "clear",
+   "reason": "Opens all doors in the room, including secret rooms.",
+   "unsure": false
+  },
+  "48": {
+   "id": 48,
+   "name": "? Card",
+   "kind": "special card",
+   "rating": 1,
+   "use": "manual",
+   "reason": "Uses the active item for free: only as good as the active.",
+   "unsure": false
+  },
+  "49": {
+   "id": 49,
+   "name": "Dice Shard",
+   "kind": "special card",
+   "rating": 1,
+   "use": "manual",
+   "reason": "Rerolls pedestals and pickups.",
+   "unsure": false
+  },
+  "50": {
+   "id": 50,
+   "name": "Emergency Contact",
+   "kind": "special card",
+   "rating": 2,
+   "use": "fight",
+   "reason": "Mom's hands grab two enemies.",
+   "unsure": false
+  },
+  "51": {
+   "id": 51,
+   "name": "Holy Card",
+   "kind": "special card",
+   "rating": 3,
+   "use": "boss",
+   "reason": "A one-hit shield that lasts until hit: use on entering a boss room.",
+   "unsure": false
+  },
+  "52": {
+   "id": 52,
+   "name": "Huge Growth",
+   "kind": "special card",
+   "rating": 3,
+   "use": "boss",
+   "reason": "+7 damage for the room.",
+   "unsure": false
+  },
+  "53": {
+   "id": 53,
+   "name": "Ancient Recall",
+   "kind": "special card",
+   "rating": 2,
+   "use": "clear",
+   "reason": "Spawns 3 cards (pocket rules apply).",
+   "unsure": false
+  },
+  "54": {
+   "id": 54,
+   "name": "Era Walk",
+   "kind": "special card",
+   "rating": 2,
+   "use": "fight",
+   "reason": "Slows enemies for the room; shot speed down.",
+   "unsure": false
+  },
+  "55": {
+   "id": 55,
+   "name": "Rune Shard",
+   "kind": "rune",
+   "rating": 1,
+   "use": "never",
+   "reason": "Weaker random rune effect.",
+   "unsure": true
+  },
+  "56": {
+   "id": 56,
+   "name": "0 - The Fool?",
+   "kind": "tarot (reversed)",
+   "rating": 0,
+   "use": "never",
+   "reason": "Drops all hearts but one on the floor.",
+   "unsure": false
+  },
+  "57": {
+   "id": 57,
+   "name": "I - The Magician?",
+   "kind": "tarot (reversed)",
+   "rating": 3,
+   "use": "fight",
+   "reason": "60 s aura that pushes enemies and shots away.",
+   "unsure": false
+  },
+  "58": {
+   "id": 58,
+   "name": "II - The High Priestess?",
+   "kind": "tarot (reversed)",
+   "rating": 0,
+   "use": "never",
+   "reason": "Mom's Foot tries to stomp Isaac for 60 s.",
+   "unsure": false
+  },
+  "59": {
+   "id": 59,
+   "name": "III - The Empress?",
+   "kind": "tarot (reversed)",
+   "rating": 3,
+   "use": "boss",
+   "reason": "Two temporary hearts and fire rate for 60 s.",
+   "unsure": false
+  },
+  "60": {
+   "id": 60,
+   "name": "IV - The Emperor?",
+   "kind": "tarot (reversed)",
+   "rating": 1,
+   "use": "manual",
+   "reason": "Teleports to an extra, harder boss for an item.",
+   "unsure": false
+  },
+  "61": {
+   "id": 61,
+   "name": "V - The Hierophant?",
+   "kind": "tarot (reversed)",
+   "rating": 3,
+   "use": "now",
+   "reason": "Two bone hearts.",
+   "unsure": false
+  },
+  "62": {
+   "id": 62,
+   "name": "VI - The Lovers?",
+   "kind": "tarot (reversed)",
+   "rating": 1,
+   "use": "manual",
+   "reason": "An item for a broken heart: a health decision.",
+   "unsure": false
+  },
+  "63": {
+   "id": 63,
+   "name": "VII - The Chariot?",
+   "kind": "tarot (reversed)",
+   "rating": 3,
+   "use": "boss",
+   "reason": "x4 fire rate and invincible for 10 s, but Isaac can't move.",
+   "unsure": false
+  },
+  "64": {
+   "id": 64,
+   "name": "VIII - Justice?",
+   "kind": "tarot (reversed)",
+   "rating": 2,
+   "use": "clear",
+   "reason": "2-4 golden chests (need keys).",
+   "unsure": false
+  },
+  "65": {
+   "id": 65,
+   "name": "IX - The Hermit?",
+   "kind": "tarot (reversed)",
+   "rating": 1,
+   "use": "manual",
+   "reason": "Turns everything in the room, items too, into coins.",
+   "unsure": false
+  },
+  "66": {
+   "id": 66,
+   "name": "X - Wheel of Fortune?",
+   "kind": "tarot (reversed)",
+   "rating": 0,
+   "use": "never",
+   "reason": "Random dice room effect: may reroll all items.",
+   "unsure": false
+  },
+  "67": {
+   "id": 67,
+   "name": "XI - Strength?",
+   "kind": "tarot (reversed)",
+   "rating": 3,
+   "use": "boss",
+   "reason": "Enemies slowed and take double damage for 30 s.",
+   "unsure": false
+  },
+  "68": {
+   "id": 68,
+   "name": "XII - The Hanged Man?",
+   "kind": "tarot (reversed)",
+   "rating": 2,
+   "use": "fight",
+   "reason": "Triple shot for 30 s.",
+   "unsure": false
+  },
+  "69": {
+   "id": 69,
+   "name": "XIII - Death?",
+   "kind": "tarot (reversed)",
+   "rating": 2,
+   "use": "fight",
+   "reason": "Bone friends from kills in the room.",
+   "unsure": false
+  },
+  "70": {
+   "id": 70,
+   "name": "XIV - Temperance?",
+   "kind": "tarot (reversed)",
+   "rating": 0,
+   "use": "never",
+   "reason": "Forces 5 random pills: bad pills included.",
+   "unsure": false
+  },
+  "71": {
+   "id": 71,
+   "name": "XV - The Devil?",
+   "kind": "tarot (reversed)",
+   "rating": 2,
+   "use": "fight",
+   "reason": "Flight and a Seraphim for 30 s. NEVER against Satan (kills Isaac).",
+   "unsure": false,
+   "not_against": [
+    "Satan"
+   ]
+  },
+  "72": {
+   "id": 72,
+   "name": "XVI - The Tower?",
+   "kind": "tarot (reversed)",
+   "rating": 1,
+   "use": "never",
+   "reason": "Rock clusters block paths (tinted rocks inside).",
+   "unsure": false
+  },
+  "73": {
+   "id": 73,
+   "name": "XVII - The Stars?",
+   "kind": "tarot (reversed)",
+   "rating": 1,
+   "use": "manual",
+   "reason": "Removes the oldest passive for two new items.",
+   "unsure": false
+  },
+  "74": {
+   "id": 74,
+   "name": "XVIII - The Moon?",
+   "kind": "tarot (reversed)",
+   "rating": 1,
+   "use": "manual",
+   "reason": "Teleports to the ultra secret room; red-room path back.",
+   "unsure": false
+  },
+  "75": {
+   "id": 75,
+   "name": "XIX - The Sun?",
+   "kind": "tarot (reversed)",
+   "rating": 2,
+   "use": "manual",
+   "reason": "Damage, flight, spectral for the floor, but red health turns to bone hearts and the floor goes dark.",
+   "unsure": true
+  },
+  "76": {
+   "id": 76,
+   "name": "XX - Judgement?",
+   "kind": "tarot (reversed)",
+   "rating": 1,
+   "use": "never",
+   "reason": "Spawns a restock machine.",
+   "unsure": false
+  },
+  "77": {
+   "id": 77,
+   "name": "XXI - The World?",
+   "kind": "tarot (reversed)",
+   "rating": 1,
+   "use": "manual",
+   "reason": "Trapdoor to a crawlspace.",
+   "unsure": false
+  },
+  "78": {
+   "id": 78,
+   "name": "Cracked Key",
+   "kind": "special card",
+   "rating": 1,
+   "use": "manual",
+   "reason": "One red room door; route decision.",
+   "unsure": false
+  },
+  "79": {
+   "id": 79,
+   "name": "Queen of Hearts",
+   "kind": "special card",
+   "rating": 3,
+   "use": "hurt",
+   "reason": "1-20 red hearts.",
+   "unsure": false
+  },
+  "80": {
+   "id": 80,
+   "name": "Wild Card",
+   "kind": "special card",
+   "rating": 1,
+   "use": "manual",
+   "reason": "Copies the last consumable or active used: depends what that was.",
+   "unsure": false
+  },
+  "81": {
+   "id": 81,
+   "name": "Soul of Isaac",
+   "kind": "soul stone",
+   "rating": 3,
+   "use": "manual",
+   "reason": "Pedestals cycle between two items: use in a treasure room, then pick.",
+   "unsure": false
+  },
+  "82": {
+   "id": 82,
+   "name": "Soul of Magdalene",
+   "kind": "soul stone",
+   "rating": 2,
+   "use": "fight",
+   "reason": "Kills drop half hearts for the room.",
+   "unsure": false
+  },
+  "83": {
+   "id": 83,
+   "name": "Soul of Cain",
+   "kind": "soul stone",
+   "rating": 1,
+   "use": "manual",
+   "reason": "Red rooms on every wall.",
+   "unsure": false
+  },
+  "84": {
+   "id": 84,
+   "name": "Soul of Judas",
+   "kind": "soul stone",
+   "rating": 1,
+   "use": "never",
+   "reason": "Dark Arts dash through enemies: contact play.",
+   "unsure": false
+  },
+  "85": {
+   "id": 85,
+   "name": "Soul of ???",
+   "kind": "soul stone",
+   "rating": 0,
+   "use": "never",
+   "reason": "Spawns butt bombs around Isaac; they can hurt him.",
+   "unsure": true
+  },
+  "86": {
+   "id": 86,
+   "name": "Soul of Eve",
+   "kind": "soul stone",
+   "rating": 3,
+   "use": "fight",
+   "reason": "14 birds attack enemies for the room.",
+   "unsure": false
+  },
+  "87": {
+   "id": 87,
+   "name": "Soul of Samson",
+   "kind": "soul stone",
+   "rating": 1,
+   "use": "never",
+   "reason": "Berserk melee mode for 10 s.",
+   "unsure": false
+  },
+  "88": {
+   "id": 88,
+   "name": "Soul of Azazel",
+   "kind": "soul stone",
+   "rating": 3,
+   "use": "boss",
+   "reason": "7.5 s Mega Blast in the facing direction: strong if the bot keeps lined up.",
+   "unsure": false
+  },
+  "89": {
+   "id": 89,
+   "name": "Soul of Lazarus",
+   "kind": "soul stone",
+   "rating": 4,
+   "use": "never",
+   "reason": "Keep it: triggers itself on fatal damage (an extra life).",
+   "unsure": false,
+   "keep": true
+  },
+  "90": {
+   "id": 90,
+   "name": "Soul of Eden",
+   "kind": "soul stone",
+   "rating": 1,
+   "use": "manual",
+   "reason": "Rerolls pedestals from random pools.",
+   "unsure": false
+  },
+  "91": {
+   "id": 91,
+   "name": "Soul of the Lost",
+   "kind": "soul stone",
+   "rating": 3,
+   "use": "manual",
+   "reason": "Free devil item, but Isaac becomes The Lost (dies in one hit) for the room.",
+   "unsure": false
+  },
+  "92": {
+   "id": 92,
+   "name": "Soul of Lilith",
+   "kind": "soul stone",
+   "rating": 3,
+   "use": "now",
+   "reason": "A permanent random familiar.",
+   "unsure": false
+  },
+  "93": {
+   "id": 93,
+   "name": "Soul of the Keeper",
+   "kind": "soul stone",
+   "rating": 2,
+   "use": "now",
+   "reason": "1-25 coins.",
+   "unsure": false
+  },
+  "94": {
+   "id": 94,
+   "name": "Soul of Apollyon",
+   "kind": "soul stone",
+   "rating": 2,
+   "use": "fight",
+   "reason": "15 locusts.",
+   "unsure": false
+  },
+  "95": {
+   "id": 95,
+   "name": "Soul of the Forgotten",
+   "kind": "soul stone",
+   "rating": 1,
+   "use": "never",
+   "reason": "Second character to control.",
+   "unsure": false
+  },
+  "96": {
+   "id": 96,
+   "name": "Soul of Bethany",
+   "kind": "soul stone",
+   "rating": 2,
+   "use": "fight",
+   "reason": "Six wisps.",
+   "unsure": false
+  },
+  "97": {
+   "id": 97,
+   "name": "Soul of Jacob and Esau",
+   "kind": "soul stone",
+   "rating": 1,
+   "use": "never",
+   "reason": "Second character to control.",
+   "unsure": false
+  },
+  "98": {
+   "id": 98,
+   "name": "Wrapped Dice",
+   "kind": "modded / unknown",
+   "rating": 1,
+   "use": "never",
+   "reason": "No description in the game data (probably a modded card).",
+   "unsure": true
+  },
+  "99": {
+   "id": 99,
+   "name": "XVI - ...The Tower...",
+   "kind": "modded / unknown",
+   "rating": 1,
+   "use": "never",
+   "reason": "No description in the game data (probably a modded card).",
+   "unsure": true
+  },
+  "100": {
+   "id": 100,
+   "name": "0 - ...The Fool...",
+   "kind": "modded / unknown",
+   "rating": 1,
+   "use": "never",
+   "reason": "No description in the game data (probably a modded card).",
+   "unsure": true
+  },
+  "101": {
+   "id": 101,
+   "name": "XV - ...The Devil...",
+   "kind": "modded / unknown",
+   "rating": 1,
+   "use": "never",
+   "reason": "No description in the game data (probably a modded card).",
+   "unsure": true
+  },
+  "102": {
+   "id": 102,
+   "name": "XIX - ...The Sun...",
+   "kind": "modded / unknown",
+   "rating": 1,
+   "use": "never",
+   "reason": "No description in the game data (probably a modded card).",
+   "unsure": true
+  },
+  "103": {
+   "id": 103,
+   "name": "VIII - ...Justice...",
+   "kind": "modded / unknown",
+   "rating": 1,
+   "use": "never",
+   "reason": "No description in the game data (probably a modded card).",
+   "unsure": true
+  },
+  "104": {
+   "id": 104,
+   "name": "XX - ...Judgement...",
+   "kind": "modded / unknown",
+   "rating": 1,
+   "use": "never",
+   "reason": "No description in the game data (probably a modded card).",
+   "unsure": true
+  },
+  "105": {
+   "id": 105,
+   "name": "Stardust Vial",
+   "kind": "modded / unknown",
+   "rating": 1,
+   "use": "never",
+   "reason": "No description in the game data (probably a modded card).",
+   "unsure": true
+  },
+  "106": {
+   "id": 106,
+   "name": "Echo of Home",
+   "kind": "modded / unknown",
+   "rating": 1,
+   "use": "never",
+   "reason": "No description in the game data (probably a modded card).",
+   "unsure": true
+  },
+  "107": {
+   "id": 107,
+   "name": "Echo of Theft",
+   "kind": "modded / unknown",
+   "rating": 1,
+   "use": "never",
+   "reason": "No description in the game data (probably a modded card).",
+   "unsure": true
+  },
+  "108": {
+   "id": 108,
+   "name": "Echo of Violence",
+   "kind": "modded / unknown",
+   "rating": 1,
+   "use": "never",
+   "reason": "No description in the game data (probably a modded card).",
+   "unsure": true
+  },
+  "109": {
+   "id": 109,
+   "name": "Echo of Birth",
+   "kind": "modded / unknown",
+   "rating": 1,
+   "use": "never",
+   "reason": "No description in the game data (probably a modded card).",
+   "unsure": true
+  },
+  "110": {
+   "id": 110,
+   "name": "Echo of Faith",
+   "kind": "modded / unknown",
+   "rating": 1,
+   "use": "never",
+   "reason": "No description in the game data (probably a modded card).",
+   "unsure": true
+  },
+  "111": {
+   "id": 111,
+   "name": "Echo of Judgement",
+   "kind": "modded / unknown",
+   "rating": 1,
+   "use": "never",
+   "reason": "No description in the game data (probably a modded card).",
+   "unsure": true
+  },
+  "112": {
+   "id": 112,
+   "name": "Grapes",
+   "kind": "modded / unknown",
+   "rating": 1,
+   "use": "never",
+   "reason": "No description in the game data (probably a modded card).",
+   "unsure": true
+  }
+ },
+ "pills": {
+  "0": {
+   "id": 0,
+   "name": "Bad Gas",
+   "rating": 1,
+   "use": "fight",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Poison fart around Isaac; only hits close enemies.",
+   "unsure": false
+  },
+  "1": {
+   "id": 1,
+   "name": "Bad Trip",
+   "rating": 0,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": true,
+   "reason": "One full heart of damage (Full Health instead at 1 heart or less).",
+   "unsure": false
+  },
+  "2": {
+   "id": 2,
+   "name": "Balls of Steel",
+   "rating": 4,
+   "use": "now",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Two soul hearts.",
+   "unsure": false
+  },
+  "3": {
+   "id": 3,
+   "name": "Bombs Are Key",
+   "rating": 1,
+   "use": "manual",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Swaps bombs and keys; good only when one is short.",
+   "unsure": false
+  },
+  "4": {
+   "id": 4,
+   "name": "Explosive Diarrhea",
+   "rating": 0,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": true,
+   "reason": "Drops lit bombs behind Isaac: they can hurt him.",
+   "unsure": false
+  },
+  "5": {
+   "id": 5,
+   "name": "Full Health",
+   "rating": 3,
+   "use": "hurt",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Heals all red health.",
+   "unsure": false
+  },
+  "6": {
+   "id": 6,
+   "name": "Health Down",
+   "rating": 0,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": true,
+   "reason": "Removes a heart container.",
+   "unsure": false
+  },
+  "7": {
+   "id": 7,
+   "name": "Health Up",
+   "rating": 3,
+   "use": "now",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Adds a heart container.",
+   "unsure": false
+  },
+  "8": {
+   "id": 8,
+   "name": "I Found Pills",
+   "rating": 1,
+   "use": "now",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Cosmetic only.",
+   "unsure": false
+  },
+  "9": {
+   "id": 9,
+   "name": "Puberty",
+   "rating": 1,
+   "use": "now",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Cosmetic only (counts toward a transformation).",
+   "unsure": false
+  },
+  "10": {
+   "id": 10,
+   "name": "Pretty Fly",
+   "rating": 2,
+   "use": "now",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "A fly orbital that blocks shots.",
+   "unsure": false
+  },
+  "11": {
+   "id": 11,
+   "name": "Range Down",
+   "rating": 0,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": true,
+   "reason": "Range down: bad for a long-range bot.",
+   "unsure": false
+  },
+  "12": {
+   "id": 12,
+   "name": "Range Up",
+   "rating": 3,
+   "use": "now",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Range up.",
+   "unsure": false
+  },
+  "13": {
+   "id": 13,
+   "name": "Speed Down",
+   "rating": 0,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": true,
+   "reason": "Speed down.",
+   "unsure": false
+  },
+  "14": {
+   "id": 14,
+   "name": "Speed Up",
+   "rating": 3,
+   "use": "now",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Speed up.",
+   "unsure": false
+  },
+  "15": {
+   "id": 15,
+   "name": "Tears Down",
+   "rating": 0,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": true,
+   "reason": "Fire rate down.",
+   "unsure": false
+  },
+  "16": {
+   "id": 16,
+   "name": "Tears Up",
+   "rating": 3,
+   "use": "now",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Fire rate up.",
+   "unsure": false
+  },
+  "17": {
+   "id": 17,
+   "name": "Luck Down",
+   "rating": 0,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": true,
+   "reason": "Luck down.",
+   "unsure": false
+  },
+  "18": {
+   "id": 18,
+   "name": "Luck Up",
+   "rating": 2,
+   "use": "now",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Luck up.",
+   "unsure": false
+  },
+  "19": {
+   "id": 19,
+   "name": "Telepills",
+   "rating": 0,
+   "use": "never",
+   "bad": false,
+   "bad_for_bot": true,
+   "reason": "Teleports Isaac to a random room.",
+   "unsure": false
+  },
+  "20": {
+   "id": 20,
+   "name": "48 Hour Energy",
+   "rating": 3,
+   "use": "now",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Fully charges the active item and spawns batteries.",
+   "unsure": false
+  },
+  "21": {
+   "id": 21,
+   "name": "Hematemesis",
+   "rating": 1,
+   "use": "manual",
+   "bad": false,
+   "bad_for_bot": true,
+   "reason": "Drops red health to one heart and spawns 1-4 hearts on the floor; risky right before a fight.",
+   "unsure": true
+  },
+  "22": {
+   "id": 22,
+   "name": "Paralysis",
+   "rating": 0,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": true,
+   "reason": "Isaac can't move for a few seconds.",
+   "unsure": false
+  },
+  "23": {
+   "id": 23,
+   "name": "I Can See Forever!",
+   "rating": 2,
+   "use": "now",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Opens secret rooms for the floor.",
+   "unsure": false
+  },
+  "24": {
+   "id": 24,
+   "name": "Pheromones",
+   "rating": 2,
+   "use": "fight",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Charms enemies.",
+   "unsure": false
+  },
+  "25": {
+   "id": 25,
+   "name": "Amnesia",
+   "rating": 0,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": true,
+   "reason": "Forgets the floor map.",
+   "unsure": false
+  },
+  "26": {
+   "id": 26,
+   "name": "Lemon Party",
+   "rating": 1,
+   "use": "fight",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Damaging creep around Isaac.",
+   "unsure": false
+  },
+  "27": {
+   "id": 27,
+   "name": "R U a Wizard?",
+   "rating": 0,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": true,
+   "reason": "Tears fly diagonally for a while: aim breaks.",
+   "unsure": false
+  },
+  "28": {
+   "id": 28,
+   "name": "Percs!",
+   "rating": 3,
+   "use": "boss",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Hits only cost half a heart for a while.",
+   "unsure": true
+  },
+  "29": {
+   "id": 29,
+   "name": "Addicted!",
+   "rating": 0,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": true,
+   "reason": "Every hit costs a full heart for a while.",
+   "unsure": false
+  },
+  "30": {
+   "id": 30,
+   "name": "Relax",
+   "rating": 1,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": false,
+   "reason": "Isaac drops poop as he walks.",
+   "unsure": false
+  },
+  "31": {
+   "id": 31,
+   "name": "???",
+   "rating": 0,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": true,
+   "reason": "Curse of the Maze for the floor: rooms get jumbled.",
+   "unsure": false
+  },
+  "32": {
+   "id": 32,
+   "name": "One Makes You Larger",
+   "rating": 0,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": true,
+   "reason": "Bigger hitbox.",
+   "unsure": false
+  },
+  "33": {
+   "id": 33,
+   "name": "One Makes You Small",
+   "rating": 2,
+   "use": "now",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Smaller hitbox.",
+   "unsure": false
+  },
+  "34": {
+   "id": 34,
+   "name": "Infested!",
+   "rating": 1,
+   "use": "fight",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Blue spiders from poop in the room.",
+   "unsure": false
+  },
+  "35": {
+   "id": 35,
+   "name": "Infested?",
+   "rating": 1,
+   "use": "fight",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Blue spiders from enemies in the room.",
+   "unsure": false
+  },
+  "36": {
+   "id": 36,
+   "name": "Power Pill!",
+   "rating": 3,
+   "use": "fight",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Short invincibility; touching enemies hurts them.",
+   "unsure": false
+  },
+  "37": {
+   "id": 37,
+   "name": "Retro Vision",
+   "rating": 1,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": false,
+   "reason": "Pixelated screen; harmless to a bot that reads game state, but no gain.",
+   "unsure": false
+  },
+  "38": {
+   "id": 38,
+   "name": "Friends Till The End!",
+   "rating": 1,
+   "use": "fight",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "A few friendly flies.",
+   "unsure": false
+  },
+  "39": {
+   "id": 39,
+   "name": "X-Lax",
+   "rating": 0,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": true,
+   "reason": "Slippery creep under Isaac: dodging breaks.",
+   "unsure": false
+  },
+  "40": {
+   "id": 40,
+   "name": "Something's Wrong...",
+   "rating": 1,
+   "use": "fight",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Black slowing creep around Isaac.",
+   "unsure": false
+  },
+  "41": {
+   "id": 41,
+   "name": "I'm Drowsy...",
+   "rating": 2,
+   "use": "fight",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Slows enemies for a while.",
+   "unsure": false
+  },
+  "42": {
+   "id": 42,
+   "name": "I'm Excited!!!",
+   "rating": 0,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": true,
+   "reason": "Speeds up enemies for a while.",
+   "unsure": false
+  },
+  "43": {
+   "id": 43,
+   "name": "Gulp!",
+   "rating": 1,
+   "use": "manual",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Swallows the held trinket permanently: a trinket decision.",
+   "unsure": false
+  },
+  "44": {
+   "id": 44,
+   "name": "Horf!",
+   "rating": 1,
+   "use": "fight",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Spits one explosive tear forward.",
+   "unsure": false
+  },
+  "45": {
+   "id": 45,
+   "name": "Feels Like I'm Walking On Sunshine!",
+   "rating": 3,
+   "use": "fight",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Invincibility for a few seconds.",
+   "unsure": false
+  },
+  "46": {
+   "id": 46,
+   "name": "Vurp!",
+   "rating": 1,
+   "use": "manual",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Spawns the last pill used: only good if that one was good.",
+   "unsure": false
+  },
+  "47": {
+   "id": 47,
+   "name": "Shot Speed Down",
+   "rating": 0,
+   "use": "never",
+   "bad": true,
+   "bad_for_bot": true,
+   "reason": "Shot speed down.",
+   "unsure": false
+  },
+  "48": {
+   "id": 48,
+   "name": "Shot Speed Up",
+   "rating": 2,
+   "use": "now",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "Shot speed up.",
+   "unsure": false
+  },
+  "49": {
+   "id": 49,
+   "name": "Experimental Pill",
+   "rating": 1,
+   "use": "manual",
+   "bad": false,
+   "bad_for_bot": false,
+   "reason": "One random stat up, one random stat down.",
+   "unsure": false
+  }
+ }
+}

@@ -85,6 +85,15 @@ plain Python, so most of it works unchanged. The Linux pieces are `start-bot.sh`
   (`tells.lua`) and a danger map of spikes, creep, fires and bombs (`danger.lua`) feed into it.
 - **Navigation** (`nav.lua`): pathfinding around rocks, pits and spikes, a floor map, door choice, pickups weighed by
   value against the risk of getting hit (`rules.lua`), bombs used sparingly.
+- **Risk layer** (`risk.lua`): one number, careful (0) to bold (1), from the whole run: would a hit kill us, would it
+  cost the floor's devil/angel deal (only red-heart damage does; soul hearts and Holy Mantle go first), how many hits
+  of buffer we have, and whether a room is taking far longer than our damage says it should. It scales the movement
+  core's safety settings, makes a hit cheaper for good loot when nothing is at stake, and opens curse and challenge
+  rooms only when we can afford them. `risk|0.25` pins the old careful play, `risk|auto` lets it decide.
+- **Run strategy** (`strategy.lua`): a profile of the build (strength for this floor, weaknesses), items valued for
+  this run (`knowledge\item_ratings.json` plus what fixes the build's weaknesses), choice pedestals, devil deals (only
+  strong items, never below 2 heart containers), shop buys by need, and cards/pills
+  (`knowledge\consumable_ratings.json`).
 - **Rescue watchdog** (`rescue.lua`): no progress for a while climbs a ladder: replan, shake, bomb, leave, report.
 - **Brain** (`brain\rescue_brain.py`, optional): when the watchdog runs out of ideas, the mod lists the real options
   and a local model picks one (`options.lua`, `knowledge\RULES.md`).
@@ -110,8 +119,11 @@ plain Python, so most of it works unchanged. The Linux pieces are `start-bot.sh`
 
 ## Contributing
 
-Ideas, bug reports and pull requests are welcome. Run the offline tests (`test\run.ps1`) before opening a PR, and
-add a test for any bug you fix. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Ideas, bug reports and pull requests are welcome, from players and programmers alike. **Start with
+[docs/HOW_WE_WORK.md](docs/HOW_WE_WORK.md)**: how the bot is built and the method used to improve it (watch, diagnose
+from logs and frames, fix the category, add a test, reload safely, measure on the bench). Then
+[CONTRIBUTING.md](CONTRIBUTING.md) for the rules. Run the offline tests (`test\run.ps1`) before opening a PR, and add
+a test for any bug you fix.
 
 **Never commit the game's files.** Unpacked game resources (sprites, `.anm2`, sounds, XML data) belong to the game's
 publisher and must stay out of this repository, and so does `knowledge\gamedata.json`.

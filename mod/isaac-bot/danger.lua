@@ -115,8 +115,13 @@ function Danger.cost(p, dmg)
   if not dmg or dmg <= 0 then return 0 end
   local hp = Danger.hp(p)
   if dmg >= hp then return math.huge end
-  -- every hit also costs the floor's deal chance (each hurting square = one hit here)
-  return dmg * R.risk.half_heart * R.risk.full_hp / (hp - dmg) + dmg * (R.risk.per_hit or 0)
+  -- every hit also costs the floor's deal chance (each hurting square = one hit here)... but only when the deal is
+  -- really at stake (risk.lua: red hearts next, deal floor, not red-damaged yet). With soul hearts in front, or no
+  -- deal left to lose, a hit is cheap: worth it for good loot (Level 2 "is it worth a hit").
+  local perHit = R.risk.per_hit or 0
+  local Risk = IsaacBotRisk
+  if Risk then perHit = Risk.atStake and perHit * 2 or perHit * math.max(0.2, 1 - Risk.level) end
+  return dmg * R.risk.half_heart * R.risk.full_hp / (hp - dmg) + dmg * perHit
 end
 
 -- Damage taken walking a path (list of squares): each hurting square counts once.
