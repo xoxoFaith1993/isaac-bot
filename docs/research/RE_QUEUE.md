@@ -50,6 +50,9 @@ the author can move an item up.
 | E2 | Red/gold chest and curse-room door damage | | few | | [x] d7216e5 (curse door) |
 | E3 | **Gluttony** | 49.0 | 12-16 | attack tells and windows | [x] ccb19e7 |
 | E3 | Envy, Pride, Lust, Greed, Wrath | 51, 52, 47, 50, 48 | 0-5 | | [x] ccb19e7 |
+| E3b | **Famine** (+ variants) | 63.0 | 1 (live 1.2.49) | first: the low-HP blood-shot fan (seen at 11.9 px/update from ~140 px), its tells, the dash | [ ] |
+| E3b | **Death** (+ variants) | 66.0 | 0 (never met) | next: the hourglass slowdown (what it slows, for how long), scythes, the horse phase | [ ] |
+| E3b | Pestilence, War, Conquest (+ variants) | 64.0, 65.0, 65.1 | 0 | bosses: two readers each | [ ] |
 | E4 | Big Spider, Fatty, Round Worm (shots), Wall Hugger, Boom Fly, Pooter, Horf, Maggot, Hopper | 94, 208, 244, 218, 25, 14, 12, 21, 29.0 | 2-13 each | in that order | [ ] |
 | E4 | Fat Bat, Tumor, Mega Maw (shooters seen in the logs) | 258, 229, 262 | 2-3 shot hits | | [ ] |
 | E5 | Mulligan, Hive, Clotty, Sucker, Spitty, Embryo, Leaper, Knight, Mr. Maw, Night Crawler, Para-Bite, Ragling, Kamikaze Leech, Moter, Wall Creep | | 0 logged | the author's list; floors 1-2 regulars | [ ] |
@@ -75,3 +78,7 @@ the author can move an item up.
 - 2026-11-26: E2 done (839ce47). Checked: 43/43 spike hits (0.8) and 1 retracting (0.9) did 2; normal and blue fireplace hits are touch damage (only red and purple shoot); all 19 bomb hits did 2 (fits if base bomb damage >= 85, asked). TNT blast and Stone Grimace/Brimstone Head/Stoney are not covered yet. **'0.0' is mostly curse-room doors** (13 of 21 room-walk cases were entering a type-10 room); a targeted hunt is running (damage flag, devil-deal effect).
 - 2026-11-26: E2c done (d7216e5). '0.0' = the spiked curse-room door (1.0 dmg, empty source, both ways; flight avoids it except when leaving a curse room). 23/28 '0.0' hits did 1. **Curse-door and sacrifice-room damage don't count against the devil deal**; spikes, bombs, contact, shots and creep do. Bomb base damage is 100 (Isaac takes 2: matches 19/19). Red/gold chest damage not covered yet. E3 next.
 - 2026-11-26: E3 done (ccb19e7; 2 readers each, Sonnet + Haiku). Checked: 2 Gluttony shot hits at 8.0 (its ring speed); 1 at 12.0 (another attack); 1 Greed shot at 11.3 (triple ~12). Back-labels added to RE_ENEMIES.md. E4 next (one reader per plain enemy).
+- 2026-11-26: the queue stalled after E3 (nothing started E4). The author: every enemy and boss on the road to
+  Delirium, no stopping. Added **E3b, the four horsemen** ahead of E4 (Famine first: it hit the bot in live run
+  1.2.49; Death next: his slowdown matters to the bot's timing). Sent to the Ghidra session; E4 and E5 follow without
+  a pause.
