@@ -571,7 +571,9 @@ run("finishes a nearly dead enemy instead of the nearest one", function()
   weak.MaxHitPoints = 20
   Reflex.plan.at = -999
   Reflex.update(Isaac.GetPlayer())
-  local t = Reflex.status.target or Reflex.plan.target
+  -- the CHOSEN target (plan.target): status.target also names a free shot at whatever is lined up this update ("run
+  -- and shoot"), and since 1.2.42 (isaac_steps 2) the near Gaper is in line on the first update
+  local t = Reflex.plan.target or Reflex.status.target
   check("finishes a nearly dead enemy instead of the nearest one", t == weak,
         "target: " .. (t and (t == weak and "the nearly dead one" or ("hp " .. tostring(t.HitPoints))) or "none"))
 end)

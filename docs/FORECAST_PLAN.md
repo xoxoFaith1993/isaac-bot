@@ -39,6 +39,13 @@ and boss on the road to Delirium. Items, menus and graphics never.
    Fly, Swarm, Squirt, Globin, Widow, Gurglings, Gurdy, Gurdy Jr., Duke, Gaping Maw, hazards). Test: each card's forecast
    against a recording (one check per card, independent). No behaviour change yet.
 2. **Reflexes read the forecast** where a card exists, instead of the learned circle. A/B forecast on/off.
+   - *Result (2026-11-26, fc-1.2.41 A vs B, quick suite x2):* can't tell (hits +0.06 [-0.28, +0.44], clears -5%
+     [-14%, +3%]). Stays off (`forecast = 0`) until step 3 gives the forecast something to plan with; only the
+     dart / wall slide / charge line / bounce kinds were on.
+   - *Found on the way:* the recordings show Isaac moves his Velocity **twice** per update (enemies once), so the
+     planner had been moving him at half speed. `isaac_steps = 2` (fc-1.2.41 A vs C): hits per room **-0.94**
+     [-1.31, -0.58], clears **+11%** [+3%, +20%]. On by default since 1.2.42, with the offline mock fixed the same way
+     and three other half-speed spots (top-speed starting guess, drift collision filter, fallback scorer).
 3. **Room map + positioning brain.** Tests from the live notes: Gluttony's rock gap, the corner pin of bench room
    d.410, Gurgling creep, Larry Jr.'s poops, "sure way out = push in and shoot" (no more timeouts). A/B.
 4. **Retire the old weights one at a time** (corner, ways out, crowd, sandwich, ring lane, per-boss tactics, commitment):

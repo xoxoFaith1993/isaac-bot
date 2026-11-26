@@ -116,7 +116,9 @@ Reflex.S = {
   body_r = 8,           -- px: walls/rocks are checked out to this far from Isaac's centre (his body must fit)
   predict_known = 0,    -- 1: Dingle predicted from its real AI state (mover.lua knownZone); 0 = learned circles (A/B)
   forecast = 0,         -- 1: enemies with a card predicted by forecast.lua (forecast plan step 2); 0 = learned circles
-  isaac_steps = 1,      -- Isaac's moves per update in the planner's sim: recordings say 2 (A/B: 1 = the old sim)
+  -- Isaac's moves per update in the planner's sim: recordings say 2 (1 = the old sim). On since 1.2.42: A/B
+  -- fc-1.2.41:A vs :C (quick suite x2, 2026-11-26) hits per room -0.94 [-1.31, -0.58], clears +11% [+3%, +20%]
+  isaac_steps = 2,
   forecast_kinds = "dart,wall_slide,charge_line,bounce", -- kinds the card check showed better or equal (hop: Monstro worse)
   fc_pad = 8,           -- px added to a card zone's radius
   fc_grow = 0.9,        -- px per update a card zone grows (card check: ~11-24 px median error after 16 updates)
@@ -1118,7 +1120,7 @@ local function score(player, room, w, d, speed, target, prefDist, center, choice
   for t = S.sample, S.horizon, S.sample do
     -- momentum for the first couple of updates, then the new direction at full speed
     local mom = math.min(t, 2)
-    local p = pos + vel * mom + d * speed * (t - mom)
+    local p = pos + vel * (mom * (S.isaac_steps or 1)) + d * speed * (t - mom) -- (Velocity moves him isaac_steps x)
     local wall = blocked(room, p, canFly)
     if wall > 0 then
       cost = cost + wall * (1 - t / (S.horizon + 2))
@@ -1543,7 +1545,9 @@ function Reflex.update(player)
   -- learned state, or B plays with what A just learned - blind review 2026-11-25)
   if S.learn ~= 0 then
     pcall(Mover.observe, w.enemies, player, Game():GetFrameCount(), w.shots)
-    pcall(Mover.observePlayer, player, math.max(2.5, player.MoveSpeed * S.speed_mul)) -- and Isaac's own movement
+    -- and Isaac's own movement. (The guess is a distance per update; his Velocity is that over isaac_steps - 1.2.42:
+    -- without the division a fresh start thought him twice as fast for ~250 updates, offline mutant check)
+    pcall(Mover.observePlayer, player, math.max(2.5, player.MoveSpeed * S.speed_mul) / (S.isaac_steps or 1))
   end
   -- outside pushes on Isaac RIGHT NOW (suction, currents): not learning, so measured even in benchmarks
   pcall(Mover.observeDrift, player, Game():GetFrameCount())

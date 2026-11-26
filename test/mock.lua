@@ -466,7 +466,9 @@ function Mock.step(move, speed)
       end
     end
     if np then
-      p.Velocity = np - p.Position
+      -- the game moves Isaac by his Velocity TWICE per update (recordings 2026-11-26: step / |Velocity| = 1.97 over
+      -- 4,159 pairs), so his Velocity is half the step he takes (Mock.vel_ratio = 1 is the old mock)
+      p.Velocity = (np - p.Position) * (1 / (Mock.vel_ratio or 2))
       p.Position = np
     else
       p.Velocity = vec(0, 0)

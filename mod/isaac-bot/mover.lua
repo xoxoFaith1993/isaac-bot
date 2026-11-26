@@ -467,11 +467,14 @@ function Mover.observeDrift(player, f)
   local rx, ry = 0, 0
   if fresh and Mover.lastDir then
     local acc = Mover.acc or 0.35
-    local top = (Mover.top or 4.6) * math.max(0.3, player.MoveSpeed)
+    local top = (Mover.top or 4.6 / (Mover.ksteps or 1)) * math.max(0.3, player.MoveSpeed) -- (4.6 is px per update)
     local tx, ty = Mover.lastDir.X * top, Mover.lastDir.Y * top
     local ex, ey = lastVD.X + (tx - lastVD.X) * acc, lastVD.Y + (ty - lastVD.Y) * acc
     rx, ry = v.X - ex, v.Y - ey
-    if rx * rx + ry * ry >= 9 then rx, ry = 0, 0 end -- (3+ px/update: a collision or a hit's knockback, not a push)
+    -- (3+ px/update: a collision or a hit's knockback, not a push; in Velocity units that's 3 / isaac_steps - 1.2.42,
+    -- found by the offline spikes test once the mock moved Isaac twice his Velocity like the game)
+    local lim = 3 / (Mover.ksteps or 1)
+    if rx * rx + ry * ry >= lim * lim then rx, ry = 0, 0 end
   end
   fastX, fastY = fastX * 0.7 + rx * 0.3, fastY * 0.7 + ry * 0.3
   slowX, slowY = slowX * 0.92 + rx * 0.08, slowY * 0.92 + ry * 0.08
@@ -736,6 +739,7 @@ function Mover.choose(ctx)
   ctx.vel = player.Velocity
   -- Isaac's learned movement (top speed per speed stat, acceleration); the old constant until it's learned
   ctx.ksteps = S.isaac_steps or 1
+  Mover.ksteps = ctx.ksteps -- (observeDrift's starting guess)
   if Mover.top then ctx.speed = Mover.top * math.max(0.3, player.MoveSpeed)
   else ctx.speed = ctx.speed / ctx.ksteps end -- (the starting guess is a distance per update, not a velocity)
   ctx.acc = Mover.acc
