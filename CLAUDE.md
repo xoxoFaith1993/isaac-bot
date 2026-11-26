@@ -13,7 +13,8 @@ Read `docs/HOW_WE_WORK.md` first: it's the method this repo is built with. Short
 5. **Measure, then gate:** `tools/bench.py run` on a locked suite (`quick` or `v1`), learning frozen, A/B paired;
    `tools/bench.py gate <baseline> <candidate>` must pass before a behaviour change ships. "Can't tell" means more
    reps, not "fine". Name the compared labels in the commit. One run proves nothing.
-6. **Write it down:** `PLAN.md`, `test/FOUND_BUGS.md`, `knowledge/*.md`.
+6. **Write it down:** `CHANGELOG.md` (what changed), `docs/BACKLOG.md` (what's parked), `ROADMAP.md` (goals),
+   `test/FOUND_BUGS.md`, `knowledge/*.md`. (`docs/START_HERE.md` is the map of the project.)
 
 ## Hard rules
 - The bot plays on **save slot 2 only**. Never start or continue a run on slot 1.
@@ -25,6 +26,9 @@ Read `docs/HOW_WE_WORK.md` first: it's the method this repo is built with. Short
 - **Lua files: no byte-order mark** (the game's Lua can't read it).
 - **Knowledge goes in data files** (`knowledge/*.json`, `rules.lua`), not hard-coded lists in code.
 - **One writer per file:** if several AI sessions work in parallel, only one edits a given file.
+- **Commit only your own files** (2026-11-26: the sessions share one checkout and one staging area, and a plain
+  `git commit` swept another session's staged CI files into a decompile commit): `git commit -m "..." -- <your files>`,
+  never a bare `git commit` or `git commit -a`. Check `git show --stat HEAD` before pushing.
 - Long jobs (overnight batches) run detached; don't reload the mod while one is running.
 
 ## Usage: the right model for the job (the author, 2026-11-26: "make everything as efficient as possible... so I don't burn through the rest of my usage before the week ends")
