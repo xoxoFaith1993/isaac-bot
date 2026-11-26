@@ -1552,3 +1552,83 @@ reader. Clotty's fire mode was settled from the assembly.
 - Wall Creep 5 px/update and its shot at 8.
 - Para-Bite teleport ranges.
 - Leaper 4-shot at 9.
+
+## Batch G1a (2026-11-26): first floors 3-6 commons
+
+**Readers:** two Haiku readers on halves of the batch, then a Haiku second reader on every type that showed new logic
+(everything below marked `2 readers`). Names are from the knowledge files.
+
+### Bony (227.0), Holy Bony (227.1), Black Bony (277), `0x53f3d0`
+- **Walk:** a random axis walk at 1.25, friction × 0.8. `[move · G1 0x53f3d0 · 2 readers]`
+- **The shot:** every 3rd update, when Isaac's position + 0-16 updates of lead is **within 20 px of its row or column**,
+  **under 200 px**, on a clear line. **One shot at 10** (mode 0), one per attack animation.
+  `[attack · G1 0x53f3d0 · 2 readers]`
+- 227.1 computes a lob from the distance, but the fixed speed 10 is what is passed to the shot. `[attack · G1 0x53f3d0 · 2 readers]`
+- **Black Bony explodes on death:** damage 40 (half a heart), radius 60. `[attack · G1 0x53f3d0 · 1 reader]`
+
+### Skinny (226.0) and Rotty (226.1), same function
+- Path chase at 0.5; flees when feared; no attack. Rotty's death: 50% back to a full-HP Bony (227.0), otherwise 1-2
+  Attack Flies. Skinny 226.2 runs its own function (`0x550b30`, unread). `[move/attack · G1 0x53f3d0 · 1 reader]`
+
+### Death's Head (212.0), Dank Death's Head (212.1), `0x539550`
+- **212.0 is invulnerable from spawn**; 212.1 is not. `[body · G1 0x539550 · 2 readers]`
+- **Movement:** a diagonal bounce (push 0.45 per axis by velocity sign, friction × 0.9), so **≈ 4.5 px/update per axis**.
+  No chase, no attack. `[move · G1 0x539550 · 2 readers]`
+- When the room is clear, 212.0 goes untouchable and stops mattering. `[body · G1 0x539550 · 2 readers]`
+
+### Buttlicker (89), Grub (239), Larry Jr. (19.0), The Hollow (19.1), `0x46e060`
+- **Heads** walk a random axis walk at 2.0; followers do not steer. `[move · G1 0x46e060 · 2 readers]`
+- **Grub charge:** after about 51 updates, when the led Isaac is within 20 px of its row or column on a clear line:
+  push 3.7, friction × 0.9, **until a wall** (≈ 33 px/update by formula: check in recording).
+  On death 2-5 spawns of Charger (23), Spitty (31) or 21. `[attack · G1 0x46e060 · 2 readers]`
+- **Larry Jr. / The Hollow shots** (head, subtype 1): **7.5 px/update**, single (19.0) or triple (19.1), cooldown
+  40-59, tried on a 1/3 roll once the cooldown is up. `[attack · G1 0x46e060 · 2 readers]`
+- **The Hollow** also drifts toward Isaac within 160 px (full pull inside ≈ 93 px), bouncing off the room edges.
+  `[move · G1 0x46e060 · 2 readers]`
+- Tails drop poops. All segments share the lowest HP. `[body · G1 0x46e060 · 1 reader]`
+
+### Maw (26.0), Red Maw (26.1), Psychic Maw (26.2), `0x5172e0`
+- **Chases** with push 0.13/d toward Isaac (Red: 0.39). `[move · G1 0x5172e0 · 1 reader]`
+- **26.0 / 26.2:** when it can shoot, one shot at **7** (10 in hard mode), cooldown 28. Psychic Maw's shot has homing
+  params and it carries a type 96 buddy. `[attack · G1 0x5172e0 · 1 reader]`
+- **Red Maw has no ranged attack**; on death it fires a 4-shot + (mode 6) at 8. `[attack · G1 0x5172e0 · 1 reader]`
+
+### Needle (881.0) and Pasty (881.1), `0x555380`
+- **Burrowed and untouchable** for 30-89 updates at the start (20-59 after a lunge). It surfaces at a spot **120-240 px
+  from Isaac**. `[body · G1 0x555380 · 2 readers]`
+- **Lunge:** velocity **8 px/update at Isaac**, an arc about 26 updates long; **hittable only while high** (height
+  ≤ −6). `[attack · G1 0x555380 · 2 readers]`
+- **Pasty** fires a 4-diagonal burst (mode 7) at 7 four updates into the lunge. `[attack · G1 0x555380 · 2 readers]`
+
+### Boil (30.0), Gut (30.1), Sack (30.2), `0x51da10`
+- **Stationary.** It shrinks to 7 HP at spawn and **regrows while not being hit**; it only attacks at full health.
+  `[body · G1 0x51da10 · 2 readers]`
+- **Attack:** a 1/50 roll (1/200 beyond 230 px). `[timing · G1 0x51da10 · 2 readers]`
+  - **Boil:** 3-4 boss shots; **Gut:** one slow boss shot (× 0.55);
+  - **Sack:** throws a type-85 (Spider) minion instead.
+  - Beyond about 230-250 px the shots go to the room origin, not at Isaac (probably a decompiler slip; unconfirmed).
+
+### Portal (306.0) and Lil Portal (306.1), `0x549f20`
+- Stationary spawner. It keeps fewer than 3 children (4 for Lil), every 90-149 updates (60-89 for Lil). Portal makes
+  1-5 spawns from a stage table and then removes itself. `[attack · G1 0x549f20 · 2 readers]`
+
+### Others in this batch (one reader)
+- **Blubber (210.0):** 3-5 boss shots along its own movement every 30-59; on death 50% becomes a Half Sack (211).
+- **Half Sack (211), Pacer (11.1):** wander or flee only.
+- **Splasher (238):** one shot at 5 along its movement every 60-89.
+- **Black Globin's Body (280):** throws a spider when fewer than 5 enemies, cooldown 90 or 180.
+  `[move/attack · G1 0x511780 · 1 reader]`
+
+### Bot meaning (G1a)
+- **Death's Head 212.0 is invulnerable:** don't shoot it; dodge its diagonal bounce.
+- **Bony family:** don't line up within 200 px.
+- **Needle:** only shoot it while airborne and high; it lands near, not on, Isaac.
+- **Boil family:** keep hitting it to stop the regrowth.
+- **Grub:** don't stand on its line once it has been alive about 2 s.
+
+### Record to confirm (G1a)
+- Bony shot speed 10 and the 20 px / 200 px gate.
+- Grub charge speed.
+- Larry Jr. / Hollow shots at 7.5.
+- Needle's lunge at 8 and hittable window.
+- Death's Head invulnerability and diagonal speed 4.5.
