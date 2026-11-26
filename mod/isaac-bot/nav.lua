@@ -582,6 +582,22 @@ local function chooseGoal(p, room)
       -- distance in the test too, every penny more than ~100 px away "wasn't worth it" - it skipped a secret
       -- room full of coins)
       local net = val - Danger.cost(p, dmg)
+      -- The way there hurts (spikes), but a way through breakable rock doesn't: a bomb is cheaper than a hit. (The
+      -- author, 2026-11-25: it walked over spikes for an item on the first floor with bombs in its pocket. "That
+      -- would be a good use of bombs... try not to take damage the first floor.")
+      if dmg > 0 then
+        local need = (e.Variant == PickupVariant.PICKUP_COLLECTIBLE) and R.bombs.loot_major
+                  or (e.Variant == PickupVariant.PICKUP_LOCKEDCHEST) and R.bombs.loot_key_chest or R.bombs.loot_minor
+        local rockPath = findPath(room, start, idx, p.CanFly, true)
+        if p:GetNumBombs() >= need and rockPath and Danger.pathDamage(rockPath) == 0
+           and Danger.cost(p, dmg) > (V.bomb[1] or 3) * 2 and not skip[it.key .. "b"] then
+          local stand, _, isPoop = bombSpot(room, start, idx, p.CanFly)
+          if stand and not isPoop then
+            return { kind = "bomb rocks to " .. name .. " (instead of " .. dmg .. " half hearts of spikes)",
+                     key = it.key .. "b", bomb = true, idx = stand, pos = room:GetGridPosition(stand) }
+          end
+        end
+      end
       local worth = net > 0 and (net + 1000 - it.d * 0.01) or net
       if worth > bestWorth then
         best = { kind = name .. (dmg > 0 and (" (worth " .. val .. ", risking " .. dmg .. " half hearts)") or ""),

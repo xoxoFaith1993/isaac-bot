@@ -118,6 +118,8 @@ Reflex.S = {
   m_corner = 500,       -- v2: cost of ending in a corner (wall on a side AND above/below), x0.5-2.5 by movers near
   m_nolane = 150,       -- v2: cost of standing still when the plan never lines up a shot (rock pockets vs worms)
   boss_aim = 1.8,       -- boss fights: lining up a shot is worth this much more (finish it, don't chip at it)
+  m_line_escape = 160,  -- v2: in a dasher's line / a coming shot's line, cost per blocked sidestep (half each side)
+  escape_step = 45,     -- v2: px of one sidestep (checked at 1 and 2 steps)
   finish_w = 220,       -- target choice: bonus for an enemy our next 1 shot kills, fading to 0 at 5 shots
   commit_w = 90,        -- target choice: bonus for staying on the (damaged) enemy we've been shooting
   ring_margin = 70,     -- ring-kite vs chasing bosses: px from the walls to the lane...
@@ -389,6 +391,9 @@ end
 -- k = avoid corners. adds: ignore / kill_close / kill_first. tells: animations right before an aimed attack.
 Reflex.bossTactics = {}
 IsaacBotBossTactics = Reflex.bossTactics
+-- rest animations: the boss is recovering from an attack, so closing in to hit is safe
+local REST_ANIM = { Tired = true, Pant = true, Stop = true, Landing = true, Land = true, Rest = true, Recover = true,
+              Stunned = true, Dizzy = true }
 function Reflex.loadBossTactics(text)
   local n = 0
   for entry in string.gmatch(text or "", "[^;]+") do
@@ -428,6 +433,18 @@ end
 function Reflex.shotPadOf(spawnerType)
   local l = spawnerType and Reflex.lessons[tostring(spawnerType)]
   return l and l.pad or 0
+end
+
+-- Is this enemy telling an attack RIGHT NOW? (a tell animation from its boss tactics, a learned warning animation,
+-- or an animation that usually leads into a shot)
+function Reflex.telling(e)
+  local tac = Reflex.tacticsOf(e)
+  local a = Tells.animOf(e)
+  if tac and a and tac.tells[a] then return true end
+  local okW, warn = pcall(Tells.warning, e)
+  if okW and warn then return true end
+  local okS, coming = pcall(Tells.shotComing, e)
+  return (okS and coming) or false
 end
 
 function Reflex.tacticsOf(e)
@@ -606,7 +623,7 @@ local function planFire(player, room, w, targets, prefDist)
             if bossOn and t.IsBoss then
               if t:IsBoss() then
                 local tac = Reflex.tacticsOf(t)
-                local keep = ((tac and tac.pd) or S.boss_dist) * (Risk.window and 0.65 or 1)
+                local keep = ((tac and tac.pd) or S.boss_dist) * ((Risk.window and REST_ANIM[Risk.window]) and 0.65 or 1)
                 if c.dist < keep * 0.8 and not Risk.invincible then score = score + 300 end
               elseif bossAdds == "kill_first" then
                 score = score - 150
@@ -1322,7 +1339,8 @@ function Reflex.update(player)
       local tac = Reflex.tacticsOf(e)
       if tac and tac.hasWindows then
         local a = Tells.animOf(e)
-        if a and tac.windows[a] then win = a; break end
+        -- never an animation that's also a tell (Dingle's Whistle comes right before the spit)
+        if a and tac.windows[a] and not tac.tells[a] then win = a; break end
       end
     end
   end
@@ -1363,7 +1381,8 @@ function Reflex.update(player)
     local ok3, coming = pcall(Tells.shotComing, e)
     if ok3 and coming then
       w.aimed = w.aimed or {}
-      w.aimed[#w.aimed + 1] = { from = e.Position, at = player.Position, eta = (ok and eta) or S.shot_coming_eta }
+      w.aimed[#w.aimed + 1] = { from = e.Position, at = player.Position, eta = (ok and eta) or S.shot_coming_eta,
+                                size = e.Size or 0 } -- a big dasher's line is as wide as its body
     end
     local ok2, sh = pcall(Tells.isShooter, e.Type)
     if ok2 and sh then w.shooters[#w.shooters + 1] = e end
@@ -1517,7 +1536,11 @@ function Reflex.update(player)
     local tac = Reflex.tacticsOf(target)
     local extra = (Reflex.lessonOf(target) or {}).dist or 0 -- the watcher learned to keep farther from this boss
     if Risk.invincible then prefDist = S.pref_dist -- untouchable right now: point-blank, whatever the boss
-    elseif tac and tac.pd then prefDist = math.min((tac.pd + extra) * (Risk.window and 0.65 or 1), player.TearRange * 0.85)
+    elseif tac and tac.pd then
+      -- close in only in a REST window (after an attack: Tired, Pant, Stop, Landing...), not in Idle: an idling
+      -- dasher dashes next
+      local rest = Risk.window and REST_ANIM[Risk.window]
+      prefDist = math.min((tac.pd + extra) * (rest and 0.65 or 1), player.TearRange * 0.85)
     else prefDist = math.max(prefDist, math.min(S.boss_dist + extra, player.TearRange * 0.8)) end
   end
   -- A shielded enemy that opens when you come close (Hosts: "you gotta walk up for them to open, and then
@@ -1592,7 +1615,7 @@ function Reflex.update(player)
       spot = (not ring) and (plateSpot or navSpot or (plan.target and plan.cellPos)) or nil, calm = calm, blocked = blocked, creepAt = creepAt,
       bounce = function(pos, r) return bounced(w, pos, r) end, lane = Reflex.lane, segDist = segDist,
       laserEnd = laserEnd, playbookOf = playbookOf, tacticsOf = Reflex.tacticsOf, leadVel = Reflex.leadVel,
-      lessonOf = Reflex.lessonOf, shotPadOf = Reflex.shotPadOf })
+      lessonOf = Reflex.lessonOf, shotPadOf = Reflex.shotPadOf, telling = Reflex.telling })
     Reflex.prof.move = Reflex.prof.move + (Isaac.GetTime() - tMove0)
     if okM and mi then best, bestCost, usedV2 = mi, mc, true; Reflex.v2err = nil
     else Reflex.v2err = tostring(mi) end -- falls back to the old core this update; main.lua reports it

@@ -43,8 +43,10 @@ local NEUTRAL = 0.25
 local INVINCIBLE = { m_hit = 0.02, m_soft = 0, m_edge_hit = 0, m_crowd = 0, m_pincer = 0, m_trap = 0, m_edge = 0,
                      m_corner = 0, m_charge_line = 0, plan_clearance = 0, still_clearance = 0, stand_safe_r = 0,
                      calm_r = 0, relax_s = 0.2, kite_r = 0 }
-local WINDOW = { m_aim = 2.5, loose_aim = 1.5, pref_dist = 0.65, boss_dist = 0.65, m_soft = 0.5, m_crowd = 0.3,
-                 m_trap = 0.5, m_corner = 0.5, m_edge = 0.5, m_center = 0.5, plan_clearance = 0.6, relax_s = 0.3 }
+-- (Walls and corners are NOT relaxed: 1.2.12 halved the corner/edge/middle costs in windows, and since Dingle idles
+-- most of the fight it hugged the walls next to him and ate a dash, 2026-11-25. Distance only shrinks in a REST window:
+-- reflex.lua.)
+local WINDOW = { m_aim = 2.5, loose_aim = 1.5, m_soft = 0.6, m_crowd = 0.5, plan_clearance = 0.7, relax_s = 0.3 }
 local R = include("rules")
 function Risk.invincibleNow(p)
   local kind, left = nil, 0

@@ -559,6 +559,81 @@ run("finishes a nearly dead enemy instead of the nearest one", function()
         "target: " .. (t and (t == weak and "the nearly dead one" or ("hp " .. tostring(t.HitPoints))) or "none"))
 end)
 
+-- 44. 1.2.21 the author's rule of thumb (Dingle): "take advantage of the time windows, and position yourself so it
+-- won't be hard to get out of harm's way when he does attack" - it pre-positioned off Dingle's lines long before any
+-- tell and never hit him. Now: lined up and shooting while it idles, off the line once the tell plays.
+run("uses the window, steps off the line when the tell plays", function()
+  Reflex.loadPlaybook("261.0=charges_on_line,k2,d4")
+  Reflex.loadBossTactics("261.0=200,k,kill_close,BeforeSlide|Dance|Whistle,Idle|Tired")
+  Mock.room(nil, { clear = false, player = Mock.tile(3, 2) })
+  local dingle = Mock.enemy(261, 0, Mock.tile(10, 4), { hp = 300, boss = true, anim = "Idle", size = 20 })
+  local p = Isaac.GetPlayer()
+  local shots = 0
+  for _ = 1, 90 do
+    local move, shoot = Reflex.update(p)
+    Mock.step(move)
+    if shoot then shots = shots + 1 end
+  end
+  dingle._anim = "BeforeSlide"
+  local inLine = 0
+  for i = 1, 30 do
+    local move = Reflex.update(p)
+    Mock.step(move)
+    local rel = p.Position - dingle.Position
+    if i > 10 and (math.abs(rel.X) < 36 or math.abs(rel.Y) < 36) then inLine = inLine + 1 end
+  end
+  Reflex.playbook = {}
+  Reflex.bossTactics = {}; IsaacBotBossTactics = Reflex.bossTactics
+  check("uses the window, steps off the line when the tell plays", shots >= 30 and inLine <= 6,
+        fmt("shooting %d of 90 updates while it idled; in its line %d of the last 20 after the tell", shots, inLine))
+end)
+
+-- 45. 1.2.21 (the author: "it gets hit deliberately every single time when he dashes"): Dingle stands still most of
+-- the fight, so the learned model said "stays put" even mid-dash. A fast mover is now predicted as a straight dash.
+run("gets out of the way of a dash", function()
+  -- teach the movement model that this type usually stands still (as Dingle does between dashes)
+  Mock.room(nil, { clear = false, player = Mock.tile(11, 6) })
+  local d0 = Mock.enemy(261, 0, Mock.tile(3, 4), { hp = 300, boss = true, size = 20 })
+  for _ = 1, 240 do Reflex.update(Isaac.GetPlayer()) end
+  d0._alive = false
+  -- now a dash straight at Isaac
+  Mock.room(nil, { clear = false, player = Mock.tile(10, 4) })
+  local dingle = Mock.enemy(261, 0, Mock.tile(3, 4), { hp = 300, boss = true, size = 20, vel = Mock.vec(9, 0) })
+  local p = Isaac.GetPlayer()
+  local closest = math.huge
+  for _ = 1, 30 do
+    local move = Reflex.update(p)
+    Mock.step(move)
+    dingle.Velocity = Mock.vec(9, 0) -- keeps dashing (the mock doesn't run Dingle's AI)
+    closest = math.min(closest, (dingle.Position - p.Position):Length())
+  end
+  check("gets out of the way of a dash", closest > dingle.Size + p.Size, fmt("closest %.0f px (touch at %.0f)", closest,
+        dingle.Size + p.Size))
+end)
+
+-- 46. 1.2.21 (the author: it walked over spikes for an item with bombs in its pocket; "that would be a good use of
+-- bombs... try not to take damage the first floor"): a rock way that doesn't hurt -> bomb it instead
+run("bombs rocks instead of walking over spikes to an item", function()
+  Mock.room({
+    "WWWWWWWDWWWWWWW",
+    "W.............W",
+    "W.......#^#...W",
+    "W.......#.#...W",
+    "D.......###...D",
+    "W.............W",
+    "W.............W",
+    "W.............W",
+    "WWWWWWWDWWWWWWW",
+  }, { player = Mock.tile(3, 5) })
+  local p = Isaac.GetPlayer()
+  p._bombs = 2
+  Mock.pickup(PickupVariant.PICKUP_COLLECTIBLE, 1, Mock.tile(9, 3))
+  Nav.newRoom()
+  Nav.update(p)
+  local goal = tostring(Nav.status.goal)
+  check("bombs rocks instead of walking over spikes to an item", goal:find("bomb rocks") ~= nil, "goal: " .. goal)
+end)
+
 -- 37. 1.2.7 boss tactics (knowledge/boss_tactics.json via the helper): loads, finds the boss, adds policy decides
 run("boss tactics: loaded and used", function()
   Reflex.loadBossTactics("261.0=200,k,kill_close,BeforeSlide|Dance|Whistle;260.0=160,c,kill_first,")

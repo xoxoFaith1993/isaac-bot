@@ -102,7 +102,17 @@ function Mover.predict(e, t, toPlayer, bounce)
   local n = m and m.n or 0
   local b = 1
   if m and m[hi][2].err < m[hi][1].err then b = 2 end
+  -- Moving FAST = a dash or charge: it keeps going straight (bouncing off walls), whatever the type usually does.
+  -- (2026-11-25: Dingle stands still most of the fight, so its learned model said "stays put" even mid-dash, and the
+  -- bot was hit by every dash. The author: "it gets hit deliberately every single time when he dashes.")
+  local dashing = e.Type ~= EntityType.ENTITY_PROJECTILE and sp > (Mover.dashSpeed or 5)
   local drift, rad = 0, prior
+  if dashing then
+    -- a straight line we can be confident about: a tight circle along it, no drift toward where Isaac is now
+    local base = e.Position + e.Velocity * t
+    if bounce then base = bounce(base, e.Size) end
+    return base, e.Size + 8 + t * 0.4
+  end
   if n > 0 then
     local dh, rh = at(hi, b)
     local dl, rl = 0, 0
@@ -160,7 +170,8 @@ local function cost_at(ctx, p, si, t)
         local rel = p - a.from
         local along = rel:Dot(dir) / len
         local perp = math.abs(rel.X * dir.Y - rel.Y * dir.X) / len
-        if along > 0 and perp < S.aim_line_w then c = c + S.m_hit * 0.8 * wt * (1 - perp / S.aim_line_w) end
+        local wide = S.aim_line_w + (a.size or 0) -- (34 px was thinner than Dingle's own body: every dash hit)
+        if along > 0 and perp < wide then c = c + S.m_hit * 0.8 * wt * (1 - perp / wide) end
       end
     end
   end
@@ -187,7 +198,8 @@ local function cost_at(ctx, p, si, t)
     local inRow, inCol = math.abs(rel.Y) < ln.half, math.abs(rel.X) < ln.half
     local hit = (ln.only == "row" and inRow) or (ln.only == "col" and inCol) or (not ln.only and (inRow or inCol))
     if hit and rel:Length() < 420 then
-      if ln.charge then c = c + S.m_charge_line * wt
+      if ln.charge then
+        if ln.active ~= false then c = c + S.m_charge_line * wt end -- (tell-gated dashers: only while telling)
       elseif ln.eta and t >= ln.eta - 6 then c = c + S.m_hit * 0.8 * wt
       else c = c + S.m_line * wt end
     end
@@ -374,6 +386,37 @@ local function total(ctx, plan)
   elseif not (ctx.spot and (plan.p - ctx.spot):Length() < 45) then
     c = c + (plan.p - ctx.room:GetCenterPos()):Length() * S.m_center
     if not ctx.room:IsPositionInRoom(plan.p, S.edge_margin) then c = c + S.m_edge end
+  end
+  -- Escape readiness (the author's rule of thumb, 2026-11-25: "position yourself so it won't be that hard to put
+  -- yourself out of harm's way when he does attack"): standing in a dasher's row/column, or in the line of a shot
+  -- that's coming, is fine for shooting it, but only where the SIDESTEP is open. Each blocked side (wall, rock, pit
+  -- within two steps) costs half of m_line_escape.
+  if S.m_line_escape > 0 then
+    local function sidesBlocked(p, perp)
+      local n = 0
+      for _, sg in ipairs({ 1, -1 }) do
+        if blockedAt(ctx, p + perp * (sg * S.escape_step)) or blockedAt(ctx, p + perp * (sg * S.escape_step * 2)) then
+          n = n + 1
+        end
+      end
+      return n
+    end
+    for _, ln in ipairs(ctx.lines) do
+      if ln.threat then
+        local rel = plan.p - ln.pos
+        local inRow, inCol = math.abs(rel.Y) < ln.half, math.abs(rel.X) < ln.half
+        if (inRow or inCol) and rel:Length() < 420 then
+          c = c + S.m_line_escape * sidesBlocked(plan.p, inRow and Vector(0, 1) or Vector(1, 0)) / 2
+        end
+      end
+    end
+    for _, a in ipairs(ctx.w.aimed or {}) do
+      local d = plan.p - a.from
+      if d:Length() > 1 and d:Length() < 420 then
+        local u = d:Normalized()
+        c = c + S.m_line_escape * sidesBlocked(plan.p, Vector(-u.Y, u.X)) / 2
+      end
+    end
   end
   -- flow: keep doing what we were doing unless something better is clearly there (no 30x-a-second twitching)
   -- Crowd pressure: how much enemy is near where the plan ends (closer counts more). With 18 enemies in a big room it
@@ -573,12 +616,21 @@ function Mover.choose(ctx)
       ctx.lines[#ctx.lines + 1] = { pos = e.Position, half = (e.Size or 13) + 14, eta = winding[h] }
     end
   end
-  -- enemies the playbook says charge when Isaac lines up (Chargers): their row and column are costly while alive
+  -- enemies the playbook says charge or dash at Isaac: their row and column are costly. The author's rule of thumb
+  -- (2026-11-25, Dingle): "take advantage of the time windows, and position yourself so it won't be that hard to get
+  -- out of harm's way when he does attack" - it pre-positioned off Dingle's lines long before any tell and so never
+  -- hit him. So: an enemy with KNOWN tells (boss tactics) makes its lines costly only while a tell is playing; one
+  -- without (a plain Charger charges the moment you line up) keeps the old always-on cost. Being in the line is then
+  -- fine, as long as the sidestep is open (escape readiness, total()).
   if ctx.playbookOf then
     for _, e in ipairs(w.enemies) do
       local pb = ctx.playbookOf(e)
       if pb and (pb.tags.charges_on_line or pb.tags.dashes_at_isaac) and e.Position then
-        ctx.lines[#ctx.lines + 1] = { pos = e.Position, half = (e.Size or 13) + 16, charge = true }
+        local tac0 = ctx.tacticsOf and ctx.tacticsOf(e)
+        local gated = tac0 and tac0.tells and next(tac0.tells) ~= nil
+        local active = (not gated) or (ctx.telling and ctx.telling(e))
+        ctx.lines[#ctx.lines + 1] = { pos = e.Position, half = (e.Size or 13) + 16, charge = true, active = active,
+                                      threat = true }
       end
       -- boss tactics: "stay diagonal" / "never in its row" / "never in its column" (Gurglings, Gluttony, The Fallen...)
       local tac = ctx.tacticsOf and ctx.tacticsOf(e)
