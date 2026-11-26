@@ -534,3 +534,27 @@ fight and one Haunt fight (the checklist is there).
 - Trite: the landing-idle `StateFrame` check.
 
 All match. ChatGPT's blind read (round 5) is next.
+**ChatGPT round 5, a blind read of the 8 new functions, reconciled with `RE_ENEMIES.md` in the C:**
+- **Agreed:**
+  - Sloth (all three variants, `StateFrame` 5, the Charger 30 px to the side, exit at 30);
+  - Monstro (13 boss shots on Taunt);
+  - Pin's champion: a 6-shot ring at speed 8 (mode 9);
+  - the Charger's 200 px / clear-line trigger and its 1.3 launch;
+  - Gemini's 1-in-60 rage chance (plus 1 in 4 for the Ovum);
+  - the 79.11 baby's 35-update cooldown;
+  - the projectile helper's modes 2, 5, 8 and 9.
+- **GPT wrong, settled in the C:**
+  - **Gemini's "18 type-20 NPCs":** the spawn call passes Gemini's own type with **variant** 20. These are its 18 cord
+    segments (79.20), not Monstros.
+  - **The Ovum baby's laser trigger "distance² < 300 (17 px)":** the squared distance goes through a function call
+    (very likely a square root; Ghidra drops its return value) before the `< 300` compare. So it's **300 px**, as
+    `RE_ENEMIES.md` says.
+  - **The Charger "recovers in state 16":** only Dank (23.2) does. The recording shows 23.0 only ever in States 4 and 8.
+  - **"A (0, 7) random gate":** `0x6d2730(0, 7)` is the shared "can I shoot?" check, not a random roll.
+- **GPT incomplete:**
+  - Gemini: it read state 3 only as "a 100-update transition". The C shows rage (8, 100 updates) → **state 3, 100 more
+    updates of calm** → walk, and the Ovum skips the calm (`state = (variant == 2) + 3`).
+  - It also missed the Attack Fly's steering details (`RE_ENEMIES.md`, already checked).
+- **From here on:** blind second readings move into the Ghidra session itself (two blind reader agents, one on a
+  different model, then reconciled in the C), so they no longer go through the author. Outside readers like GPT stay
+  an optional spot check.
