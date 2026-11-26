@@ -531,7 +531,110 @@ functions cover about 65%.** By share of appearances:
 
 ## Gaps (for the next pass)
 
-- The NPC collision handler (`0x6d4ce0`): the exact contact-damage conditions; the decompile fails.
 - Knockback on Isaac: not in TakeDamage or the player's collision handler.
 - EvadeTarget / MoveRandomly: signatures stale, functions not located.
 - Projectile `PositionOffset.Y` vs the height field: whether they are kept in sync.
+
+---
+
+## Batch A (2026-11-26): creep and contact damage
+
+Both were read from **annotated disassembly** (`probe dis:`), because the decompiler fails on both. Each had two blind
+readers (bundles B10 and B11, one reader on Sonnet).
+
+### Creep (effect 1000.22 red, 1000.23 green, 1000.24 yellow; 25/26/56 slow; 44/45/46/53/54/169/204 enemy-side)
+
+**Where it is:**
+- `Entity_Effect::Update` (`0x5da490`) switches on the variant through a jump table at `0x60d388` (index variant − 1).
+- Variants 22-26 and 46 all jump to one block at **`0x5f1143`**. It also holds the code for 44, 45, 53, 54, 56, 92, 94,
+  169 and 204.
+- That function is about 200 KB and is on the never-decompile list.
+
+**Size** (first update only, `0x5f1143`-`0x5f1886`):
+- `size = 20 × s × scale`. Here s is the sprite scale the creep was spawned with, after an optional trinket-106
+  bonus; scale is field `+0x478`.
+- The animation (small / normal / big / bigger puddle, 1 of 6 random frames) is picked by s.
+- **The size never grows or shrinks while the creep is alive.**
+
+**Lifetime:**
+- **No timeout is counted in this block.** Whatever sets the creep's `dead` flag lives elsewhere.
+- This block only kills it on room clear or in water (`0x5f188c`-`0x5f19a7`), and not if it's friendly.
+- Once dead it **fades over 40 updates** (alpha lerps to 0, sprite scale × 0.98 per update, then Remove at
+  `0x5f3454`). It does no damage while fading.
+- Field `+0x45c` gets a random 0-29 for some variants and may be the lifetime, but nothing here counts it.
+
+**Damage to Isaac: variants 22, 23, 24** (and 169 when not friendly) (`0x5f1a2c`-`0x5f1d44`). It checks every player
+**every update**:
+- **Skip if the player's grid collision class is not 5 (ground)** (`0x5f1aeb`; `0x4450e0` simply returns
+  `entityGridCollisionClass`). **Flying Isaac (grid class 3) is immune.** There's no height test.
+- Also skipped: trinket 14 (`0x5f1afd`), collectible 571 (`0x5f1b15`), and a per-player test `0x7e3ef0`.
+- **Coarse range:** distance < `size × sprite scale (+0xe4) + a player term` (probably his size) (`0x5f1b30`-`0x5f1bcf`).
+- **Fine test:** the creep sprite is sampled at Isaac's position, and **hits only where its alpha is > 0.5**
+  (`0x5f1bd5`-`0x5f1cb8`). **The hit shape is the painted puddle, not a circle.**
+- **Damage: a flat 1.0** (not the creep's collision damage), flags `0x10`, countdown 30
+  (`TakeDamage(1.0, 0x10, 0, source, 30)`, `0x5f1d23`-`0x5f1d44`).
+- The source is the creep's parent if it has one, else the creep.
+- There's no timer of its own: **Isaac's invincibility after the hit (60-120 updates) is what spaces repeat hits.**
+- **Slowing creep (25, 26, 56):** the same tests, then slows the player to 0.75× (variant 25) or 0.85×, with no damage.
+  Variant 94 sets a player flag instead (probably slippery).
+- **Enemy-side creep** (Isaac's own creep, e.g. 46/53/54) damages enemies, inside an ellipse whose y distance is
+  stretched ×1.75.
+
+**Review:**
+- **All agree** on the size formula, the 40-update fade, the flat 1.0 damage, flags 0x10, countdown 30, the
+  every-update check, and the alpha > 0.5 sample.
+- **The flying immunity: settled by C.**
+  - Reader A read the `== 5` test as the grid class.
+  - Reader B couldn't name `0x4450e0`.
+  - Its body returns `entityGridCollisionClass`, and the player's Update sets class 3 while flying (`RE_CORE.md`,
+    B6).
+- **Unresolved:** where the creep's lifetime timer lives.
+
+**Bot meaning:**
+- Red/green/yellow creep hurts only where it's actually painted, so the sprite's own shape matters, not a radius.
+- One hit, then Isaac's i-frames cover the rest of the puddle.
+- **Flying makes Isaac immune.**
+- A puddle doesn't spread after it's spawned.
+
+### Contact damage (`Entity_NPC::HandleCollision`, `0x6d4ce0`, player branch)
+
+**Touching an enemy hurts Isaac when** the collision pair passes `CollidePair` (classes, `RE_CORE.md` Level 2), and
+then (`0x6d65e9`-`0x6d67ed`):
+- the `low` argument is 0 (the normal call);
+- **the enemy's `collisionDamage` (+0x388) is above 0**;
+- none of the exceptions below apply.
+
+**Damage:** `TakeDamage(collisionDamage, 0 (2 = fire for fireplaces), 0, enemy, 30)`.
+- **No multiplier, and no height, state or collision-class check on this path.**
+
+**No damage** when:
+- **a friendly enemy** (flag 0x20000000) passes a source test (`0x6d62d3`);
+- an enemy with flag 0x1000000 that isn't a boss kills itself instead (`0x6d62a7`);
+- **in ambush / boss-rush / greed wave rooms** (room types 11 and 17), the enemy is in State 1, **or spawned under 10
+  updates ago** (`0x6d6349`);
+- both are in minecarts;
+- some items: Skatole vs flies, Bursting Sack vs spiders, by config flag;
+- **per-type cases:**
+  - Boom Fly (25) in State 5 explodes instead;
+  - type 881 only hurts in State 6;
+  - 291, 808, 810, 308 and 866 each have their own conditions (full table in the B11 reader reports).
+
+**There's no knockback on Isaac here.**
+
+**So the "airborne" cases come from collision classes, not from a height check here:**
+- **Monstro mid-jump** is class 0: no pair, no damage.
+- **A Trite mid-hop** is class 2: the pair happens and it **does hurt**.
+- **Orbiting Lil' Haunts** (class 1) hurt; that's 81 recorded hits.
+
+**Review:**
+- **All agree** (both readers): the gates, `collisionDamage` × 1, countdown 30, the 10-update spawn grace in wave rooms.
+- **Unresolved:** what the friendly-source test `0x6b3ca0` checks exactly, and whether charmed enemies are excluded
+  elsewhere (probably in the player's TakeDamage).
+
+**Recording checklist (Batch A):**
+- Creep: no damage while Isaac flies; a hit only inside the painted puddle; 1 damage per hit regardless of the creep's
+  collision damage; the puddle size constant while alive.
+- Creep: log the creep's lifetime (spawn → fade start), to locate the timer.
+- Contact: a Trite hurts mid-hop; Monstro doesn't mid-jump.
+- Contact: in a wave room, no contact damage in an enemy's first 10 updates; contact damage = the enemy's
+  `CollisionDamage`.
