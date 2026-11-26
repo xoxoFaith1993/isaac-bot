@@ -1795,4 +1795,32 @@ run("a darting spider's zone is at the dart's end (card forecast)", function()
             z and string.format("%.0f", d) or "none", math.floor(math.sqrt((spider.Position.X + 160 - goal.X) ^ 2 + (spider.Position.Y - goal.Y) ^ 2))))
 end)
 
+-- 70. 1.2.43 (2026-11-26, room 71: six red fires behind rock columns, two plates in the corners, doors shut): it
+-- "fought" the fires it couldn't reach for over a minute. An unpressed plate with only fires left = go press it.
+run("presses the button instead of fighting fires behind rocks", function()
+  Mock.room({
+    "WWWWWWWDWWWWWWW",
+    "W_#.........#.W",
+    "W.#.........#.W",
+    "W.#.........#.W",
+    "D.#.........#.D",
+    "W.#.........#.W",
+    "W.#.........#.W",
+    "W.#.........#_W",
+    "WWWWWWWDWWWWWWW",
+  }, { clear = false, player = Mock.tile(7, 4) })
+  for _, tl in ipairs({ { 1, 3 }, { 1, 5 }, { 13, 3 }, { 13, 5 } }) do
+    local fire = Mock.fire(Mock.tile(tl[1], tl[2]))
+    fire.Variant = 1 -- red: it shoots
+  end
+  Nav.newRoom()
+  local p = Isaac.GetPlayer()
+  local move = Reflex.update(p)
+  local active = Reflex.status.active
+  if not move then move = Nav.update(p) end
+  local goal = Reflex.status.active and tostring(Reflex.status.goalText) or tostring(Nav.status.goal)
+  check("presses the button instead of fighting fires behind rocks", not active and goal:find("button") ~= nil,
+        fmt("reflexes %s, goal: %s", active and "FIGHTING" or "off", goal))
+end)
+
 return table.concat(results, "\n")

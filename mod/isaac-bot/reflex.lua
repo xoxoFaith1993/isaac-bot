@@ -1617,12 +1617,24 @@ function Reflex.update(player)
       end
     end
   end
+  -- an unpressed pressure plate holds the doors shut, fires never do (2026-11-26, room 71: six red fires behind rock
+  -- columns, two plates in the corners; it "fought" fires its tears couldn't reach for 60 s+ while the plates waited).
+  -- With only fires left, the plate comes first: fires aren't a fight then, and their shots are still dodged.
+  local plateLeft = false
+  for i = 0, room:GetGridSize() - 1 do
+    local ge = room:GetGridEntity(i)
+    if ge and ge:GetType() == GridEntityType.GRID_PRESSURE_PLATE and ge.State < 3 then plateLeft = true; break end
+  end
+  local nonFire = 0
+  if plateLeft then
+    for _, e in ipairs(w.enemies) do if e.Type ~= EntityType.ENTITY_FIREPLACE then nonFire = nonFire + 1 end end
+  end
   local real, hurtable = 0, 0
   for _, e in ipairs(w.enemies) do
     if e.Type ~= EntityType.ENTITY_FIREPLACE then
       real = real + 1
       if e:IsVulnerableEnemy() and not e:IsInvincible() then hurtable = hurtable + 1 end
-    elseif IsaacBotRedFire(e) then
+    elseif IsaacBotRedFire(e) and not (plateLeft and nonFire == 0) then
       -- a lit red fire keeps shooting: put it out, even in a cleared room
       real, hurtable = real + 1, hurtable + 1
     end

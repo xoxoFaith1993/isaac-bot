@@ -234,6 +234,10 @@ return {
   { test = "doesn't run into a corner from a chaser", why = "planner moves Isaac once per update (half his real speed)",
     patches = { { file = "reflex", find = "  isaac_steps = 2,", replace = "  isaac_steps = 1," } } },
 
+  { test = "presses the button instead of fighting fires behind rocks", why = "red fires count as a fight with a plate left",
+    patches = { { file = "reflex", find = "elseif IsaacBotRedFire(e) and not (plateLeft and nonFire == 0) then",
+                  replace = "elseif IsaacBotRedFire(e) then" } } },
+
   { test = "doesn't swap its card for a pill", why = "pocket slot check for pills/cards",
     patches = { { file = "nav", find = "(p:GetPill(0) == 0 and p:GetCard(0) == 0) and V.pill_card or 0",
                   replace = "V.pill_card" } } },
