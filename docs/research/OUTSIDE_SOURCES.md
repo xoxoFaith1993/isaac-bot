@@ -325,8 +325,18 @@ wind-ups.
     reading it.
   - **StrategyWiki:** the Monstro-shadow advice sits under Monstro's section, not Dingle's. This came from a search
     snippet; the page itself was 403 again. Probably right, and it matches our guess.
-- **Patch notes:** it says the Repentance+ notes it opened changed none of our target enemies. Being checked by an
-  agent (result below when in).
+- **Patch notes:** it says the Repentance+ notes it opened changed none of our target enemies. **Confirmed, and
+  widened:**
+  - Its three examples are in the official Steam posts:
+    - 1.9.7.8 moved Needles' minimum spawn distance farther from the player and lowered Wizoob and Red Ghost health;
+    - 1.9.7.6 fixed Mother's intro.
+  - Across every Repentance+ patch up to 1.9.7.20 (2026-11-25), our 17 target enemies and bosses got no change to
+    behaviour, speed, health or attacks. The only mentions were a rare themed drop on death (1.9.7.11), new sounds
+    (1.9.7.13), and fixes to friendly versions summoned by an item.
+  - So Repentance-era guides and data still apply to these enemies. The 2026 patches were checked on the wiki's
+    pages only. ([1.9.7.8](https://store.steampowered.com/news/app/250900/view/520825731534554234),
+    [1.9.7.6](https://store.steampowered.com/news/app/250900/view/4470480602670303857),
+    [version history](https://bindingofisaacrebirth.wiki.gg/wiki/Version_History))
 - **The lesson:** a search-only assistant hits the same blocked pages we do. It's more useful for a *blind second
   reading* of a file we've both opened than for more searching.
 
