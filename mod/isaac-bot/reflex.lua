@@ -1783,7 +1783,13 @@ function Reflex.update(player)
           veryClose = true; break
         end
       end
-      if not veryClose and standCost and standCost - bestCost < S.still_tolerance * 2 then
+      -- never plant into a coming attack or with shots in the air near us (1.2.23 bench: Dingle's spit hit it 6 and
+      -- 4 times; standing up to 2x the tolerance costlier was too generous)
+      local threatened = (w.aimed and #w.aimed > 0)
+      for _, sh in ipairs(w.shots) do
+        if (sh.Position - player.Position):Length() < 200 then threatened = true; break end
+      end
+      if not veryClose and not threatened and standCost and standCost - bestCost < S.still_tolerance then
         best = 0
       else
         lands = false
