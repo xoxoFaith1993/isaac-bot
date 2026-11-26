@@ -11,6 +11,14 @@ and ticks items off here.
 - the write-up goes to `RE_ENEMIES.md` / `RE_CORE.md` ("Bot meaning" plus "Record to confirm");
 - then a recording check (`tools/re_check.py`).
 
+**Reading policy (the author, 2026-11-26, to cut usage):**
+- two blind readers only for shared building blocks, Isaac's own rules and bosses;
+- plain enemies get one reader (on a cheaper model) plus the recording check, escalating to two if the reader finds
+  new logic;
+- every written fact carries three labels: category (`move`/`attack`/`timing`/`body`/`terrain`), source (batch +
+  function address), checked (`1 reader`/`2 readers`/`recording`/`contradicted`). See `docs/FORECAST_PLAN.md`,
+  "The fallback".
+
 **Safety:** one Ghidra job at a time, 6 GB heap, the watchdog, low CPU priority while a benchmark gate is running.
 Only confirmed facts become bot rules (the main session folds them in).
 
