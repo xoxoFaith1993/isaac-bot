@@ -59,7 +59,7 @@ The decompiled `ai_haunt` (`0x4855e0`) against the community `Haunt.lua` and our
 | Lil' Haunts at start | 3 (subtype 1: 2, subtype 2: 1), orbit 50 px | same | yes |
 | `TargetPosition` = wall-slide push | 0.3 sideways | `(0.3, 0)`; flips and adds 15× on a wall bump | yes |
 | `I1` = live Lil' Haunts | recount every 4 updates | `frame & 3 == 0`, `QueryNPCsType(260, 10)` | yes |
-| Invulnerable phase | `STATE_MOVE` (4) and Peel (16) | `isInvicible` at init; 4 → AngrySkin → 16 → 3 | yes |
+| Invulnerable phase | `STATE_MOVE` (4) and Peel (16) | the state path 4 → AngrySkin → 16 → 3 matches, but **no damage blocking here**: `isInvicible` is set at init and cleared at the top of every later update | **not in `ai_haunt`; unconfirmed** (the game may block damage in its damage path instead) |
 | Pinned to the top wall | top + 30 | `Y = top + 30` whenever State ≠ 4 | yes |
 | Side dash | within 40 px vertically, 1 in 40, 10-15 px/update | `abs(dy) < 40`, `rand % 40`, `10 + rand*5` | yes |
 | Attack gap | no attack while StateFrame ≤ 60, then 1 in 60 | `StateFrame++ > 60`, `rand % 60`; reset to 0 after each attack | yes |
@@ -71,7 +71,9 @@ The decompiled `ai_haunt` (`0x4855e0`) against the community `Haunt.lua` and our
 | **Lil' Haunt shot range** | `distance < sqrt(4000)` ≈ **63 px** | `dx²+dy² < 40000.0` (`0x486c4f`, constant at `0xbcfe5c`) → **200 px** | **no: real is 200 px** |
 
 **Verdict:** the pipeline works. It reproduces a careful hand translation, and it settles the one place where the
-hand translation slipped (a dropped zero). **Correction for `OUTSIDE_SOURCES.md`'s Haunt table:** the Lil' Haunt
+hand translation slipped (a dropped zero). One claim it can't settle: where the Haunt's invulnerability comes from.
+`ai_haunt` doesn't block damage, so it must happen elsewhere (for example a damage handler that checks `State`), or not
+at all. That needs a recording. (Pointed out by a blind second reading of the C, checked against the code.) **Correction for `OUTSIDE_SOURCES.md`'s Haunt table:** the Lil' Haunt
 shoots within **200 px**, not 63, so the suggested "70 px berth" won't stop its shots. A berth of more than 200 px
 does, or keep `how: change_direction` for the led shot.
 
@@ -165,7 +167,13 @@ For `261.0`, once one recording confirms them:
   extractor tries (`event_names_tried`). Add `"Slide"` (and in general, the event strings the AI code passes to its
   event check) so the dash moment gets a frame number.
 
-## What to record to confirm it (`record|1`, one Dingle fight, ideally also one champion)
+## What to record to confirm it (`record|1`)
+
+**Haunt (one fight):** shots that hit the Haunt while `State` is 4 or 16 should do **no damage** (its health stays the
+same). `ai_haunt` doesn't show this, so only a recording can confirm the invulnerable phase. Also check the Lil' Haunt
+shot range: no shots from more than 200 px.
+
+**Dingle (one fight, ideally also one champion):**
 
 - `State` sequence: only 3, 11, 4, 16, 10, 9, 8 should appear; 11 → 4 (x3) → 16 → 3; 10 → 8 → 3; 9 → 8 → 3.
 - `StateFrame` when each attack starts from IDLE: **never 30 or less**.
