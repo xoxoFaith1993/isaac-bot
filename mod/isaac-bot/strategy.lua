@@ -62,7 +62,8 @@ end
 
 function Strategy.update(p)
   local f = Game():GetFrameCount()
-  if Strategy.profile and f - Strategy.lastProfile < 90 then return Strategy.profile end
+  -- (math.abs: a new run restarts the frame counter; it kept the OLD run's profile, 2026-11-26)
+  if Strategy.profile and math.abs(f - Strategy.lastProfile) < 90 then return Strategy.profile end
   Strategy.lastProfile = f
   local ok, prof = pcall(Strategy.makeProfile, p)
   if ok then Strategy.profile = prof end
@@ -167,7 +168,7 @@ end
 -- layer is relaxed (healthy, nothing at stake) and the room is clear.
 function Strategy.wantPocket(p, ctx)
   local f = Game():GetFrameCount()
-  if f - lastPocket < 45 then return false end
+  if math.abs(f - lastPocket) < 45 then return false end -- (abs: survives the frame counter restarting in a new run)
   local card = p:GetCard(0)
   if card and card > 0 then
     if useFits(Strategy.cards[card], ctx) then lastPocket = f; return true end

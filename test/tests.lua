@@ -778,6 +778,28 @@ run("Gemini's cord balls aren't enemies, even at a reused address", function()
         fmt("%d balls counted, bot sees %s enemies", counted, tostring(Reflex.nEnemies)))
 end)
 
+-- 48. 1.2.30 (the author: Monstro "always shoots at the bottom right... when really it could be aiming at Monstro"):
+-- a new run restarts the game's frame counter; the planner must not freeze on a plan from the old run
+run("re-plans after a new run restarts the frame counter", function()
+  Mock.room(nil, { clear = false, player = Mock.tile(2, 4) })
+  local old = Mock.enemy(EntityType.ENTITY_GAPER, 0, Mock.tile(12, 6), { hp = 20 })
+  Reflex.plan.at = -999
+  Reflex.update(Isaac.GetPlayer())
+  local hadPlan = Reflex.plan.target == old
+  -- died: a new run, frame counter back near 0, a boss somewhere else
+  Mock.room(nil, { clear = false, player = Mock.tile(11, 4) })
+  Mock.setFrame(40)
+  local boss = Mock.enemy(20, 0, Mock.tile(4, 2), { hp = 250, boss = true })
+  for _ = 1, 20 do
+    local move = Reflex.update(Isaac.GetPlayer())
+    Mock.step(move)
+  end
+  local t = Reflex.plan.target
+  check("re-plans after a new run restarts the frame counter", hadPlan and t == boss,
+        fmt("first plan on the old enemy: %s, now planning on: %s", tostring(hadPlan),
+            t == boss and "the boss" or (t == old and "the OLD room's enemy" or tostring(t))))
+end)
+
 run("doesn't cross spikes for a penny", function()
   Mock.room({
     "WWWWWWWDWWWWWWW",

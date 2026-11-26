@@ -5,6 +5,10 @@
 -- `find` is plain text (not a pattern); \n = line break (Windows line endings are ignored).
 
 return {
+  { test = "re-plans after a new run restarts", why = "forgetting the timers when the frame counter goes back",
+    patches = { { file = "reflex", find = "if Reflex.lastFrameSeen and fNow0 < Reflex.lastFrameSeen then",
+                  replace = "if false then" } } },
+
   { test = "Gemini's cord balls aren't enemies", why = "the cord rule and the seed check (stale 'seen solid' memory)",
     patches = { { file = "reflex", find = "if e.Parent ~= nil and not e:IsVulnerableEnemy() then return false end",
                   replace = "" },

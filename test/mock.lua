@@ -300,6 +300,9 @@ local soloRoom = 1000 -- single-room tests each get their own room number (the b
 -- A fresh world: rows = grid letters (default: an empty 1x1 room), player at a tile.
 -- opts: clear, player, roomIdx, type (room type), doors = { [slot] = { to = room, type = t, locked = true } },
 --       keepFloor (used by Mock.enter: stay on the same floor; otherwise every call is a brand-new floor)
+-- a new run: the game's frame counter starts again from 0 (tests: timers must survive it)
+function Mock.setFrame(n) W.frame = n end
+
 function Mock.room(rows, opts)
   opts = opts or {}
   -- a new test jumps 1000 updates ahead (stale timers run out); walking into the next room is just 1 update

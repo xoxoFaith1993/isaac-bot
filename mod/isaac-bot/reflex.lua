@@ -594,7 +594,7 @@ local function planFire(player, room, w, targets, prefDist)
       if (e.Position - plan.cellPos):Length() < e.Size + clear * 0.8 then plan.at = -999; break end
     end
   end
-  if f - plan.at < 15 then return end
+  if math.abs(f - plan.at) < 15 then return end -- (abs: see the frame-counter note in Reflex.update)
   plan.at = f
   local oldTarget, oldIdx = plan.target, plan.cell and plan.cell.idx
   plan.target, plan.cell, plan.cellPos, plan.path = nil, nil, nil, nil
@@ -1401,6 +1401,18 @@ function Reflex.update(player)
   local S = Reflex.S
   local st = Reflex.status
   local room = Game():GetRoom()
+  -- The game's frame counter starts again from 0 in a new run. Every "until frame N" / "last done at frame N" timer
+  -- then sat in the future: the firing planner (re-plans when 15 frames have passed since plan.at) never ran again,
+  -- and the bot kept a plan from an earlier, bigger room - a firing spot outside this room. On the bench, after the
+  -- first death every fight was played with that frozen plan (the author, 2026-11-26: Monstro "always shoots at the
+  -- bottom right... when really it could be aiming its tears at Monstro"). Time going backwards = forget the timers.
+  local fNow0 = Game():GetFrameCount()
+  if Reflex.lastFrameSeen and fNow0 < Reflex.lastFrameSeen then
+    plan.at, plan.target, plan.cell, plan.cellPos, plan.path = -999, nil, nil, nil, nil
+    plan.banned, plan.forced, plan.forcedTarget = {}, nil, nil
+    Mover.lastFrame, Mover.lastMove = nil, nil
+  end
+  Reflex.lastFrameSeen = fNow0
   Danger.build(player)
   Tells.timing = (S.tell_timing ~= 0)
   Reflex.spectral = hasSpectral(player)
@@ -1647,7 +1659,7 @@ function Reflex.update(player)
   local wayPos = plan.target and waypoint(room, player) or nil
   -- dodging in a cleared room: keep walking where the walker was going (its next step and goal), not stand around
   local navSpot = nil
-  if st.dodgeOnly and IsaacBotNavAim and Game():GetFrameCount() - IsaacBotNavAim.f < 45 then
+  if st.dodgeOnly and IsaacBotNavAim and math.abs(Game():GetFrameCount() - IsaacBotNavAim.f) < 45 then
     wayPos, navSpot = IsaacBotNavAim.pos, IsaacBotNavAim.final
   end
   -- Buttons (the author, 2026-11-25: a room of pressure plates guarded by invulnerable shooting heads; it fought the

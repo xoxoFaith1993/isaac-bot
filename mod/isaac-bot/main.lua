@@ -23,7 +23,7 @@ local Options = include("options")
 -- handed to the watchdog so it can build the brain's multiple-choice menu
 local MODS = { Reflex = Reflex, Nav = Nav, Danger = Danger, Options = Options, Rescue = Rescue, json = json }
 
-local VERSION = "1.2.29"
+local VERSION = "1.2.30"
 Reflex.status.mode = "full" -- fight + walk + explore (Stage 3); "combat" = fights only, "off" = hands off
 local TAG = "IBOT|"
 local BOT_SLOT = 2
@@ -514,7 +514,9 @@ local function wantActive(p)
   local id = p:GetActiveItem(ActiveSlot and ActiveSlot.SLOT_PRIMARY or 0)
   if not id or id <= 0 or NEVER_ACTIVE[id] then return false end
   local f = Game():GetFrameCount()
-  if f - lastActiveUse < 30 then return false end
+  -- (math.abs: a new run restarts the frame counter; "f - last" went negative and blocked the active item for a whole
+  -- run after a death, 2026-11-26)
+  if math.abs(f - lastActiveUse) < 30 then return false end
   local cfg = Isaac.GetItemConfig():GetCollectible(id)
   if not cfg or cfg.MaxCharges <= 0 then return false end
   if p:GetActiveCharge() + p:GetBatteryCharge() < cfg.MaxCharges then return false end

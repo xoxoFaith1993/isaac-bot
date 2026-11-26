@@ -166,7 +166,7 @@ local function edgeDead(a, b)
   -- weak evidence (it was busy, e.g. fighting an unkillable statue) expires after a minute; a locked door doesn't
   local soft = d.why ~= "locked, no key" and not tostring(d.why):find("rocks in the way")
   if p:GetNumKeys() > d.keys or p:GetNumBombs() > d.bombs or p:GetHearts() + p:GetSoulHearts() > d.hp
-     or (soft and d.f and Game():GetFrameCount() - d.f > 30 * 60) then
+     or (soft and d.f and math.abs(Game():GetFrameCount() - d.f) > 30 * 60) then
     deadEdge[a .. ">" .. b] = nil
     return false
   end
@@ -763,7 +763,7 @@ end
 -- Returns move, bombNow, finished
 local function driveBomb(room, player, g, f)
   if g.placed then
-    if f - g.placed < 80 then return nil, false, false end
+    if math.abs(f - g.placed) < 80 then return nil, false, false end -- (abs: frame counter restarts in a new run)
     if g.secret then
       secretTried[g.secret.cell] = true
       secretCount = secretCount + 1
