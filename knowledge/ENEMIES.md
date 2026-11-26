@@ -33,7 +33,8 @@ enemy starts with known behaviour, and learning (tells, motion, hit reviews) onl
   2. `tools\wiki_bestiary.py` saves the wiki's monster/boss pages to `wiki_bestiary.json`.
   3. `tools\tag_bestiary.py` has the local AI make `playbook_draft.json`.
   4. Hand corrections go in `playbook_review.json`.
-  5. The builder script merges everything: hand table > review > draft.
+  5. The first merge was: hand table > review > draft. The merged JSON is now edited by hand (see "Rebuilding"), so
+     bring new drafts in by hand and never overwrite `reviewed` entries.
   - The first three outputs and `playbook_game.json` are local only (game data and CC BY-SA wiki text). The merged
     playbook holds only derived tags.
 - **Coverage:** every enemy cause in `hits.jsonl` has an entry. Non-enemy causes (spikes, own bombs, projectiles,
@@ -168,5 +169,5 @@ they're gauntlet staples.
   and TNT).
 - **Exact frames.** Shoot, jump and land frames come from the game's anm2 files (the main session's work). This
   file only says which behaviour to expect.
-- **Rebuilding.** The generator that builds the JSON (with a vocabulary check and an enums check) is in the shared
-  session notes folder as `build_playbook.py`. Edit its table and rerun it rather than hand-editing the JSON.
+- **Rebuilding.** `enemy_playbook.json` is the source: edit it by hand. The generator that first built it is not part
+  of this repo and must not be rerun, because it would overwrite hand corrections.
