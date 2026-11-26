@@ -1770,3 +1770,82 @@ get the fire-mode tail. Push values are per update before friction.
 - Mr. Mine lunge 14 within 130 px; Mom's Hand slam timing.
 - Mobile Host 3-spread at 8.4 / 7.6; Faceless ring at 7-8.
 - Fistula split counts and drift speeds.
+
+## Batch G2 (2026-11-26): floors 3-6 bosses (Chub, Peep, Loki, Mask of Infamy, Mom)
+
+**Readers:** two blind Sonnet readers over all five functions; they agreed on every number below. Pestilence (E3b),
+Gurdy Jr. (E1) and The Hollow (G1a) were already read. Per-update odds are the code's rolls; push and friction values
+are the code's, so top speeds are estimates. Variant and subtype numbers are the code's.
+
+### Chub (28.0), C.H.A.D. (28.1), Carrion Queen (28.2), `0x47e740`
+- **Walk:** random axis runs, push 1.5, friction 0.8 (28.0 subtype 1: 0.75, subtype 2: 0.86). `[move · G2 0x47e740 · 2 readers]`
+- **Charge:** more than 50 updates since the last one, and Isaac's position + 0-16 updates of lead **within 20 px of
+  the head's row or column** on a clear line. No range limit, no random roll. Push 3.7 per update, friction 0.72
+  (estimate 10-13 px/update), **until a wall**, with no pause after. `[attack · G2 0x47e740 · 2 readers]`
+- **Rear spawn:** 1% per update (28.0/28.1 also need fewer than 5 of a counted kind). The tail drops it about 10
+  updates later. 28.0: Charger (subtype 1: Boil; subtype 2: type 31); C.H.A.D.: Sucker; non-Boils come in twos 1/3 of
+  the time. `[attack · G2 0x47e740 · 2 readers]`
+- **Carrion Queen:** only the tail takes outside damage; drops red poop (max 5). Subtype 0 under 30% HP: no charge or
+  poop, diagonal bouncing at push 2 per axis. `[body · G2 0x47e740 · 2 readers]`
+- Three segments share one HP pool. A swallowed bomb explodes after about 37 updates (a Matriarch's Chub spits it back
+  at 20). `[body · G2 0x47e740 · 2 readers]`
+
+### Peep (68.0), The Bloat (68.1), `0x481c30`
+- **Jump** (about 4% per update): velocity = 0.033 × the offset to Isaac's current position (no lead). No contact and
+  no hits while airborne. `[move · G2 0x481c30 · 2 readers]`
+- **Landing:** Peep, a 12-shot ring at 10 or 12. Bloat, 10 creep puddles within 100 px, plus a fixed 8-way (subtype 0)
+  or 3 exploding lobs, one aimed. `[attack · G2 0x481c30 · 2 readers]`
+- **Ring** (about 2.5% per update): Peep 8 shots; Bloat a fixed 8-way (subtype 0) or 2 random lobs.
+  `[attack · G2 0x481c30 · 2 readers]`
+- **Creep spray** (about 2.5% per update): creep around the body; Bloat subtype 1 also spawns 2 Chargers. Peep subtype
+  1 leaves creep every 13 updates. `[attack · G2 0x481c30 · 2 readers]`
+- **Bloat's brimstone, no random roll:** down beams when Isaac is below and |x − (his x + 10 updates)| < 40 (two
+  columns at ± 15, 40 updates); side beams when |y − 40 − (his y + 10 updates)| < 20. Down has priority.
+  `[attack · G2 0x481c30 · 2 readers]`
+- **Eyes:** invincible diagonal bouncers that don't shoot. Peep releases one below 2/3 HP and one below 1/3; Bloat and
+  Peep subtype 2 release both at once. `[body · G2 0x481c30 · 2 readers]`
+
+### Loki (69.0), Lokii (69.1), `0x46b5e0`
+- Slow random drift, friction 0.8. Rolls per update, in this order: `[move · G2 0x46b5e0 · 2 readers]`
+- **Teleport:** 1/40, **only if Isaac is within 300 px**. Lands at least 200 px from him, and not within 20 px of his
+  row or column unless 400+ px away. `[move · G2 0x46b5e0 · 2 readers]`
+- **8-way ring:** 1/140, fixed directions, speed 12. `[attack · G2 0x46b5e0 · 2 readers]`
+- **Cross:** 1/100, three volleys of 4: **+, then ×, then +**, speed 12, fixed directions, never aimed.
+  `[attack · G2 0x46b5e0 · 2 readers]`
+- **Flies:** 1/70 while the room count is under 3-5: Boom Fly (Lokii: red Boom Fly, and only 1/3 of those rolls).
+  `[attack · G2 0x46b5e0 · 2 readers]`
+
+### Mask of Infamy (97), `0x465f10`
+- **Invincible while its Heart (98) lives.** After that: vulnerable, wander push 0.85 → 1.5 for good.
+  `[body · G2 0x465f10 · 2 readers]`
+- **Charge:** checked 1 update in 4: Isaac (0-16 updates of lead) within 20 px of its row or column, under 200 px, a
+  mostly clear path. Push 2.0, friction 0.82 (about 11 px/update), until a wall. `[attack · G2 0x465f10 · 2 readers]`
+- **Pain dash:** each time the Heart takes damage, 50% to dash toward Isaac's axis at once (push 1.6, about 9), with no
+  range or alignment check. `[attack · G2 0x465f10 · 2 readers]`
+- No shots, no summons. The Heart's own AI is not in this function (unread). `[attack · G2 0x465f10 · 2 readers]`
+
+### Mom (45), `0x4d7aa0`
+- **Stomp:** at Isaac's position when triggered, no lead; the foot only hurts and can only be hurt while down. Roll
+  1/40 per update, then 1/3 (subtype 2: 1/15, always). Cooldown 80 (subtype 2: 50). **No stomp while Isaac is within
+  70 px of a door** (after room frame 60). `[attack · G2 0x4d7aa0 · 2 readers]`
+- **Subtype 3 (Mausoleum):** a triple stomp that re-targets Isaac between hits, the last adding 4 directional effects;
+  cooldown 180. `[attack · G2 0x4d7aa0 · 2 readers]`
+- **Hand grab:** checked 1 update in 4, 1/8: Isaac (+ 10 updates of lead) within 46 px sideways and 90 px out from a
+  door. Never in subtype 3. `[attack · G2 0x4d7aa0 · 2 readers]`
+- **Door eyes:** at most 2 at a time (subtype 2: 1). Subtype 2's eye shoots a 3-spread aimed at Isaac (12, sides 10.8
+  at ± 16°); subtype 3's fires lasers (the `EyeLaser` branch; sweep and duration unread).
+  `[attack · G2 0x4d7aa0 · 2 readers]`
+- Doors are only hittable while open; all parts share one HP pool. Door enemy summons never happen in subtype 2, not
+  during the foot cooldown, own cooldown 100. `[body · G2 0x4d7aa0 · 2 readers]`
+- Unread: animation event frames, door positions, spawn tables, stomp radius.
+
+### Bot meaning (G2)
+- **Chub family, Mask of Infamy:** standing within 20 px of its row or column invites the charge.
+- **Peep / Bloat:** the jump aims at where you are: keep moving. Bloat: don't line up below or beside it.
+- **Loki:** stand off the 8 lines (rows, columns, diagonals); every shot is fixed-angle.
+- **Mom:** standing near a door stops the stomp but risks the hand; leave the spot as soon as a stomp triggers.
+
+### Record to confirm (G2)
+- Chub charge speed and the 20 px gate; Peep ring speed (10 or 12) and jump distance factor.
+- Loki shots at 12 and the +, ×, + order; teleport only within 300 px.
+- Mask charge speed; Mom no-stomp near doors and eye shot speeds.
