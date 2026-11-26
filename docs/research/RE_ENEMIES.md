@@ -638,8 +638,8 @@ entities can spawn or morph into 11.0 / 11.1 (Gusher / Pacer, line 226); the exa
 ### Bot meaning
 - A Gaper heads straight at Isaac whenever there's a clear line within 70 px, otherwise along the grid path: it
   **never stops chasing**.
-- Its speed factor is under half of Isaac's (`RE_CORE.md`: Isaac's accel is 0.6 × k per step against the
-  pathfinder's 2 × 0.6), so kiting works.
+- Its speed factors (0.5-0.72) are small, but their px/update top speed isn't derived here: it depends on the
+  pathfinder's friction handling. Measure it before assuming kiting is safe.
 - 10.0 speeds up (0.72) once angry.
 
 **Review:**
