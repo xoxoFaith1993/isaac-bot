@@ -111,3 +111,4 @@ the author can move an item up.
   3 Mr. Maw head 35.1 contact hits did 1. The rest isn't in the logs yet. F2 is running; G1-G4 after it.
 - 2026-11-26: F2 done (f755a66): charge weapons, tear period fireDelay+1, flight = grid class 0-3, piercing/spectral. Not checked against recordings. G1a is in its second read.
 - 2026-11-26: G1a done (294a96c; RE_ENEMIES.md Batch G1a). Not checked against recordings. G1b-G4 handover in runs/research/re/HANDOVER.md; the Ghidra session proposed a fresh Sonnet session (waits on the author).
+- 2026-11-26: G1b done (0b191c0; Record-to-confirm list in RE_ENEMIES.md), by the fresh Sonnet decompile session. Not checked against recordings. G2-G4 follow.
