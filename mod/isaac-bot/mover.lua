@@ -210,6 +210,13 @@ end
 local function aimed(ctx, p, t)
   local tp = ctx.targetAt and ctx.targetAt(t)
   if not tp then return false end
+  -- lead the shot: line up with where the target will be when a tear fired from p ARRIVES, not where it is at t
+  -- (the author, 2026-11-25: "predictive shots on the Haunt need work": lined up with a boss moving ~7 px/update,
+  -- every tear passed behind it)
+  if ctx.tearSpeed and ctx.tearSpeed > 0 then
+    local flight = (tp - p):Length() / ctx.tearSpeed
+    tp = ctx.targetAt(t + flight) or tp
+  end
   local rel = tp - p
   local size = (ctx.target.Size or 10) + 8 + ctx.S.loose_aim * 0.5 -- roughly in line counts (we spray)
   local ok = (math.abs(rel.X) < size or math.abs(rel.Y) < size) and rel:Length() < ctx.range
@@ -416,7 +423,10 @@ local function total(ctx, plan)
   -- the walking goal counts with or without a target (a button to press has none: 2026-11-25 it stood still in a
   -- room of buttons because this pull only applied when there was a target)
   if ctx.wayPos then c = c + (plan.p1 - ctx.wayPos):Length() * S.m_way * (ctx.calm and 1.5 or 1) end
-  if ctx.spot then c = c + (plan.p - ctx.spot):Length() * S.m_way * 0.7 end
+  -- the planner's firing spot. When it's calm (no shots in the air, nothing moving close) COMMIT to it, as the old core
+  -- did (calm_commit): v2's gentle pull lost to the spread-out circles of far-off spiders, and the bot stood in the
+  -- open for minutes while four Sacks kept spawning, never walking to the square below them (2026-11-25).
+  if ctx.spot then c = c + (plan.p - ctx.spot):Length() * S.m_way * 0.7 * (ctx.calm and S.calm_commit or 1) end
   return c
 end
 
@@ -488,9 +498,13 @@ function Mover.choose(ctx)
     local tgt = ctx.target
     ctx.targetAt = function(t)
       if not tgt.Position then return nil end
-      local v = tgt.Velocity or Vector(0, 0)
-      return tgt.Position + v * math.min(t, 15)
+      local v = (ctx.leadVel and ctx.leadVel(tgt)) or tgt.Velocity or Vector(0, 0)
+      local q = tgt.Position + v * math.min(t, 30)
+      -- it can't leave the room (fast movers like the Haunt turn at the walls): keep the guess inside
+      if ctx.room.GetClampedPosition then q = ctx.room:GetClampedPosition(q, (tgt.Size or 10)) end
+      return q
     end
+    ctx.tearSpeed = S.tear_speed * math.max(0.5, player.ShotSpeed)
   end
 
   ctx.NEXT = NEXT
@@ -505,7 +519,18 @@ function Mover.choose(ctx)
   local winding = {}
   for _, wu in ipairs(w.windups or {}) do winding[GetPtrHash(wu.e)] = wu.eta end
   for _, e in ipairs(w.shooters or {}) do
-    if e.Position then
+    -- Rows and columns are only dangerous for shooters that fire ALONG them: 4-way crosses (Clotty), lasers, and
+    -- fixed turrets (Stone Grimace). Shooters that aim at Isaac (Boils' bursts, lobbers, spreads, moving single
+    -- shooters) are just as dangerous anywhere, and their row/column is where we must stand to shoot them: costing it
+    -- kept the bot out of every Boil's line in a room of three Boils, and it hardly fired for minutes (2026-11-25).
+    -- Their aimed shots are covered by the "shot coming" line (w.aimed) instead.
+    local pb = ctx.playbookOf and ctx.playbookOf(e)
+    local alongLines = true
+    if pb then
+      local t = pb.tags
+      alongLines = t.shoots_ring or t.laser or (t.shoots_single and (t.invulnerable or t.stationary)) or false
+    end
+    if e.Position and alongLines then
       local h = GetPtrHash(e)
       ctx.lines[#ctx.lines + 1] = { pos = e.Position, half = (e.Size or 13) + 14, eta = winding[h] }
     end

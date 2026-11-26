@@ -23,7 +23,7 @@ local Options = include("options")
 -- handed to the watchdog so it can build the brain's multiple-choice menu
 local MODS = { Reflex = Reflex, Nav = Nav, Danger = Danger, Options = Options, Rescue = Rescue, json = json }
 
-local VERSION = "1.2.9"
+local VERSION = "1.2.11"
 Reflex.status.mode = "full" -- fight + walk + explore (Stage 3); "combat" = fights only, "off" = hands off
 local TAG = "IBOT|"
 local BOT_SLOT = 2
@@ -243,14 +243,19 @@ local function endArena(result, f)
   arena = nil
 end
 
+-- Our tear hit an enemy: counts toward real accuracy (Reflex.acc). Its own callback: the player-hit one below is
+-- registered for the player only, so in 1.2.7-1.2.9 enemy hits never arrived and the log said "0% of N tears hit".
+-- (Tear damage can come through with the tear or the player as its source: both count.)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, function(_, ent, amount, flags, source)
-  if ent.Type ~= EntityType.ENTITY_PLAYER then
-    -- our tear hit an enemy: counts toward real accuracy (Reflex.acc)
-    if source and source.Type == EntityType.ENTITY_TEAR and source.Entity and ent:IsVulnerableEnemy() then
-      pcall(Reflex.tearHit, source.Entity)
-    end
-    return nil
+  if ent.Type == EntityType.ENTITY_PLAYER or not source or not ent:IsVulnerableEnemy() then return nil end
+  if source.Type == EntityType.ENTITY_TEAR or source.Type == EntityType.ENTITY_PLAYER then
+    pcall(Reflex.tearHit, source.Entity, source.Type == EntityType.ENTITY_PLAYER)
   end
+  return nil
+end)
+
+mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, function(_, ent, amount, flags, source)
+  if ent.Type ~= EntityType.ENTITY_PLAYER then return nil end
   local src = source and (tostring(source.Type) .. "." .. tostring(source.Variant)) or "?"
   local p = ent.Position
   -- what actually touched Isaac: the game credits a shot to its shooter ("46.0" for Sloth's shot), so also log the
@@ -668,18 +673,24 @@ end)
 -- Surprise bombs (the author, 2026-11-25: a troll bomb in a trap room took a full heart 3 s after walking in; "is it
 -- RNG or a scripted room?"). Every bomb Isaac didn't drop: variant, who spawned it, updates since entering the room,
 -- and the room layout. A few runs of these lines answer it (PLAN.md "Situations to watch").
-mod:AddCallback(ModCallbacks.MC_POST_BOMB_INIT, function(_, b)
+local function logBomb(b, kind)
   if not botAllowed() then return end
   local sp = b.SpawnerEntity
   if sp and sp.Type == EntityType.ENTITY_PLAYER then return end
   pcall(function()
     local d = Game():GetLevel():GetCurrentRoomDesc()
-    send("bomb", string.format("variant %d|from %s|%d updates after entering|room %s|layout %s", b.Variant,
+    send("bomb", string.format("%s %d|from %s|%d updates after entering|room %s|layout %s", kind,
+      (kind == "pickup") and b.SubType or b.Variant,
       sp and (sp.Type .. "." .. sp.Variant) or "none (room or pickup)",
       Game():GetFrameCount() - (IsaacBotRoomEnter or 0), tostring(Game():GetLevel():GetCurrentRoomIndex()),
       (d and d.Data) and (d.Data.Type .. "." .. d.Data.Variant) or "?"))
   end)
-end)
+end
+mod:AddCallback(ModCallbacks.MC_POST_BOMB_INIT, function(_, b) logBomb(b, "bomb variant") end)
+-- troll bombs also come as PICKUPS that blow up by themselves (the 1.2.8 logger only watched real bombs: saw nothing)
+mod:AddCallback(ModCallbacks.MC_POST_PICKUP_INIT, function(_, pk)
+  if IsaacBotTrollPickup and IsaacBotTrollPickup(pk) then logBomb(pk, "pickup") end
+end, PickupVariant.PICKUP_BOMB)
 
 mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, function()
   local level = Game():GetLevel()

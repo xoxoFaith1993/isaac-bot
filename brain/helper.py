@@ -285,7 +285,9 @@ FLOOR_NAMES = {1: "Basement I", 2: "Basement II", 3: "Caves I", 4: "Caves II", 5
 PLAYBOOK_TAGS = {"charges_on_line", "dashes_at_isaac", "knocked_back_by_tears", "burrows", "flies", "jumps",
                  "invulnerable_until", "invulnerable", "spawns_enemies", "explodes_on_death", "explodes_on_contact",
                  "leaves_creep", "shoots_single", "shoots_spread", "shoots_ring", "shoots_burst", "lobbed", "laser",
-                 "stomp", "hops", "erratic", "splits", "heavy", "tethered"}
+                 "stomp", "hops", "erratic", "splits", "heavy", "tethered",
+                 # movement kinds the movement core reads (chasers home in; stationary turrets fire along lines)
+                 "chases", "wanders", "stationary", "orbits"}
 
 
 def send_playbook(pipe):

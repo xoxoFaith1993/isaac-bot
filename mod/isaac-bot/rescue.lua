@@ -71,7 +71,9 @@ function Rescue.update(p, nav, fighting, send, reflex, M)
     return Vector(0, 0), shoot
   elseif step == "bomb" then
     if first and not fighting then nav.bombNearest(p) end
-    if first and fighting then Rescue.wantSiege = true end
+    -- a siege bomb only makes sense when the target is walled in (no lane from any side); against a boss flying
+    -- around in the open (the Haunt, 2026-11-25) it just dropped a bomb in the middle of the fight
+    if first and fighting and reflex and reflex.status and reflex.status.walled then Rescue.wantSiege = true end
   elseif step == "leave" then
     if first and not fighting then nav.leaveAny(p) end
   elseif step == "report" then

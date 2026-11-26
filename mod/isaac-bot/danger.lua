@@ -82,8 +82,8 @@ function Danger.build(player)
       end
     elseif ty == EntityType.ENTITY_FIREPLACE then
       if e.HitPoints > 1 then mark(st, room:GetGridIndex(e.Position), size, R.danger.fire) end
-    elseif ty == EntityType.ENTITY_BOMB then
-      around(room, dy, e.Position, R.danger.bomb_radius, R.danger.bomb)
+    elseif ty == EntityType.ENTITY_BOMB or (IsaacBotTrollPickup and IsaacBotTrollPickup(e)) then
+      around(room, dy, e.Position, R.danger.bomb_radius, R.danger.bomb) -- live bombs and troll-bomb pickups
     elseif e:IsActiveEnemy(false) and not e:HasEntityFlags(EntityFlag.FLAG_FRIENDLY)
            and (not IsaacBotSolid or IsaacBotSolid(e)) then -- cords/chains never hurt; a mid-jump boss still does
       if cleared then

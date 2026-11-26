@@ -10,6 +10,14 @@
 -- Has this entity EVER had collision? Cord pieces never do (ignore them); a jumping boss only loses it mid-air.
 -- (A global table so danger.lua and eyes.lua share the same memory.)
 IsaacBotSolidSeen = IsaacBotSolidSeen or {}
+
+-- A troll bomb lying as a PICKUP (bomb pickup, troll / super troll / golden troll subtype): it explodes by itself a
+-- moment after it appears, like a lit bomb. Shared with danger.lua and main.lua's bomb logger.
+function IsaacBotTrollPickup(e)
+  if e.Type ~= EntityType.ENTITY_PICKUP or e.Variant ~= PickupVariant.PICKUP_BOMB then return false end
+  local s = e.SubType
+  return s == 3 or s == 5 or s == 6 -- BombSubType.BOMB_TROLL, BOMB_SUPERTROLL, BOMB_GOLDENTROLL
+end
 function IsaacBotSolid(e)
   local h = GetPtrHash(e)
   if e.EntityCollisionClass ~= EntityCollisionClass.ENTCOLL_NONE then IsaacBotSolidSeen[h] = true; return true end
@@ -409,6 +417,7 @@ end
 -- out to ~0 while a steady crawl (Maggots) keeps its speed. Averaging the plain speed made shaking Horfs look
 -- like movers: no firing spot, no shots, timeout (gauntlet 0.9.3).
 local velAvg = {}
+local leadAvg = {}
 -- Homing: how steadily a fast mover keeps pointing at Isaac (average cosine between its heading and the
 -- direction to us, only while it's moving). A straight dash (Dingle's slide, a Trite leap) points at us when
 -- it starts, then we sidestep and it doesn't turn: low. A chaser (Blighted Ovum at 6 px/update) keeps turning
@@ -420,6 +429,9 @@ function Reflex.trackSpeeds(enemies, player)
     local h = GetPtrHash(e)
     seen[h] = true
     velAvg[h] = (velAvg[h] or e.Velocity) * 0.93 + e.Velocity * 0.07
+    -- the velocity to LEAD shots by: starts at zero and settles in ~0.5 s. A steady mover (the Haunt sweeping) gets
+    -- its full lead; a hopper's jumps average out (leading a spider by one hop's speed overshot it)
+    leadAvg[h] = (leadAvg[h] or Vector(0, 0)) * 0.85 + e.Velocity * 0.15
     if player and e.Velocity:Length() > 1.5 then
       local to = player.Position - e.Position
       if to:Length() > 1 then
@@ -428,7 +440,11 @@ function Reflex.trackSpeeds(enemies, player)
       end
     end
   end
-  for h in pairs(velAvg) do if not seen[h] then velAvg[h] = nil; homeAvg[h] = nil end end
+  for h in pairs(velAvg) do if not seen[h] then velAvg[h] = nil; homeAvg[h] = nil; leadAvg[h] = nil end end
+end
+function Reflex.leadVel(e)
+  if not e or e.kind or not e.Velocity then return Vector(0, 0) end
+  return leadAvg[GetPtrHash(e)] or Vector(0, 0)
 end
 function Reflex.homing(e) return homeAvg[GetPtrHash(e)] or 0 end
 function Reflex.avgSpeed(e)
@@ -670,8 +686,10 @@ local function gather(player)
       if e.SpawnerType ~= EntityType.ENTITY_PLAYER and e.SpawnerType ~= EntityType.ENTITY_FAMILIAR then
         w.lasers[#w.lasers + 1] = e:ToLaser()
       end
-    elseif ty == EntityType.ENTITY_BOMB then
-      w.bombs[#w.bombs + 1] = e -- every live bomb is danger, including our own (bots bomb now)
+    elseif ty == EntityType.ENTITY_BOMB or IsaacBotTrollPickup(e) then
+      -- every live bomb is danger, including our own; and troll-bomb PICKUPS, which blow up by themselves (the
+      -- author, 2026-11-25: "it stood on top of a troll bomb without moving": it only knew real bomb entities)
+      w.bombs[#w.bombs + 1] = e
     elseif ty == EntityType.ENTITY_FIREPLACE then
       -- lit fires burn on touch (and red/purple ones shoot); the batch review caught 3 hits from them
       if e.HitPoints > 1 then w.enemies[#w.enemies + 1] = e end
@@ -1106,12 +1124,13 @@ end
 -- Real accuracy (the author, 2026-11-25: "it feels like it's just shooting randomly"): tears fired vs tears that
 -- hit an enemy (main.lua counts the hits). Reported as an `aim` line.
 Reflex.acc = { fired = 0, hit = 0, hitTears = {} }
-function Reflex.tearHit(tear)
-  if not tear then return end
-  local h = GetPtrHash(tear)
-  if Reflex.acc.hitTears[h] then return end -- piercing tears count once
-  Reflex.acc.hitTears[h] = true
-  Reflex.acc.hit = Reflex.acc.hit + 1
+function Reflex.tearHit(tear, viaPlayer)
+  if tear and not viaPlayer then
+    local h = GetPtrHash(tear)
+    if Reflex.acc.hitTears[h] then return end -- piercing tears count once
+    Reflex.acc.hitTears[h] = true
+  end
+  Reflex.acc.hit = math.min(Reflex.acc.fired, Reflex.acc.hit + 1)
 end
 function Reflex.accReport()
   local a = Reflex.acc
@@ -1404,7 +1423,8 @@ function Reflex.update(player)
   local ledPos = nil
   if target then
     local tt = (target.Position - player.Position):Length() / (S.tear_speed * math.max(0.5, player.ShotSpeed))
-    ledPos = target.Position + (target.Velocity or Vector.Zero) * math.min(tt, 20)
+    ledPos = target.Position + Reflex.leadVel(target) * math.min(tt, 30)
+    pcall(function() ledPos = room:GetClampedPosition(ledPos, target.Size or 10) end) -- it turns at the walls
   end
   w.ledPos = ledPos
   -- calm = nothing in the air and nobody close: safe to commit to walking to the firing spot
@@ -1433,7 +1453,7 @@ function Reflex.update(player)
     local okM, mi, mc = pcall(Mover.choose, { S = S, w = w, room = room, player = player, speed = speed, DIRS = DIRS,
       target = target, prefDist = prefDist, wayPos = wayPos, spot = plateSpot or navSpot or (plan.target and plan.cellPos) or nil, calm = calm, blocked = blocked, creepAt = creepAt,
       bounce = function(pos, r) return bounced(w, pos, r) end, lane = Reflex.lane, segDist = segDist,
-      laserEnd = laserEnd, playbookOf = playbookOf, tacticsOf = Reflex.tacticsOf })
+      laserEnd = laserEnd, playbookOf = playbookOf, tacticsOf = Reflex.tacticsOf, leadVel = Reflex.leadVel })
     Reflex.prof.move = Reflex.prof.move + (Isaac.GetTime() - tMove0)
     if okM and mi then best, bestCost, usedV2 = mi, mc, true; Reflex.v2err = nil
     else Reflex.v2err = tostring(mi) end -- falls back to the old core this update; main.lua reports it
@@ -1547,7 +1567,13 @@ function Reflex.update(player)
   -- All 4 directions, lane from Isaac's real position (offline test K2: in a one-tile corridor the chosen axis
   -- pointed into rock, so a spider roughly in line to the right never got a tear).
   if shoot and not lands and not curved and st.target and not st.target.kind and S.loose_aim > 0 then
-    local rel = st.target.Position - player.Position
+    -- where it will be when the tear gets there (a fast boss is long gone from where it is now)
+    local tpos = st.target.Position
+    if st.target.Velocity then
+      local tt = (tpos - player.Position):Length() / (S.tear_speed * math.max(0.5, player.ShotSpeed))
+      tpos = tpos + Reflex.leadVel(st.target) * math.min(tt, 30)
+    end
+    local rel = tpos - player.Position
     for _, sd in ipairs({ shoot, "left", "right", "up", "down" }) do
       local dir = ({ left = Vector(-1, 0), right = Vector(1, 0), up = Vector(0, -1), down = Vector(0, 1) })[sd]
       local along = rel:Dot(dir)

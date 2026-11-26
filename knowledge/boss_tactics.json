@@ -12,7 +12,9 @@
     "avoid_diagonals": "true = never stand on its 45-degree diagonals (X-pattern attacks).",
     "stay_diagonal": "true = prefer spots diagonal to it (off both row and column).",
     "avoid_corners": "true = don't fight from a corner (bounces, dashes or slams pin Isaac there).",
-    "room_zone": "where to fight: any | open (most free space around Isaac) | center (circle the room centre) | bottom_half (stay below the room's middle row) | far_side (opposite half from the boss).",
+    "room_zone": "where to fight: any | open (most free space around Isaac) | center (circle the room centre) | edges (run a big loop just inside the walls, cutting the corners) | bottom_half (stay below the room's middle row) | far_side (opposite half from the boss).",
+    "vary_loop": "true = don't run the same loop twice in a row (the boss leaves a creep trail that is still there when Isaac comes round again).",
+    "move_pattern": "circle = move in a steady circle that never doubles back (lobbed shots land behind Isaac).",
     "attack_windows": "animation names during which it is safe to stand and shoot, or 'always'. Names marked in anims_logged were seen by the bot (tells.dat); others are descriptions until tells.lua logs the real names.",
     "dodge": "list of {attack, tell, tell_anim (list of animation names, or null if unknown), fires (animation the shots/charge come out in), shots_at_frame, shots, how, notes}.",
     "how": "sideways = step 90 degrees off the attack's line | away = add distance | diagonal = get off its row and column | behind_rocks = put an obstacle between | keep_moving = never stop (aimed at where Isaac is / lands on him) | no_reverse = keep going the same way (shot lands where Isaac was; doubling back walks into it) | change_direction = turn or stop (shot is led at where Isaac will be if he keeps going) | off_creep = leave and avoid creep.",
@@ -62,9 +64,9 @@
       "on_death": "none",
       "champions": "Black: 8-shot ring instead of 3 (stand off its rows, columns and diagonals), spiders instead of Dips, one very fast dash. Red: 4 shorter, slower dashes, red poop instead of Dips.",
       "anims_logged": ["Appear", "Idle", "Dance", "Whistle", "Spit", "BeforeSlide", "Slide", "Tired"],
-      "notes": "Stationary except for dashes, so shoot it from range while it Idles; Tired after the dashes is the free window. Dashes knock Dips around and can leave a Poop that blocks shots. The bot's lack of a fixed firing spot for dashers (reflex.lua) is right for this boss.",
-      "confidence": "wiki + logs; tell timing from logs",
-      "sources": ["wiki:Dingle", "guide:bamboogaming-dingle (search summary)", "bot:tells.dat"]
+      "notes": "Stationary except for dashes, so shoot it from range while it Idles; Tired after the dashes is the free window (both guides agree). Keep a turning lane open before the dashes and sidestep the spread from far enough to see its gaps. Clear Dips only when they crowd the route. Dashes knock Dips around and can leave a Poop that blocks shots. The bot's lack of a fixed firing spot for dashers (reflex.lua) is right for this boss.",
+      "confidence": "wiki + guides + logs; tell timing from logs",
+      "sources": ["wiki:Dingle", "guide:bamboogaming-dingle", "guide:gamerevolution-part1", "bot:tells.dat"]
     },
     "261.1": {
       "name": "Dangle",
@@ -96,10 +98,10 @@
       "pref_dist": 180,
       "avoid_row_col": false,
       "avoid_corners": true,
-      "room_zone": "center",
+      "room_zone": "edges",
       "attack_windows": ["Pant", "always"],
       "dodge": [
-        {"attack": "chase + speed-up charge", "tell": "keeps speeding up in WalkHori/WalkVert, ends in Pant", "tell_anim": null, "fires": "WalkHori", "shots": "contact", "how": "sideways", "notes": "Circle the room centre at 180+ px; when it speeds up, cut 90 degrees across its path instead of running ahead of it. Pant (catching breath) follows the charge: shoot then."}
+        {"attack": "chase + speed-up charge", "tell": "keeps speeding up in WalkHori/WalkVert, ends in Pant", "tell_anim": null, "fires": "WalkHori", "shots": "contact", "how": "sideways", "notes": "Run a big loop round the edges of the room (the guide's advice) at 180+ px, shooting back at it; when it speeds up, cut 90 degrees across its path instead of running ahead of it. Pant (catching breath) follows the charge: shoot then."}
       ],
       "adds": "ignore",
       "target_order": ["79.10", "79.0"],
@@ -109,9 +111,9 @@
       "on_death": "none",
       "champions": "Blue: Suture fires homing shots (behind_rocks, keep_moving). Green: the twins start apart.",
       "anims_logged": ["Appear", "WalkHori", "WalkVert", "Pant", "Walk01", "Attack01", "Rage", "Walk02"],
-      "notes": "Type 79 animations are logged together for both twins: WalkHori/WalkVert/Pant look like Contusion, Walk01/Attack01 like attached Suture, Rage -> Walk02 like Suture detaching. Never fight it from a corner: it chases into you and Suture swings around it.",
-      "confidence": "wiki + logs; kill order from the wiki's phase rule",
-      "sources": ["wiki:Gemini", "bot:tells.dat", "bot:bench_rooms.json"]
+      "notes": "Type 79 animations are logged together for both twins: WalkHori/WalkVert/Pant look like Contusion, Walk01/Attack01 like attached Suture, Rage -> Walk02 like Suture detaching. Never fight it from a corner: it chases into you and Suture swings around it. The guide also says kill the small one first: otherwise it follows Isaac at high speed and is hard to avoid.",
+      "confidence": "wiki + guide + logs",
+      "sources": ["wiki:Gemini", "guide:gamerevolution-part1", "bot:tells.dat", "bot:bench_rooms.json"]
     },
     "79.10": {
       "name": "Gemini: Suture (small twin)",
@@ -121,7 +123,7 @@
       "hp": 140,
       "pref_dist": 150,
       "avoid_corners": true,
-      "room_zone": "center",
+      "room_zone": "edges",
       "attack_windows": ["always"],
       "dodge": [
         {"attack": "aimed shot (while attached)", "tell": "Attack01", "tell_anim": ["Attack01"], "fires": "Attack01", "shots_at_frame": 17, "shots": "1 projectile at Isaac; blocked by obstacles", "how": "sideways", "notes": "17 frames of warning: sidestep as Attack01 starts. A rock between Isaac and Suture blocks it (behind_rocks)."},
@@ -176,18 +178,19 @@
       "hp": 140,
       "pref_dist": 180,
       "avoid_corners": true,
-      "room_zone": "center",
+      "room_zone": "edges",
+      "vary_loop": true,
       "attack_windows": ["always"],
       "dodge": [
-        {"attack": "chase + charge", "tell": "speeds up (no breather in this version)", "tell_anim": null, "fires": null, "shots": "contact; leaves a red creep trail", "how": "sideways", "notes": "Its trail is red creep (1000.22): don't circle back over its own path."}
+        {"attack": "chase + charge", "tell": "speeds up (no breather in this version)", "tell_anim": null, "fires": null, "shots": "contact; leaves a red creep trail (a whole heart)", "how": "sideways", "notes": "Its trail is red creep (1000.22) that lasts just long enough to still be there after one lap of the room: never run the same loop twice; switch between a wide and a tight loop or reverse the loop direction."}
       ],
       "adds": "ignore",
       "target_order": ["79.2"],
       "never_aim": ["79.12"],
       "phase_change": "none; killing Contusion kills the ghost Suture too.",
-      "notes": "Only Contusion can be hurt. The danger is the ghost Suture's horizontal beam (see 79.12): never be level with it.",
-      "confidence": "wiki",
-      "sources": ["wiki:Blighted_Ovum"]
+      "notes": "Only Contusion can be hurt (half of Gemini's total HP). The danger is the ghost Suture's horizontal beam (see 79.12): never be level with it. Players single out the creep trail plus the beam as what makes it hard.",
+      "confidence": "wiki + player commentary",
+      "sources": ["wiki:Blighted_Ovum", "tropes:ThatOneBoss"]
     },
     "79.12": {
       "name": "Blighted Ovum: Suture (ghost)",
@@ -220,9 +223,9 @@
       "dodge": [
         {"attack": "contact (phase 1)", "tell": "always", "tell_anim": ["IdleSkin"], "fires": null, "shots": "body and orbiting Lil Haunts hurt on touch even while see-through", "how": "away", "notes": "Keep 160+ px from the Haunt itself in phase 1 and fight the chasing Lil Haunt away from it."},
         {"attack": "phase change rush", "tell": "AngrySkin then Peel", "tell_anim": ["AngrySkin", "Peel"], "fires": "Peel", "shots": "it flies to the upper wall; the move can hit", "how": "away", "notes": "When the last Lil Haunt dies, get out of the line between it and the top wall."},
-        {"attack": "Brimstone straight down", "tell": "IdleNoSkin then LaserNoSkin", "tell_anim": ["IdleNoSkin"], "fires": "LaserNoSkin", "shots": "laser down its column", "how": "sideways", "notes": "2 logged hits came from LaserNoSkin. It slides left/right along the top wall, so its column moves: keep 60+ px sideways from its column whenever it can laser, and don't step under it."},
+        {"attack": "Brimstone straight down", "tell": "IdleNoSkin then LaserNoSkin", "tell_anim": ["IdleNoSkin"], "fires": "LaserNoSkin", "shots": "laser down its column", "how": "sideways", "notes": "2 logged hits came from LaserNoSkin; players say it gives barely a second of warning. It slides left/right along the top wall, so its column moves: keep 60+ px sideways from its column whenever it can laser, and don't step under it."},
         {"attack": "5 blood shots downward spread", "tell": "SpitNoSkin", "tell_anim": ["SpitNoSkin"], "fires": "SpitNoSkin", "shots_at_frame": 3, "shots": "5 shots in a downward fan", "how": "away", "notes": "Gaps widen with distance: being low in the room makes the fan easy."},
-        {"attack": "dash at Isaac", "tell": "Isaac near the upper wall", "tell_anim": ["AngryNoSkin"], "fires": null, "shots": "fast contact dash", "how": "away", "notes": "Only when Isaac is near the top wall: stay in the bottom half."}
+        {"attack": "side dash", "tell": "Isaac beside it near the upper wall", "tell_anim": ["AngryNoSkin"], "fires": null, "shots": "fast contact dash left/right along the top wall", "how": "away", "notes": "Standing beside it avoids the laser and spread but makes it dash sideways at Isaac: never hug the top wall level with it. Stay in the bottom half."}
       ],
       "adds": "kill_first",
       "adds_ids": {"260.10": "kill_first"},
@@ -233,16 +236,16 @@
       "on_death": "none",
       "champions": "Black: 2 Lil Haunts; phase 2 spawns 1-2 spiders instead of the laser. Pink: 1 Lil Haunt; phase 2 has 100 HP, two diagonal lasers that bounce once off walls (avoid_diagonals), 8 aimed shots.",
       "anims_logged": ["IdleSkin", "AngrySkin", "Peel", "IdleNoSkin", "LaserNoSkin", "SpitNoSkin", "AngryNoSkin", "Idle", "Float", "FloatChase", "Shoot"],
-      "notes": "Phase 2 shooting spot: bottom half of the room, offset 60+ px from its column, shooting up and leading it as it slides (it moves into the tears). It can get stuck trying to reach a spot and then stops attacking. Idle/Float/FloatChase/Shoot in the type-260 log are the Lil Haunts.",
-      "confidence": "wiki + logs",
-      "sources": ["wiki:The_Haunt", "wiki:Lil'_Haunt", "guide:bamboogaming-the-haunt (search summary)", "bot:tells.dat", "bot:bench_rooms.json"]
+      "notes": "Phase 2 shooting spot: bottom half of the room, offset 60+ px from its column, shooting up and leading it as it slides (it moves into the tears). One guide says to alternate between its side and its front: step under it to shoot only while it isn't about to laser, then back out to the side (low, not level with it). It is fast once phase 2 starts, so lead the shots. It can get stuck trying to reach a spot and then stops attacking. Idle/Float/FloatChase/Shoot in the type-260 log are the Lil Haunts.",
+      "confidence": "wiki + guides + logs",
+      "sources": ["wiki:The_Haunt", "wiki:Lil'_Haunt", "guide:bamboogaming-the-haunt", "guide:gamerevolution-part1", "tropes:ThatOneBoss", "bot:tells.dat", "bot:bench_rooms.json"]
     },
     "260.10": {
       "name": "Lil Haunt",
       "kind": "boss",
       "part_of": "260.0",
       "hp": 25,
-      "pref_dist": 130,
+      "pref_dist": 150,
       "room_zone": "open",
       "attack_windows": ["always"],
       "dodge": [
@@ -251,9 +254,9 @@
       ],
       "adds": "kill_first",
       "target_order": ["260.10", "260.0"],
-      "notes": "25 HP, dies fast; only the one that left the orbit is worth shooting. The orbiting ones circle the invulnerable Haunt and still hurt on touch.",
-      "confidence": "wiki + logs",
-      "sources": ["wiki:Lil'_Haunt", "wiki:The_Haunt", "bot:tells.dat"]
+      "notes": "25 HP, dies fast; only the one that left the orbit is worth shooting. The orbiting ones circle the invulnerable Haunt and still hurt on touch. Players say they close in and shoot from almost point-blank, leaving no time to dodge: keep 150 px so its led shot has travel time.",
+      "confidence": "wiki + player commentary + logs",
+      "sources": ["wiki:Lil'_Haunt", "wiki:The_Haunt", "tropes:ThatOneBoss", "bot:tells.dat"]
     },
     "237.1": {
       "name": "Gurglings",
@@ -280,8 +283,8 @@
       "champions": "Black: troll bombs instead of creep, no flies. Yellow: three of them, faster, no creep, no flies.",
       "anims_logged": ["Appear", "WalkLeft", "WalkRight", "WalkVert", "ChargeLeft", "ChargeRight", "ChargeUp", "ChargeDown", "Stop"],
       "notes": "After hitting a wall it pauses (Stop) and spawns 0-2 Attack Flies: that pause is the safe time to shoot it. Trick (inferred): at long range, step onto its line and straight back off; it rushes into the wall and stops, giving a free window. An Attack Fly in its path stops the dash. 60 HP each, so the slow bench clear was missed windows, not toughness.",
-      "confidence": "wiki + logs; bait trick inferred",
-      "sources": ["wiki:Gurglings", "bot:tells.dat", "bot:bench_rooms.json"]
+      "confidence": "wiki + guide + logs; bait trick inferred",
+      "sources": ["wiki:Gurglings", "guide:gamerevolution-part1", "bot:tells.dat", "bot:bench_rooms.json"]
     },
     "237.2": {
       "name": "Turdlings",
@@ -313,9 +316,10 @@
       "avoid_row": true,
       "avoid_corners": true,
       "room_zone": "open",
+      "move_pattern": "circle",
       "attack_windows": ["always"],
       "dodge": [
-        {"attack": "Ipecac shot", "tell": "Attack", "tell_anim": ["Attack"], "fires": "Attack", "shots_at_frame": 5, "shots": "1 lobbed explosive (Ipecac) projectile at Isaac's position when fired; hurts where it lands (a whole heart)", "how": "no_reverse", "notes": "This is why the bot saw danger 0 before the hits: the shot is high in the air and only hurts on landing (logged hits came during WalkHori/WalkVert, after the Attack). Keep moving the same way; doubling back walks into the blast. Predict the landing at the spot Isaac stood when Attack fired and stay 60+ px away from it."},
+        {"attack": "Ipecac shot", "tell": "Attack", "tell_anim": ["Attack"], "fires": "Attack", "shots_at_frame": 5, "shots": "1 lobbed explosive (Ipecac) projectile at Isaac's position when fired; hurts where it lands (a whole heart)", "how": "no_reverse", "notes": "This is why the bot saw danger 0 before the hits: the shot is high in the air and only hurts on landing (logged hits came during WalkHori/WalkVert, after the Attack). Move in a steady circle that never doubles back, so every shot lands behind Isaac. Predict the landing at the spot Isaac stood when Attack fired and stay 60+ px away from it."},
         {"attack": "Charger spawn", "tell": "Attack (the other option)", "tell_anim": ["Attack"], "fires": "Attack", "shots": "a Charger that charges horizontally in the direction Sloth faces, then acts as a normal Charger", "how": "sideways", "notes": "Never stand on Sloth's row; then the new Charger misses."}
       ],
       "adds": "kill_close",
@@ -326,9 +330,9 @@
       "on_death": "none",
       "champions": "Super Sloth (floors 3-4): two Ipecac shots and two spiders at a time.",
       "anims_logged": ["Appear", "WalkHori", "WalkVert", "Attack"],
-      "notes": "Its body is slow; the shot is the danger. Often comes with two Chargers, Splashers or Attack Flies. The wiki strategy is to keep moving in one direction: doubling back to dodge Chargers is what gets players hit by the Ipecac.",
+      "notes": "Its body is slow; the shot is the danger. Often comes with two Chargers, Splashers or Attack Flies; at most 3 of its Chargers at once. Fan wiki strategy: keep moving in one direction, since doubling back to dodge Chargers is what gets players hit by the Ipecac. Trick: its Ipecac blasts break rocks and kill its own Chargers, so a circle that leads the Chargers through the landing spots clears them for free and opens the room. A steady circle also gives predictable moments to shoot.",
       "confidence": "wiki + logs",
-      "sources": ["wiki:Sloth", "wiki-fandom:Sloth (search summary)", "bot:tells.dat", "bot:bench_rooms.json"]
+      "sources": ["wiki:Sloth", "fandom:Sloth", "bot:tells.dat", "bot:bench_rooms.json"]
     },
     "264.0": {
       "name": "Mega Fatty",
@@ -344,7 +348,7 @@
         {"attack": "off-screen leap", "tell": "Jumping", "tell_anim": ["Jumping"], "fires": "Landing", "shots": "lands on Isaac's position, big red creep puddle", "how": "keep_moving", "notes": "Move as Jumping starts and keep going until Landing; then stay off the puddle (off_creep)."},
         {"attack": "short slide + hop", "tell": "slides toward Isaac", "tell_anim": null, "fires": null, "shots": "contact and creep", "how": "sideways", "notes": ""},
         {"attack": "inhale", "tell": "Sucking", "tell_anim": ["Sucking"], "fires": "Sucking", "shots": "pulls Isaac and nearby enemies toward him", "how": "away", "notes": "Walk straight away from him for the whole Sucking animation so the pull doesn't drag Isaac into contact or fart range."},
-        {"attack": "vomit rain", "tell": "Sucking then Puking", "tell_anim": ["Sucking"], "fires": "Puking", "shots_at_frame": 3, "shots": "shots go up and rain down for a while, following Isaac", "how": "keep_moving", "notes": "Never stop during the rain; shots fall where Isaac is heading less than where he is."},
+        {"attack": "vomit rain", "tell": "Sucking then Puking", "tell_anim": ["Sucking"], "fires": "Puking", "shots_at_frame": 3, "shots": "shots go up and rain down for a while, following Isaac", "how": "keep_moving", "notes": "Never stop during the rain. Each falling shot casts a shadow where it will land (the guide's tip): treat each falling projectile's ground position as a no-go spot until it lands."},
         {"attack": "fart", "tell": "Idle then Fart", "tell_anim": ["Idle"], "fires": "Fart", "shots_at_frame": 21, "shots": "hurts close by, then 1-3 Dips or a cluster of shots", "how": "away", "notes": "21 frames of warning. The bench hits came from 85-92 px: keep 170 px."}
       ],
       "adds": "kill_close",
@@ -355,9 +359,9 @@
       "on_death": "none",
       "champions": "Brown: no vomit; long jump sends rock waves. Red: smaller, 6 shots on landing instead of creep, four shot streams instead of the vomit rain.",
       "anims_logged": ["Idle", "Jumping", "Landing", "Sucking", "Puking", "Fart"],
-      "notes": "Not a floor 1-2 boss in Repentance+ (Caves / Flooded Caves), but it's on the bench. 600 HP makes it long: shoot in every window from 170 px.",
-      "confidence": "wiki + logs",
-      "sources": ["wiki:Mega_Fatty", "bot:tells.dat", "bot:bench_rooms.json"]
+      "notes": "Not a floor 1-2 boss in Repentance+ (Caves / Flooded Caves), but it's on the bench. The guide calls the jump the biggest threat because it comes with no warning beyond the Jumping animation; it uses the vomit more often. 600 HP makes it long: shoot in every window from 170 px.",
+      "confidence": "wiki + guide + logs",
+      "sources": ["wiki:Mega_Fatty", "guide:gamerevolution-part1", "bot:tells.dat", "bot:bench_rooms.json"]
     },
     "20.0": {
       "name": "Monstro",
@@ -383,7 +387,7 @@
       "kind": "boss",
       "floors": ["Basement", "Burning Basement"],
       "hp": "22 per segment",
-      "pref_dist": 100,
+      "pref_dist": 160,
       "avoid_corners": true,
       "room_zone": "open",
       "attack_windows": ["always"],
@@ -391,9 +395,9 @@
         {"attack": "body path", "tell": "moves in straight cardinal lines, turning at walls, rocks and poop", "tell_anim": null, "fires": null, "shots": "contact", "how": "sideways", "notes": "Never stand in front of the head on its current line; don't get boxed in by its body and poop."}
       ],
       "adds": "ignore",
-      "notes": "Drops poop as it moves; shooting poop turns it. Long segments can split into a new worm. Piercing tears hit several segments. Green champion: shoots in its facing direction after a pause.",
-      "confidence": "wiki",
-      "sources": ["wiki:Larry_Jr."]
+      "notes": "Drops poop as it moves; shooting poop turns it. Shoot away poop that would box Isaac in. The guide: it only turns aggressive when it sees Isaac head-on, so shoot from across the room and finish one worm at a time. Long segments can split into a new worm. Piercing tears hit several segments. Green champion: shoots in its facing direction after a pause.",
+      "confidence": "wiki + guide",
+      "sources": ["wiki:Larry_Jr.", "guide:gamerevolution-part1"]
     },
     "67.0": {
       "name": "The Duke of Flies",
@@ -407,12 +411,12 @@
       "dodge": [
         {"attack": "fly release", "tell": "5-6 flies orbiting", "tell_anim": null, "fires": null, "shots": "orbiting Attack Flies sent out to chase Isaac", "how": "away", "notes": "Kill flies as they come; keep the fly count low so it never reaches the release."}
       ],
-      "adds": "kill_close",
-      "adds_ids": {"18.0": "kill_close"},
+      "adds": "kill_first",
+      "adds_ids": {"18.0": "kill_first"},
       "on_death": "Releases its orbiters and (Repentance) spawns 6 more flies: keep fighting after the kill.",
-      "notes": "Floats diagonally and bounces off walls (avoid corners). Orbiting flies block shots. Green champion: Moters and 8-way blood shots. Orange: Suckers.",
-      "confidence": "wiki",
-      "sources": ["wiki:The_Duke_of_Flies"]
+      "notes": "Floats diagonally and bounces off walls (avoid corners). Orbiting flies block shots. The guide: kill all the flies first, then shoot the Duke; the danger is losing track of them. Green champion: Moters and 8-way blood shots. Orange: Suckers.",
+      "confidence": "wiki + guide",
+      "sources": ["wiki:The_Duke_of_Flies", "guide:gamerevolution-part1"]
     },
     "99.0": {
       "name": "Gurdy Jr.",
@@ -427,9 +431,9 @@
         {"attack": "charge", "tell": "none (very dangerous up close)", "tell_anim": null, "fires": null, "shots": "fast slide at Isaac, bouncing off walls, then slows to a stop", "how": "sideways", "notes": "Below 50% HP it charges nonstop."},
         {"attack": "jump", "tell": "leaves the ground", "tell_anim": null, "fires": null, "shots": "8 shots in a ring on landing", "how": "away", "notes": ""}
       ],
-      "adds": "kill_close",
-      "adds_ids": {"14.0": "kill_close"},
-      "notes": "The wiki lists it as a chapter 2 boss (the playbook's floors 1-2 tag looks wrong). An active bomb slows its charge a lot.",
+      "adds": "kill_first",
+      "adds_ids": {"14.0": "kill_first"},
+      "notes": "The guide: stay away from it; its charge comes with no warning; kill its spawns before focusing it. The wiki lists it as a chapter 2 boss (the playbook's floors 1-2 tag looks wrong). An active bomb slows its charge a lot.",
       "confidence": "wiki",
       "sources": ["wiki:Gurdy_Jr."]
     },
@@ -467,10 +471,10 @@
       ],
       "adds": "ignore",
       "invulnerable_while": ["underground"],
-      "notes": "Every segment can be hurt. It can't cross gaps. Grey champion (Repentance): bigger, 6-shot spiral burst.",
+      "notes": "Every segment can be hurt. It can't cross gaps. The guide: its 4 X-pattern shots are slow and easy to avoid; when it pops out at one spot to throw the explosive shot, that's the best window to attack. Keep moving so it never surfaces right under Isaac. Grey champion (Repentance): bigger, 6-shot spiral burst.",
       "anims_logged": ["HeadWiggle", "Body1Wiggle", "Body2Wiggle", "Attack1"],
-      "confidence": "wiki + logs",
-      "sources": ["wiki:Pin", "bot:tells.dat"]
+      "confidence": "wiki + guide + logs",
+      "sources": ["wiki:Pin", "guide:gamerevolution-part1", "bot:tells.dat"]
     },
     "908.0": {
       "name": "Baby Plum",
@@ -505,12 +509,12 @@
         {"attack": "horizontal charge", "tell": "Isaac on its row (it lines up with Isaac when it has 2 Pooters)", "tell_anim": null, "fires": null, "shots": "charges across the screen, exits, comes back from the far side", "how": "sideways", "notes": "Stay off its row. Mid-room vertically makes the charges easy."},
         {"attack": "phase 2 head spread", "tell": "head stops", "tell_anim": null, "fires": null, "shots": "3-shot spread", "how": "sideways", "notes": "Move slowly up and down; shots go where Isaac was."}
       ],
-      "adds": "kill_close",
-      "adds_ids": {"14.0": "kill_close"},
+      "adds": "kill_first",
+      "adds_ids": {"14.0": "kill_first"},
       "phase_change": "After enough damage the body explodes; the head drifts toward Isaac and fires 3-shot spreads.",
       "notes": "Blue champion: charges more often and veers toward Isaac, 6-way shots.",
-      "confidence": "wiki + player thread",
-      "sources": ["wiki:Famine", "steam:famine-tips"]
+      "confidence": "wiki + guide + player thread",
+      "sources": ["wiki:Famine", "guide:gamerevolution-part1", "steam:famine-tips"]
     },
     "81.0": {
       "name": "The Fallen",
@@ -589,14 +593,14 @@
       "attack_windows": ["always"],
       "dodge": [
         {"attack": "homing shots", "tell": "1, 3 or 5 in quick succession", "tell_anim": null, "fires": null, "shots": "homing", "how": "behind_rocks", "notes": "Keep moving and put rocks between; homing shots curve around a straight sidestep."},
-        {"attack": "rolling head", "tell": "throws its head", "tell_anim": null, "fires": null, "shots": "head rolls at Isaac, then becomes a Ragling", "how": "sideways", "notes": "The head has 25 HP and damage to it also hurts Rag Man."}
+        {"attack": "rolling head", "tell": "throws its head", "tell_anim": null, "fires": null, "shots": "head rolls at Isaac, then becomes a Ragling", "how": "sideways", "notes": "The head has 25 HP and damage to it also hurts Rag Man. Destroying the head stops that Ragling from spawning, so shoot the head while it rolls."}
       ],
       "adds": "kill_close",
       "adds_ids": {"246.0": "kill_close"},
-      "target_order": ["405.0"],
-      "notes": "Revives Raglings and heals 10 HP each time. When it dies, every Ragling dies, so focus Rag Man and only kill Raglings in the way.",
-      "confidence": "wiki",
-      "sources": ["wiki:Rag_Man"]
+      "target_order": ["rolling head", "405.0"],
+      "notes": "Revives Raglings from their leftover bandages (players say once it is below about a third of its HP) and heals 10 HP each time. When it dies, every Ragling dies, so focus Rag Man and only kill Raglings in the way. It tends to walk away from Isaac, so it takes chasing to stay in range.",
+      "confidence": "wiki + player commentary",
+      "sources": ["wiki:Rag_Man", "tropes:ThatOneBoss"]
     },
     "901.0": {
       "name": "Lil Blub",
@@ -710,9 +714,9 @@
       ],
       "adds": "ignore",
       "phase_change": "At half health the bag bursts into explosive clouds and the jump phase starts.",
-      "notes": "Always opens with a Butt Bomb.",
-      "confidence": "wiki",
-      "sources": ["wiki:Colostomia"]
+      "notes": "Always opens with a Butt Bomb. Players say the gas it leaves is the only tell for where its slides go: read the gas trail to see its lanes.",
+      "confidence": "wiki + player commentary",
+      "sources": ["wiki:Colostomia", "tropes:ThatOneBoss"]
     },
     "918.0": {
       "name": "Turdlet",
@@ -834,9 +838,11 @@
   },
   "sources": {
     "wiki:<Page>": "https://bindingofisaacrebirth.wiki.gg/wiki/<Page> (read 2026-11-25)",
-    "guide:bamboogaming-dingle (search summary)": "https://www.bamboogaming.net/the-binding-of-isaac/bosses/dingle (page refused automated reads; tips seen only in the search summary)",
-    "guide:bamboogaming-the-haunt (search summary)": "https://www.bamboogaming.net/the-binding-of-isaac/bosses/the-haunt (same)",
-    "wiki-fandom:Sloth (search summary)": "https://bindingofisaac.fandom.com/wiki/Sloth (strategy line seen in the search summary; page refused automated reads)",
+    "guide:bamboogaming-dingle": "https://www.bamboogaming.net/the-binding-of-isaac/bosses/dingle (Repentance fight guide, read in a browser 2026-11-25)",
+    "guide:bamboogaming-the-haunt": "https://www.bamboogaming.net/the-binding-of-isaac/bosses/the-haunt (Repentance fight guide, read in a browser 2026-11-25)",
+    "guide:gamerevolution-part1": "https://www.gamerevolution.com/guides/66063-the-binding-of-isaac-rebirth-boss-guide-part-1 (Rebirth-era written boss guide, read in a browser 2026-11-25)",
+    "fandom:Sloth": "https://bindingofisaac.fandom.com/wiki/Sloth (older-version fan wiki strategy section, read in a browser 2026-11-25)",
+    "tropes:ThatOneBoss": "https://tvtropes.org/pmwiki/pmwiki.php/ThatOneBoss/TheBindingOfIsaac (player commentary on what makes each boss hard, read in a browser 2026-11-25)",
     "steam:famine-tips": "https://steamcommunity.com/app/250900/discussions/0/3122660456793418717",
     "bot:tells.dat": "knowledge/tells.dat and telegraphs.txt (animation names, shots@frame, hits per animation from the bot's own runs)",
     "bot:bench_rooms.json": "knowledge/bench_rooms.json (hit causes per bench room)"

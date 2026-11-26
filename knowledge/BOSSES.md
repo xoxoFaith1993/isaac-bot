@@ -13,9 +13,11 @@ to the bot instead of letting it learn by getting hit.
   logs their names.
 - *Wiki* facts are from bindingofisaacrebirth.wiki.gg (read 2026-11-25).
 - *Inferred* means it's reasoned from the mechanic and needs a bench test.
-- The written guide sites (GameRevolution, SuperCheats, Bamboo Gaming, TV Tropes, the fandom Sloth page) refused
-  automated reads. YouTube video pages gave titles only (no description or transcript). So the player tips here come
-  from the wiki pages, two search-result summaries of guide pages, and one Steam thread.
+- *Guide* and *player* tips come from written guides and player commentary read in a real browser: Bamboo Gaming's
+  Repentance fight guides (only Dingle and the Haunt have one), GameRevolution's boss guide (Rebirth era, so the
+  wiki wins where they differ), the fan wiki's Sloth strategy, TV Tropes, and one Steam thread.
+- SuperCheats refused even the browser. The YouTube no-hit videos have no narration or transcript (the Dingle one is
+  a 79-second gameplay clip), so they'd only help if someone studied the footage frame by frame.
 
 ## What would help the bot most
 
@@ -40,13 +42,22 @@ to the bot instead of letting it learn by getting hit.
    - Pride's lasers are diagonal.
 4. **Lobbed shots hurt where they land.** Sloth's shot is an Ipecac lob (this answers the playbook's "unsure: shot
    path"; the bot saw danger 0 because the shot is up in the air). Predict the landing at Isaac's position when it
-   fired. Keep moving the same way (`no_reverse`), because doubling back walks into it. The same applies to Pin's
-   red shot and the Headless Horseman body.
-5. **Creep lanes are walls.** 2 of the 3 Gurglings bench hits were red creep (1000.22) along their dash paths.
-6. **Haunt phase 2 zone:** stay in the bottom half (it dashes at Isaac near the top wall). Keep 60+ px sideways from
-   its column (laser), and shoot up as it slides across.
-7. **Per-boss distance** (`pref_dist`): Dingle 200 (dash reaction time), Gemini 180, Mega Fatty 170 (its fart hit
-   the bot twice at 85-92 px), Sloth 160.
+   fired.
+   - Sloth: move in a steady circle that never doubles back (`move_pattern: circle`), so every shot lands behind
+     Isaac. Its blasts also kill its own Chargers and break rocks.
+   - The same applies to Pin's red shot and the Headless Horseman body.
+   - Mega Fatty's vomit rain: each falling shot's ground spot (its shadow) is a no-go until it lands.
+5. **Creep lanes are walls.**
+   - 2 of the 3 Gurglings bench hits were red creep (1000.22) along their dash paths.
+   - Blighted Ovum's trail lasts just long enough to still be there after one lap of the room, so never run the same
+     loop twice (`vary_loop`).
+6. **Haunt phase 2 zone:** stay in the bottom half and never level with it by the top wall (it dashes sideways at
+   Isaac there). Keep 60+ px sideways from its column (laser, under a second of warning). Step under it to shoot only
+   between lasers, leading it as it slides.
+7. **Gemini:** run a big loop round the room's edges (`room_zone: edges`) and shoot back, rather than circling the
+   centre.
+8. **Per-boss distance** (`pref_dist`): Dingle 200 (dash reaction time), Gemini 180, Mega Fatty 170 (its fart hit
+   the bot twice at 85-92 px), Sloth 160, Lil Haunt 150 (players say they shoot from almost point-blank).
 
 **Wiring idea** (for the main session, not done here). Send it like the playbook: one `key=field:value,...` line per
 boss, with tells as `tell_anim>fires@frame/how`. `tells.lua` already knows the current animation per entity, so a
@@ -95,8 +106,11 @@ Bench: died with 6 hits. The logged causes split about evenly between puke shots
 - **Distance and position:** 200 px, open floor with room to step either way, no corners.
 - **Attack windows:** Tired (after the dashes), Idle (it is stationary), Whistle.
 - **Adds:** Dips (217.0): kill when close.
-- **Tricks:**
-  - Wait for the whole dash sequence to finish before moving in.
+- **Tricks** (both guides agree):
+  - Keep a turning lane open before the dashes.
+  - Sidestep the spread from far enough away to see its gaps.
+  - Wait for the whole dash sequence to finish (Tired) before moving in.
+  - Clear Dips only when they crowd the route.
   - Its dashes knock Dips around and can leave poop that blocks shots.
 - **Champions:**
   - Black: an 8-shot ring instead of 3 (stand off its 8 lines), spiders, one very fast dash.
@@ -119,10 +133,11 @@ Bench: timed out with 4 hits (Contusion contact, a Suture shot, Suture contact).
 | Suture (detached) | furious charge with momentum | Rage → Walk02 | sideways, late; it overshoots |
 
 - **Kill order:** Suture first. The wiki's phase rule: if Contusion dies first, Suture detaches and charges. If Suture
-  dies first, nothing changes.
+  dies first, nothing changes. The guide agrees: a loose Suture follows Isaac at high speed.
 - **Position:**
-  - Circle the room centre at 180+ px from Contusion. That also keeps Isaac outside Suture's cord circle.
-  - Never fight from a corner: it chases into Isaac and the baby swings around it.
+  - Run a big loop round the edges of the room (the guide's advice), 180+ px from Contusion, and shoot back. That
+    also keeps Isaac outside Suture's cord circle.
+  - Cut the corners: in a corner it chases into Isaac and the baby swings around it.
 - **Steven:**
   - The twins split at 50% of big Steven's HP anyway.
   - On death, big Steven fires two rows of 8 slow shots that pass over rocks. Be far away and step through a gap.
@@ -130,7 +145,8 @@ Bench: timed out with 4 hits (Contusion contact, a Suture shot, Suture contact).
 - **Blighted Ovum:**
   - Ghost Suture (79.12) is invincible and dies with Contusion: never aim at it.
   - It fires a horizontal Brimstone whenever Isaac is level with it, so stay off its row.
-  - Contusion leaves red creep and has no breather.
+  - Contusion leaves red creep (a whole heart) and has no breather. The trail lasts just long enough to catch Isaac
+    after one lap of the room, so switch between wide and tight loops or reverse direction.
 - **Champions:**
   - Blue: Suture's shots home.
   - Green: the twins start apart.
@@ -146,7 +162,8 @@ Bench: timed out with 2 hits; died with 4 on a copy. Most hits were Lil Haunts.
 
 **Phase 1:** the Haunt is invulnerable. Three Lil Haunts orbit it, and one at a time leaves to chase Isaac.
 - The orbiting ones and the Haunt still hurt on touch, so keep 160+ px from the Haunt.
-- Fight the chasing Lil Haunt (kill first; 25 HP) away from the Haunt.
+- Fight the chasing Lil Haunt (kill first; 25 HP) away from the Haunt, at 150 px. Players say they close in and shoot
+  from almost point-blank.
 - The Lil Haunt mirrors Isaac's movement and stops to fire a blood shot *led* at where Isaac will be (Shoot @4f).
   Turn or stop when it slows down (`change_direction`); keeping the same direction walks into it.
 
@@ -157,11 +174,12 @@ out of its way.
 
 | Attack | Tell | Dodge |
 |---|---|---|
-| Brimstone down its column | IdleNoSkin → LaserNoSkin (2 logged hits) | sideways: stay 60+ px off its moving column |
+| Brimstone down its column | IdleNoSkin → LaserNoSkin (2 logged hits; under a second of warning) | sideways: stay 60+ px off its moving column |
 | 5 blood shots, downward fan | SpitNoSkin @3f | away: low in the room the gaps are wide |
-| Dash at Isaac | Isaac near the top wall | stay in the bottom half |
+| Side dash along the top wall | Isaac beside it near the top wall | never level with it up there; stay in the bottom half |
 
-- **Shooting spot:** lower half of the room, offset from its column, shooting up and leading it as it slides.
+- **Shooting spot:** lower half of the room, offset from its column, shooting up and leading it as it slides (it's
+  fast). One guide says to alternate: step under it only between lasers, then back out to the side, low in the room.
 - **Trick:** it can get stuck trying to reach a spot, and then it stops attacking.
 - **Champions:**
   - Black: 2 Lil Haunts; spiders instead of the laser.
@@ -199,15 +217,19 @@ Bench: timed out with 5 hits; 7 of its 8 logged hits were its shot.
 
 | Attack | Tell | Dodge |
 |---|---|---|
-| Ipecac shot: lobbed explosive, aimed at Isaac's spot, hurts where it lands | Attack @5f | no_reverse: keep moving one way; stay 60+ px from the predicted landing |
+| Ipecac shot: lobbed explosive, aimed at Isaac's spot, hurts where it lands | Attack @5f | no_reverse: a steady circle that never doubles back; stay 60+ px from the predicted landing |
 | Charger spawn: charges horizontally the way Sloth faces | Attack | never stand on Sloth's row |
 
 - **Why the bot misread it:** logged hits came during WalkHori/WalkVert, after the Attack. The shot is in the air for
   a while, which is why the bot saw danger 0.
-- **Wiki strategy:** keep moving in one direction. Doubling back to dodge Chargers is what gets players hit by the
-  Ipecac.
-- **Distance and adds:** 160 px. Kill Chargers (23.0) and Attack Flies when close. It often comes with 2 Chargers,
-  Splashers or Attack Flies.
+- **Fan wiki strategy:**
+  - Keep moving in one direction. Doubling back to dodge Chargers is what gets players hit by the Ipecac.
+  - Move in a circle that never doubles back. All its shots then miss, and the bot gets predictable moments to
+    shoot.
+  - **Trick:** the Ipecac blasts break rocks and kill its own Chargers. Leading the Chargers through the landing
+    spots clears them for free.
+- **Distance and adds:** 160 px. At most 3 Chargers at once. Kill Chargers (23.0) and Attack Flies when close. It
+  often comes with 2 Chargers, Splashers or Attack Flies.
 
 ### Mega Fatty (264.0)
 Bench: 3 hits on a Caves I copy, all from its blood bursts at 85-92 px.
@@ -221,11 +243,13 @@ Bench: 3 hits on a Caves I copy, all from its blood bursts at 85-92 px.
 | Off-screen leap onto Isaac, then a big red creep puddle | Jumping | keep moving until Landing, then off the creep |
 | Short slide + hop toward Isaac | slides | sideways |
 | Inhale: pulls Isaac in | Sucking | walk straight away for the whole animation |
-| Vomit rain: shots go up and fall following Isaac | Sucking → Puking @3f | keep moving, never stop |
+| Vomit rain: shots go up and fall following Isaac | Sucking → Puking @3f | keep moving; each shot's shadow shows where it lands: avoid those spots |
 | Fart: hurts up close, then 1-3 Dips or a shot cluster | Idle → Fart @21f | away (keep 170 px) |
 
 - **Attack windows:** Idle, Landing, Fart (from range).
 - **Adds:** Dips: kill when close.
+- **Guide note:** the jump is the biggest threat because nothing but the Jumping animation warns of it. It uses the
+  vomit more often.
 - **Champions:**
   - Brown: rock waves, no vomit.
   - Red: smaller; 6 shots on landing; 4 shot streams.
@@ -237,22 +261,22 @@ Bench: 3 hits on a Caves I copy, all from its blood bursts at 85-92 px.
 | Boss (id) | HP | Keep | Lanes / zone | Key dodges | Adds |
 |---|---|---|---|---|---|
 | Monstro (20.0) | 250 | 160 | open, no corners | spit cluster: sideways; off-screen jump: keep moving, then 120+ px from the landing ring | kill close |
-| Larry Jr. (19.0) | 22/seg | 100 | open | never in front of the head on its line; don't get boxed in by body and poop | — |
-| Duke of Flies (67.0) | 110 | 150 | centre, no corners | it sends flies out at 5-6 orbiting: keep the fly count down | flies: kill close; 6 more on death |
+| Larry Jr. (19.0) | 22/seg | 160 | open | never in front of the head on its line; shoot from across the room, one worm at a time; shoot away poop that would box Isaac in | — |
+| Duke of Flies (67.0) | 110 | 150 | centre, no corners | it sends flies out at 5-6 orbiting: keep the fly count down | **flies: kill first**; 6 more on death |
 | Widow (100.0) | 130 | 160 | open | long leap: keep moving; white creep slows: off creep | Sacks 30.2, Spiders 85.0: kill close |
-| Pin (62.0) | 100 | 150 | open | under: never stand still; red lob (Attack1 @47f): no_reverse; it jumps out of the same spot after the shot | — |
+| Pin (62.0) | 100 | 150 | open | under: never stand still; slow 4-shot X when it dives; red lob (Attack1 @47f): no_reverse; when it pops out at one spot to throw it, that's the best window; it jumps out of that same spot next | — |
 | Baby Plum (908.0) | 234 | 180 | centre, off her 8 lines for the slam | stream: sideways; spiral: circle with it; slam rings: away | — (death ring of 10) |
-| Famine (63.0) | 240 | 160 | **off its row**, mid-room | horizontal charge; phase 2 head 3-shot spread: move slowly up/down | Pooters: kill close |
+| Famine (63.0) | 240 | 160 | **off its row**, mid-room | horizontal charge; phase 2 head 3-shot spread: move slowly up/down | **Pooters: kill first** |
 | The Fallen (81.0) | 105-420 | 170 | **diagonal** when it halts | 3+4 spreads: sideways; 4-way cardinal Brimstone after the chase | splits at 50%: kill both |
 | Headless Horseman (82.0 body, 83.0 head) | — | 160 | **off the head's row** | head side charges ×1-3; body's lobbed red shots leave creep: no_reverse | — |
 | Little Horn (404.0) | 200 | 120 | keep moving | pits under Isaac; troll bombs pop up near Isaac: 100+ px away | Dark Ball: kill close |
-| Rag Man (405.0) | 200 | 170 | rocks between | homing shots 1/3/5: behind_rocks; rolling head: sideways | Raglings die with it: focus Rag Man |
+| Rag Man (405.0) | 200 | 170 | rocks between | homing shots 1/3/5: behind_rocks; rolling head: sideways, and shoot it (a destroyed head makes no Ragling) | Raglings die with it: focus Rag Man; it revives them below ~1/3 HP |
 | Lil Blub (901.0) | 200 | 180 | open | 6 streams: far, between them; low-HP jump chain: keep moving | Small Leeches 810: kill close; death rain |
 | The Rainmaker (902.0) | 240 | 180 | open | 2 lines of 6 from the edges: move vertically; rings and bursts: away | — |
 | Min-Min (913.0) | 280 | 170 | off the floor lights | Willo ring shots: away; ring chase: keep moving; vanish attack | Willos 808: ignore (die with her) |
 | Wormwood (62.3) | 200 | 150 | diagonal when it lunges | lunge 4 cardinal shots; below 33% it pierces Isaac's spot 3-6×: keep moving | leeches: kill close |
 | Clog (914.0) | 420 | 160 | open | spiral lines: circle through the gaps; fart lines knock back | **Drips 870: kill first** (they enable the water spin) |
-| Colostomia (917.0) | 380 | 170 | **off row and column** | hop + slide on the nearest cardinal line; explosive gas: never near bombs; phase 2 jumps: away | — |
+| Colostomia (917.0) | 380 | 170 | **off row and column** | hop + slide on the nearest cardinal line (its gas trail is the only tell for its lanes); explosive gas: never near bombs; phase 2 jumps: away | — |
 | Turdlet (918.0) | 190 | 170 | no corners | huddle (~7 s) → tail launch: get far | — (splits at 30 HP) |
 
 **Minibosses:**
@@ -321,17 +345,21 @@ Wiki pages (bindingofisaacrebirth.wiki.gg, read 2026-11-25):
 - Read, but no boss tips for these bosses (it only covers which items work on them):
   [The Lost (Strategy)](https://bindingofisaacrebirth.wiki.gg/wiki/The_Lost_(Strategy))
 
-Guides and players (only partly readable):
-- Dingle: [Bamboo Gaming, Dingle](https://www.bamboogaming.net/the-binding-of-isaac/bosses/dingle). Seen only through
-  a search summary; the page itself refused automated reads. Tips: keep a turning lane open, dodge across each dash,
-  attack after the sequence.
-- The Haunt: [Bamboo Gaming, The Haunt](https://www.bamboogaming.net/the-binding-of-isaac/bosses/the-haunt). Search
-  summary only. Tips: keep space from the ghosts, leave the upper wall to the boss.
-- Sloth: [Binding of Isaac wiki (fandom), Sloth](https://bindingofisaac.fandom.com/wiki/Sloth). Search summary only.
-  Tip: keep moving one way; doubling back gets you hit by the Ipecac.
-- Famine: [Steam discussion](https://steamcommunity.com/app/250900/discussions/0/3122660456793418717). Phase 1: stay
-  mid-room; phase 2: move slowly up and down.
-- No-hit videos, title only (no description or transcript readable):
+Guides and players (read in a browser, 2026-11-25):
+- Bamboo Gaming, Repentance fight guides:
+  [Dingle](https://www.bamboogaming.net/the-binding-of-isaac/bosses/dingle) ·
+  [The Haunt](https://www.bamboogaming.net/the-binding-of-isaac/bosses/the-haunt).
+  Its Gemini, Gurglings and Mega Fatty pages have no fight guide; there is no Sloth page.
+- [GameRevolution, Rebirth boss guide part 1](https://www.gamerevolution.com/guides/66063-the-binding-of-isaac-rebirth-boss-guide-part-1):
+  Dingle, Duke, Famine, Gemini, Haunt, Gurdy Jr., Gurglings, Larry Jr., Monstro, Pin, Widow, Mega Fatty.
+- [Binding of Isaac fan wiki (fandom), Sloth](https://bindingofisaac.fandom.com/wiki/Sloth): the strategy section
+  (circle, never double back; blasts kill its Chargers).
+- [TV Tropes, That One Boss](https://tvtropes.org/pmwiki/pmwiki.php/ThatOneBoss/TheBindingOfIsaac): player commentary
+  on Haunt, Blighted Ovum, Rag Man, Colostomia, Baby Plum.
+- [Steam discussion](https://steamcommunity.com/app/250900/discussions/0/3122660456793418717): Famine phase 1, stay
+  mid-room; phase 2, move slowly up and down.
+- Not readable: the SuperCheats Dingle and Gemini pages (blocked even in a browser).
+- No-hit videos (no narration or transcript; the Dingle one is a 79-second gameplay clip):
   [All 122 Bosses, No Hit](https://www.youtube.com/watch?v=JLvaW-zUs5g) ·
   [All Bosses, No Damage / Hard Mode](https://www.youtube.com/watch?v=sScz3U-eWsY) ·
   [Dingle, minimal items (Repentance+)](https://www.youtube.com/watch?v=oX-HqHJ9z1Q).
