@@ -522,3 +522,89 @@ Checked against real recorded fights by the outside-sources session.
 | The same trigger runs Gurglings (type 237) | 18/18 Gurgling charges fit (by chance about 35%) | **confirmed** |
 | Gurglings leave red creep while charging | main session: CREEP_RED, 16-25 per charge direction | measured (not in these tables) |
 | Gemini, the Blighted Ovum, Monstro, Pin, Trite, Attack Fly | not recorded yet (Attack Flies only appeared as Gurgling spawns) | **not covered** |
+---
+
+## Host (27.0), Red Host (27.1), Hard Host (27.3)
+
+`ai_host`, `0x5179b0` (dispatcher case `0xe` = byte at `0x6cbe5c + 17`). Shared with type 859.
+
+**"Armored" variants** (lines 62-68): **Host (27.0) and Hard Host (27.3)**. The **Red Host (27.1)** is never armored:
+it is always damageable, never wipes damage, and isn't slowed down by hits. Any variant with subtype 99 is also
+unarmored.
+
+| State | What it does | Leaves to |
+|---|---|---|
+| 0 init (69-85) | Idle; `isInvicible` for that one update only | 3 |
+| **3 closed** (236-295) | entity flag 0x10 set (armored); the open check below; `StateFrame` = an open **delay** that counts down 1 every 7 updates (286-293) | 8 (or 9) |
+| **8 attack** (321-511) | plays Shoot (61 f; Open @9, **Shoot @24**, Close @55; Hard Host 71 f), flag 0x10 cleared | 3 when the animation ends |
+| 9 fake open (296-319) | the same animation with no shot; only while confused or feared, 1 in 50 per update | 3 |
+
+### 1. The open trigger (lines 242-276)
+All of these:
+- `StateFrame` < 1, i.e. no hit delay left;
+- checked **only 1 update in 7** (`IsFrame(7, index)`);
+- **`ProjectileCooldown` < 1**: it is set to 7 at each attack and counts down only on those 1-in-7 checks, so **about
+  50-56 updates closed between attacks at minimum**;
+- **Isaac within 240 px** (squared distance < 57600, line 263; no square root, so exactly 240);
+- **a clear line**: `Room::CheckLine` from the Host to Isaac, mode 3 (Hard Host mode 0). Champion colour 8 skips
+  this check.
+
+**No random chance, and no check of Isaac shooting or of tears flying nearby.**
+
+What "attacking it keeps it closed" really is (lines 87-121, armored only):
+- **each hit that lands on a closed Host** adds `round(damage) / 2` (integer) to its open delay, capped at 10;
+- each delay unit is 7 updates, so **up to 70 updates (2.3 s) of extra delay**;
+- hits under 1.5 damage add nothing; a 3.5-damage tear adds 2 (14 updates);
+- more than 20 damage in one update (a bomb) plays "Bombed".
+- The author's observation matches for hits. Shots that miss don't matter.
+
+### 2. The attack (lines 471-502)
+- **At the Shoot event, animation frame 24**: about 24 updates after the open starts, plus up to 7 updates from the
+  1-in-7 check.
+- **Aim: Isaac's current position, no lead** (475-476). The base speed is 7.0 (483-491).
+- **Host: fire mode 2 (triple: 0°, ±16°). Red Host: mode 5 (five: 0°, ±12°, ±24°)** (lines 218-222).
+- The params set `VelocityMulti` 1.07 (230). With FireProjectiles' ×1.2 tail for modes 2 and 5 (`RE_CORE.md`), the
+  real speed is **7 × 1.2 × 1.07 ≈ 9.0** (Host's side shots 0.9 × that ≈ 8.1; all five Red Host shots ≈ 9.0). The
+  Host doesn't move, so the 0.4 × shooter-velocity term is 0.
+- **This matches the recorded Host shot speed of 8-9.**
+- **Hard Host:** no Shoot event, so no projectiles. On its Close event (frame 54) it slams instead: an effect aimed at
+  Isaac, debris, and a push on players within 120 px (lines 372-470).
+
+### 3. How long it stays open
+- **Damageable from the Open event (frame 9) until the Close event (frame 55): about 46 updates (1.5 s).**
+- The whole attack lasts 61 updates, then it's back to State 3 with `StateFrame` 0.
+
+### 4. Vulnerability (lines 87-103, armored only)
+While closed (State 3), or in the attack before Open or after Close, **every queued damage record is zeroed**. That
+is the same queue wipe as the Haunt's, with one exception: records whose damage flags include `0x8000` (probably
+burn/poison-type damage) keep their damage.
+
+There's no collision-class change: tears still hit it and are used up, they just do nothing. Flag 0x10 (probably
+NO_TARGET) is set while closed, so homing tears ignore it.
+
+### Bot meaning
+- **The bait spot:** the trigger needs Isaac **within 240 px with a clear line**. Bait from about 200-230 px, not 100.
+  - The attack fires 24 updates after opening.
+  - The triple then needs about 22-25 updates to cross 200-230 px at about 9 px/update.
+  - That's roughly 1.5 s from the open to the shots arriving, to sidestep the ±16° spread.
+- **At 100 px the shots arrive about 11 updates after firing, with the spread only about 28 px wide**, which fits the
+  recorded hits at 6-14 px.
+- **Holding fire while it's closed is right.** Each landed hit (≥ 1.5 damage) delays the open by up to 2.3 s, and the
+  damage is thrown away anyway.
+- Shoot only between frames 9 and 55 of its Shoot animation (`State == 8`). It then stays closed for at least about
+  50 updates.
+- **The Red Host can be shot any time** (no armour), but fires 5 shots.
+
+### Record to confirm
+- Opens only with Isaac within 240 px and a clear line; never beyond 240; a rock between blocks it.
+- Shots at animation frame 24: Host 3 shots, about 9.0 centre and 8.1 sides; Red Host 5 at about 9.0; aimed at
+  Isaac's position, no lead.
+- At least about 50 updates closed between attacks; each landed hit while closed adds about 7 × round(damage)/2
+  updates of delay.
+- HP unchanged when hit closed (Host, Hard Host); always damageable (Red Host).
+
+**Review:** **all agree** (me and both blind readers: one on Sonnet, B9 bundle in `runs/research/re/core/B9`) on
+every number above.
+- **Settled by C:** the "Open" event name (`DAT_00b82628` is the string "Open").
+- **Settled by C:** the real shot speed, from the ×1.2 tail in `RE_CORE.md`. The readers couldn't see it, so both
+  said "7 × 1.07 if applied".
