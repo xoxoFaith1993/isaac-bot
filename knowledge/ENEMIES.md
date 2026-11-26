@@ -10,12 +10,35 @@ enemy starts with known behaviour, and learning (tells, motion, hit reviews) onl
   - which enemies appear on which floor from the wiki.gg floor pages;
   - behaviour from Isaac knowledge;
   - hit counts from `runs\hits.jsonl`.
-- **Size:** 238 entries. 152 can appear on floors 1-2: Basement, Cellar, Burning Basement, Downpour, Dross, plus
-  the sins and horsemen. The rest are floors 3-4 (Caves, Catacombs, Flooded Caves, Mines, Ashpit), with lighter
-  detail.
+- **Size:** 491 entries (since the bestiary merge, 2026-11-25 evening). 162 can appear on floors 1-2: Basement,
+  Cellar, Burning Basement, Downpour, Dross, plus the sins and horsemen. Each entry's `source` says how far to
+  trust it:
+  - `hand` (238): the original hand-written table. These win over everything else.
+  - `reviewed` (52): a local-AI draft corrected by hand. These are the floors 1-4 enemies the hand table lacked.
+  - `draft` (201): local-AI tags made from the wiki text, not hand-checked. They carry
+    `unsure: "local-AI draft, ..."`, and are mostly floors 5+ and bosses. The helper doesn't send drafts to the mod
+    until they're checked (a wrong tag like `chases` changes how the bot moves).
+- **Game data:** not in this file. It's game-derived, and `enemy_playbook.json` is committed. The builder writes it
+  to the local, gitignored `playbook_game.json`, under the same keys. 489 entries there carry the game's own
+  numbers: `base_hp`, `radius` (px), `mass`, `contact_damage`, and `boss`. 318 also carry `events`, the animation
+  event frames from the game files, e.g. Dingle `"Spit": {"Shoot": [3]}`, the Haunt
+  `"LaserNoSkin": {"Shoot": [17]}`. These match the bot's live `tells.dat`
+  exactly. The events tell the bot when each enemy's attack comes out before it ever gets hit. A few animations
+  use event names the dump didn't guess (Sloth's `Attack`, Pin's `Attack1`, Suture's `Attack01`); the live tells
+  cover those.
+- **Bestiary pipeline** (rerun in this order when the game updates):
+  1. `tools\bestiary_game.py` saves the game-data dump to `bestiary_game.json`. The dump comes from mod
+     `isaac-bot-bestiary` and runs once per game version. Never let it read other floors' RoomConfig during a run:
+     that crashed the game, so the pass is disabled.
+  2. `tools\wiki_bestiary.py` saves the wiki's monster/boss pages to `wiki_bestiary.json`.
+  3. `tools\tag_bestiary.py` has the local AI make `playbook_draft.json`.
+  4. Hand corrections go in `playbook_review.json`.
+  5. The builder script merges everything: hand table > review > draft.
+  - The first three outputs and `playbook_game.json` are local only (game data and CC BY-SA wiki text). The merged
+    playbook holds only derived tags.
 - **Coverage:** every enemy cause in `hits.jsonl` has an entry. Non-enemy causes (spikes, own bombs, projectiles,
   creep) are in `non_enemy_hit_causes`.
-- **Unsure:** 86 entries have an `unsure` field saying what isn't certain. It's mostly variant ids or attack
+- **Unsure:** 287 entries have an `unsure` field: the 201 drafts, plus the hand table's original 86. It's mostly variant ids or attack
   details for the Repentance Downpour/Dross enemies. Trust the tags; check the `unsure` part in game or in the
   anm2 data before building on it.
 

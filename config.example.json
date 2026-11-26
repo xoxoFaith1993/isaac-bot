@@ -6,5 +6,7 @@
   "python": "python",
   "repentogon_launcher": "C:\\path\\to\\REPENTOGONLauncher\\REPENTOGONLauncher.exe",
   "repentogon_ini": "",
-  "bot_dir": ""
+  "bot_dir": "",
+  "cache_dir": "",
+  "safety_tools": ""
 }

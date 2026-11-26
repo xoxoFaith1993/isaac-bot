@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+    <name>Isaac Bot (bestiary)</name>
+    <directory>isaac-bot-bestiary</directory>
+    <description>Helper for Isaac Bot: writes the game's own enemy, animation and floor-spawn data to this mod's save file once per game version. Needs REPENTOGON. Local mod.</description>
+    <version>0.0.1</version>
+    <visibility>Private</visibility>
+</metadata>

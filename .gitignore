@@ -6,6 +6,8 @@ tools/*_window.json
 runs/
 knowledge/gamedata.json
 knowledge/bestiary_game.json
+knowledge/wiki_bestiary.json
+knowledge/playbook_game.json
 knowledge/telegraphs.txt
 knowledge/bench_rooms.json
 

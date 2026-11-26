@@ -1,0 +1,187 @@
+{
+ "shot:79": {
+  "step": 2,
+  "status": "trying",
+  "history": [
+   {
+    "when": "2026-11-25 21:07",
+    "step": 1,
+    "rate": 0.75
+   },
+   {
+    "when": "2026-11-25 21:39",
+    "judged": 0.167,
+    "status": "kept"
+   },
+   {
+    "when": "2026-11-25 21:55",
+    "step": 2,
+    "rate": 0.5
+   }
+  ],
+  "boss": false,
+  "rate_before": 0.5,
+  "enc_at": 10,
+  "hits_since": 1
+ },
+ "body:261.0": {
+  "step": 1,
+  "status": "trying",
+  "history": [
+   {
+    "when": "2026-11-25 21:28",
+    "step": 1,
+    "rate": 5.667
+   }
+  ],
+  "boss": true,
+  "rate_before": 5.667,
+  "enc_at": 3,
+  "hits_since": 0
+ },
+ "shot:261": {
+  "step": 1,
+  "status": "trying",
+  "history": [
+   {
+    "when": "2026-11-25 21:30",
+    "step": 1,
+    "rate": 0.75
+   }
+  ],
+  "boss": false,
+  "rate_before": 0.75,
+  "enc_at": 4,
+  "hits_since": 0
+ },
+ "shot:46": {
+  "step": 1,
+  "status": "trying",
+  "history": [
+   {
+    "when": "2026-11-25 21:34",
+    "step": 1,
+    "rate": 1.0
+   }
+  ],
+  "boss": false,
+  "rate_before": 1.0,
+  "enc_at": 3,
+  "hits_since": 1
+ },
+ "body:23.0": {
+  "step": 1,
+  "status": "trying",
+  "history": [
+   {
+    "when": "2026-11-25 21:34",
+    "step": 1,
+    "rate": 1.333
+   }
+  ],
+  "boss": false,
+  "rate_before": 1.333,
+  "enc_at": 3,
+  "hits_since": 1
+ },
+ "body:79.0": {
+  "step": 1,
+  "status": "trying",
+  "history": [
+   {
+    "when": "2026-11-25 21:38",
+    "step": 1,
+    "rate": 1.333
+   }
+  ],
+  "boss": true,
+  "rate_before": 1.333,
+  "enc_at": 3,
+  "hits_since": 2
+ },
+ "body:79.10": {
+  "step": 1,
+  "status": "trying",
+  "history": [
+   {
+    "when": "2026-11-25 21:39",
+    "step": 1,
+    "rate": 1.0
+   }
+  ],
+  "boss": true,
+  "rate_before": 1.0,
+  "enc_at": 3,
+  "hits_since": 0
+ },
+ "shot:260": {
+  "step": 0,
+  "status": "didn't help",
+  "history": [
+   {
+    "when": "2026-11-25 21:40",
+    "step": 1,
+    "rate": 0.5
+   },
+   {
+    "when": "2026-11-25 21:41",
+    "judged": 0.5,
+    "status": "didn't help"
+   }
+  ],
+  "boss": false,
+  "rate_before": 0.5,
+  "enc_at": 6,
+  "hits_since": 2
+ },
+ "body:260.0": {
+  "step": 1,
+  "status": "kept",
+  "history": [
+   {
+    "when": "2026-11-25 21:40",
+    "step": 1,
+    "rate": 2.333
+   },
+   {
+    "when": "2026-11-25 21:43",
+    "judged": 1.0,
+    "status": "kept"
+   }
+  ],
+  "boss": true,
+  "rate_before": 2.333,
+  "enc_at": 3,
+  "hits_since": 4
+ },
+ "body:260.10": {
+  "step": 1,
+  "status": "trying",
+  "history": [
+   {
+    "when": "2026-11-25 21:42",
+    "step": 1,
+    "rate": 1.4
+   }
+  ],
+  "boss": false,
+  "rate_before": 1.4,
+  "enc_at": 5,
+  "hits_since": 2
+ },
+ "body:10.1": {
+  "step": 1,
+  "status": "trying",
+  "history": [
+   {
+    "when": "2026-11-25 21:53",
+    "step": 1,
+    "rate": 0.5
+   }
+  ],
+  "boss": false,
+  "rate_before": 0.5,
+  "enc_at": 6,
+  "hits_since": 0
+ }
+}
