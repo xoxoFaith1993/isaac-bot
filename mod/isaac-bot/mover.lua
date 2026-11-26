@@ -134,10 +134,16 @@ end
 local SEG = { { 2, 4, 6, 8 }, { 11, 14, 17, 20 }, { 25, 30, 35 } }
 local SEG_END = { 8, 20, 35 }
 
-local function cost_at(ctx, p, si, t)
+local function cost_at(ctx, p, si, t, parts)
   local S, w = ctx.S, ctx.w
   local wt = 1 / (1 + t / S.m_decay)
   local c = 0
+  -- (parts: optional table; each block's share is added under its name, for the "why" line's breakdown)
+  local mark0 = 0
+  local function mark(name)
+    if parts then parts[name] = (parts[name] or 0) + (c - mark0) end
+    mark0 = c
+  end
   local pr = ctx.pr
   local at = ctx.byT[t]
   for _, z in ipairs(at.z) do
@@ -157,9 +163,11 @@ local function cost_at(ctx, p, si, t)
       c = c + S.m_hit * wt * f
     elseif margin < S.m_soft then c = c + (S.m_soft - margin) * S.m_soft_w * wt end
   end
+  mark("enemies")
   for _, sp in ipairs(at.s) do
     if (sp.c - p):Length() < pr + sp.r then c = c + S.m_hit * wt end
   end
+  mark("shots")
   -- an aimed shot coming (learned tells: Dingle's "Dance" before "Spit"): the line from the shooter through where
   -- Isaac is now gets costly from just before it fires, so it steps sideways off that line in time
   for _, a in ipairs(w.aimed or {}) do
@@ -175,6 +183,7 @@ local function cost_at(ctx, p, si, t)
       end
     end
   end
+  mark("attack lines")
   -- floor hazards (spikes, creep, fires, leftovers) and TNT "caution": asked once per 10 px patch per update
   -- (each is a call into the game; ~1,500 of them per update were most of the big-room lag)
   local hk = (p.X // 10) * 4096 + (p.Y // 10)
@@ -191,6 +200,7 @@ local function cost_at(ctx, p, si, t)
   if hz[1] > 0 then c = c + hz[1] * S.danger_w * wt end
   -- TNT and other "caution" squares: not damage, just not places to stand around in
   if hz[2] > 0 then c = c + hz[2] * S.m_caution * wt end
+  mark("floor")
   -- Learned tells (wired in 2026-11-25 after the v2 core forgot them: it parked in Sloth's row and ate the
   -- shot). In a shooter's line: a little cost always, nearly a hit's cost while it's winding up to fire.
   for _, ln in ipairs(ctx.lines) do
@@ -204,17 +214,20 @@ local function cost_at(ctx, p, si, t)
       else c = c + S.m_line * wt end
     end
   end
+  mark("row/col lines")
   if t <= 10 then
     for _, lz in ipairs(w.lasers) do
       if ctx.segDist(p, lz.Position, ctx.laserEnd(lz)) < pr + 18 then c = c + S.m_hit * wt end
     end
   end
+  mark("lasers")
   for _, bm in ipairs(w.bombs) do
     -- a bomb costs a FULL heart: full hit cost, measured from Isaac's edge, bigger for big bombs (Mr. Boom etc.)
     local big = BombVariant and (bm.Variant == BombVariant.BOMB_BIG or bm.Variant == BombVariant.BOMB_MR_MEGA)
     local br = S.bomb_r + pr + (big and 40 or 0)
     if (bm.Position - p):Length() < br then c = c + S.m_hit * wt end
   end
+  mark("bombs")
   return c
 end
 
@@ -338,7 +351,17 @@ local function ringCost(ctx, plan)
   local x = math.max(rg.x0 - plan.p.X, 0, plan.p.X - rg.x1)
   local y = math.max(rg.y0 - plan.p.Y, 0, plan.p.Y - rg.y1)
   local dr = math.sqrt(x * x + y * y)
-  local c = math.abs(dr - rg.r) * S.ring_w
+  -- keep a real GAP from the boss (2026-11-25: Gemini cut inside the lane at the corners and touched it 4 times in a
+  -- minute): a plan ending near where the boss will be costs; with the boss already close, the lane loosens so it can
+  -- cut across and get away instead of following the lane into it
+  local c = 0
+  if rg.boss then
+    local bp = rg.boss + rg.bossVel * 20
+    local d = (plan.p - bp):Length()
+    if d < S.ring_gap then c = c + (S.ring_gap - d) * S.ring_gap_w end
+  end
+  local laneW = (rg.boss and (ctx.player.Position - rg.boss):Length() < S.ring_gap) and S.ring_w * 0.3 or S.ring_w
+  c = c + math.abs(dr - rg.r) * laneW
   -- flow along the lane: angle gained around the room's middle, in the chosen direction
   local a0 = math.atan(ctx.player.Position.Y - rg.cy, ctx.player.Position.X - rg.cx)
   local a1 = math.atan(plan.p.Y - rg.cy, plan.p.X - rg.cx)
@@ -609,7 +632,10 @@ function Mover.choose(ctx)
     local alongLines = true
     if pb then
       local t = pb.tags
-      alongLines = t.shoots_ring or t.laser or (t.shoots_single and (t.invulnerable or t.stationary)) or false
+      -- (only INVULNERABLE stationary single shooters are fixed turrets: a Horf stands still but aims at Isaac.
+      -- 1.2.11 counted every stationary shooter: 4 Horfs made every row and column "dangerous", it found nowhere to
+      -- shoot from and circled scared, 2026-11-25)
+      alongLines = t.shoots_ring or t.laser or (t.shoots_single and t.invulnerable) or false
     end
     if e.Position and alongLines then
       local h = GetPtrHash(e)
@@ -703,9 +729,15 @@ function Mover.choose(ctx)
   end
   -- why it chose this (for the log): danger part, ways out, total; and the same for standing still
   if bestPl then
-    Mover.debug = string.format("best move %d: total %.0f (danger %.0f, closed ways %d, aim %s) | stand: %s | %d plans kept",
+    -- what the danger is made of where Isaac stands now (all sample times): which source is driving the choice
+    local parts, here = {}, {}
+    for si = 1, 3 do for _, t in ipairs(SEG[si]) do cost_at(ctx, player.Position, si, t, parts) end end
+    for k, v in pairs(parts) do if v >= 1 then here[#here + 1] = string.format("%s %.0f", k, v) end end
+    table.sort(here)
+    Mover.debug = string.format("best move %d: total %.0f (danger %.0f, closed ways %d, aim %s) | stand: %s | %d plans kept"
+      .. " | danger here: %s",
       best, bestC, bestPl.c, waysOut(ctx, bestPl.p), tostring(bestPl.aimT), standC and string.format("%.0f", standC) or "pruned",
-      #keep)
+      #keep, #here > 0 and table.concat(here, ", ") or "none")
   end
   Mover.last = { move = best, cost = bestC }
   Mover.lastMove = best

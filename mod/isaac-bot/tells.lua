@@ -8,7 +8,7 @@
 -- aimed at us, the reflexes move off the spot BEFORE the shot exists ("wind-up" = step aside).
 -- Nothing per enemy is hand-written: the table fills itself from experience.
 
-local Tells = { book = {}, cur = {}, lastReport = 0, trans = {} }
+local Tells = { book = {}, cur = {}, lastReport = 0, trans = {}, dur = {} }
 -- trans[type][from][to] = count: which animation follows which. An animation usually followed by one that
 -- HURTS is a warning (Dingle: "BeforeSlide" -> "Slide", and Slide was 64 hits).
 
@@ -37,6 +37,12 @@ function Tells.update(enemies)
             Tells.trans[e.Type] = tt
             tt[c.anim] = tt[c.anim] or {}
             tt[c.anim][anim] = (tt[c.anim][anim] or 0) + 1
+            -- and how long the previous animation lasted (shotComing: WHEN, not just whether)
+            local dt = Tells.dur[e.Type] or {}
+            Tells.dur[e.Type] = dt
+            local d = dt[c.anim] or { sum = 0, n = 0 }
+            d.sum, d.n = d.sum + (f - c.start), d.n + 1
+            dt[c.anim] = d
           end
           Tells.cur[h] = { anim = anim, start = f, shot = false, type = e.Type }
           entry(e.Type, anim).seen = entry(e.Type, anim).seen + 1
@@ -128,6 +134,15 @@ function Tells.hurtful(e)
   return nil
 end
 
+-- Share of the times this enemy's CURRENT animation was played that it hurt us (0 = never or too few to say).
+function Tells.hurtRateOf(e)
+  local c = Tells.cur[GetPtrHash(e)]
+  if not c then return 0 end
+  local r = (Tells.book[c.type] or {})[c.anim]
+  if not r or r.seen < 3 then return 0 end
+  return r.hits / r.seen
+end
+
 -- Is this enemy playing a WARNING animation: one that's usually followed by an animation that hurts us?
 -- (learned from transitions; e.g. Dingle's "BeforeSlide" before its dash)
 local function hurtRate(etype, anim)
@@ -156,7 +171,16 @@ function Tells.shotComing(e)
     total = total + n
     if shoots(to) then toShot = toShot + n end
   end
-  return total >= 3 and toShot / total >= 0.5
+  if not (total >= 3 and toShot / total >= 0.5) then return false end
+  -- WHEN: an animation that always leads into a shot (a Horf's Idle -> Attack) said "shot coming" all the time, so
+  -- 4 Horfs drew 4 permanent danger lines and the bot circled the far wall, scared (2026-11-25). Only in the last
+  -- ~half second before this animation usually ends.
+  local d = (Tells.dur[c.type] or {})[c.anim]
+  if d and d.n >= 3 then
+    local into = Game():GetFrameCount() - c.start
+    return into >= d.sum / d.n - 15
+  end
+  return true
 end
 
 function Tells.warning(e)

@@ -118,6 +118,7 @@ Reflex.S = {
   m_corner = 500,       -- v2: cost of ending in a corner (wall on a side AND above/below), x0.5-2.5 by movers near
   m_nolane = 150,       -- v2: cost of standing still when the plan never lines up a shot (rock pockets vs worms)
   boss_aim = 1.8,       -- boss fights: lining up a shot is worth this much more (finish it, don't chip at it)
+  plant_r = 90,         -- px: "plant your feet" for a sure shot unless an enemy is closer than this
   m_line_escape = 160,  -- v2: in a dasher's line / a coming shot's line, cost per blocked sidestep (half each side)
   escape_step = 45,     -- v2: px of one sidestep (checked at 1 and 2 steps)
   finish_w = 220,       -- target choice: bonus for an enemy our next 1 shot kills, fading to 0 at 5 shots
@@ -126,6 +127,8 @@ Reflex.S = {
   ring_r = 90,          -- ...whose corners are arcs this big (cuts every corner)
   ring_w = 3,           -- cost per px off the lane
   ring_flow = 220,      -- reward for moving along the lane in the chosen direction (per ~20 degrees)
+  ring_gap = 150,       -- ring-kite: px to keep from where the boss will be in ~0.7 s...
+  ring_gap_w = 8,       -- ...cost per px short of it
   corner_gap = 60,      -- v2: px to a wall on both axes that counts as a corner
   fire_pad = 14,        -- px: extra no-touch distance around lit fires
   deep_k = 6,           -- how many of the best moves get the expensive checks (speed: the rest are cut early)
@@ -822,6 +825,7 @@ function Reflex.ringFor(player, target, w, room)
   local away = (diff >= 0) and 1 or -1
   if math.abs(diff) < 0.5 and away ~= Reflex.ringDir then Reflex.ringDir = away end
   ring.dir = Reflex.ringDir
+  ring.boss, ring.bossVel = target.Position, Reflex.leadVel(target)
   return ring
 end
 
@@ -1230,6 +1234,11 @@ local DIRV = { left = Vector(-1, 0), right = Vector(1, 0), up = Vector(0, -1), d
 Reflex.curveK = 1.15     -- share of Isaac's sideways velocity a new tear keeps (self-calibrating;
                          -- measured 1.16 over 266 real shots on 2026-11-25, started from a 0.5 guess)
 Reflex.curveSamples = 0
+-- Learned from our own tears too (2026-11-25: "sure" shots hit only 25-52%): the real tear speed per shot-speed point,
+-- and how far tears fly before dropping, as a share of the range stat (tears that hit something are left out).
+Reflex.tearSpeedK = 10
+Reflex.reachK = 1.0
+local tearTrack = {} -- hash -> { spawn = pos, last = pos }
 
 -- Would a shot fired now (Isaac moving at `pv`, nil = standing) reach `pos`? Accounts for the curve.
 local function shotCanHitAt(room, player, shoot, pos, size, pv)
@@ -1237,12 +1246,13 @@ local function shotCanHitAt(room, player, shoot, pos, size, pv)
   if not dir or not pos then return false end
   local rel = pos - player.Position
   local along = rel:Dot(dir)
-  if along <= 0 or along > player.TearRange * 1.1 then return false end
+  -- how far tears really get before they drop (learned from our own tears; starts at the range stat)
+  if along <= 0 or along > player.TearRange * Reflex.reachK * 0.95 then return false end
   local offset = (dir.X ~= 0) and rel.Y or rel.X               -- signed: where the target sits sideways
   local drift = 0
   if pv then
     local side = (dir.X ~= 0) and pv.Y or pv.X
-    local flight = along / (Reflex.S.tear_speed * math.max(0.5, player.ShotSpeed))
+    local flight = along / (Reflex.tearSpeedK * math.max(0.5, player.ShotSpeed))
     drift = side * Reflex.curveK * flight                       -- how far the tear bends on the way
   end
   if math.abs(offset - drift) > (size or 10) + 8 then return false end
@@ -1277,6 +1287,8 @@ function Reflex.accReport()
   table.sort(parts)
   local s = string.format("%d%% of %d tears hit", a.fired > 0 and math.floor(100 * a.hit / a.fired) or 0, a.fired)
     .. (#parts > 0 and (" (" .. table.concat(parts, ", ") .. ")") or "")
+    .. string.format(" | learned: tear speed %.1f, reach %.2fx range, curve %.2f", Reflex.tearSpeedK, Reflex.reachK,
+      Reflex.curveK)
   Reflex.acc = newAcc()
   return s
 end
@@ -1284,15 +1296,40 @@ end
 -- Watch our own fresh tears: compare their sideways speed with Isaac's sideways speed when fired.
 local lastPlayerVel = Vector.Zero
 function Reflex.calibrateCurve(player)
+  local alive = {}
   for _, e in ipairs(Isaac.FindByType(EntityType.ENTITY_TEAR)) do
+    local h = GetPtrHash(e)
+    if e.SpawnerType == EntityType.ENTITY_PLAYER then
+      alive[h] = true
+      local tr = tearTrack[h]
+      if tr then tr.last = e.Position else tearTrack[h] = { spawn = e.Position, last = e.Position, range = player.TearRange } end
+    end
     if e.FrameCount == 1 and e.SpawnerType == EntityType.ENTITY_PLAYER then
       local a = Reflex.acc
       a.fired = a.fired + 1
       local k = Reflex.lastShotKind or "other"
-      a.kindOf[GetPtrHash(e)] = k
+      a.kindOf[h] = k
       a.byKind[k] = a.byKind[k] or { fired = 0, hit = 0 }
       a.byKind[k].fired = a.byKind[k].fired + 1
+      -- real tear speed along its direction, per shot-speed point (minus what Isaac's own movement added)
+      local v = e.Velocity
+      local dirv = (math.abs(v.X) > math.abs(v.Y)) and Vector(v.X > 0 and 1 or -1, 0) or Vector(0, v.Y > 0 and 1 or -1)
+      local along = v:Dot(dirv) - lastPlayerVel:Dot(dirv) * Reflex.curveK
+      local per = along / math.max(0.5, player.ShotSpeed)
+      if per > 4 and per < 25 then Reflex.tearSpeedK = Reflex.tearSpeedK * 0.95 + per * 0.05 end
     end
+  end
+  -- tears that are gone: how far did they get? (only ones that didn't hit anything: a hit ends a tear early)
+  for h, tr in pairs(tearTrack) do
+    if not alive[h] then
+      if not Reflex.acc.hitTears[h] and tr.range and tr.range > 0 then
+        local k = (tr.last - tr.spawn):Length() / tr.range
+        if k > 0.3 and k < 2.5 then Reflex.reachK = Reflex.reachK * 0.95 + k * 0.05 end
+      end
+      tearTrack[h] = nil
+    end
+  end
+  for _, e in ipairs(Isaac.FindByType(EntityType.ENTITY_TEAR)) do
     if e.FrameCount <= 1 and e.SpawnerType == EntityType.ENTITY_PLAYER then
       local v = e.Velocity
       local horizontal = math.abs(v.X) > math.abs(v.Y) -- fired left/right: sideways is Y
@@ -1407,7 +1444,10 @@ function Reflex.update(player)
     -- anyway): its attack comes along a line toward Isaac (the Haunt's LaserNoSkin hurt 4 times, its shots ~12 px a
     -- frame; a bigger circle around it didn't help: watcher queue 2026-11-25 "shot:260: more berth didn't help").
     -- Treat it like a shot coming: step off the line in time.
-    if not (ok3 and coming) and okH and hh and hh >= 2 and e.Velocity:Length() < S.dash_speed then coming = true; ok3 = true end
+    -- (by RATE, not count: 1.2.22 used "hurt us 2+ times", and Horf hits credited to its everyday Idle gave every Horf
+    -- a permanent line - "attack lines 18556" in the why line, the bot circled a room of 4 Horfs scared)
+    local okR, rate = pcall(Tells.hurtRateOf, e)
+    if not (ok3 and coming) and okR and rate >= 0.2 and e.Velocity:Length() < S.dash_speed then coming = true; ok3 = true end
     if ok3 and coming then
       w.aimed = w.aimed or {}
       w.aimed[#w.aimed + 1] = { from = e.Position, at = player.Position, eta = (ok and eta) or S.shot_coming_eta,
@@ -1728,6 +1768,28 @@ function Reflex.update(player)
   end
   if not moverNear and (lands or Reflex.linedUp(player)) and standCost and standCost - bestCost < S.still_tolerance then
     best = 0
+  end
+  -- Plant your feet (2026-11-25: "sure" shots hit only 25-52%): "lands" was checked for standing still, but in boss
+  -- fights a moving enemy is nearly always within stand_safe_r, so it kept running and the tear curved off with
+  -- Isaac's movement. Re-check with the move we'll really make. If it only lands standing: stop for this shot,
+  -- unless something is right on top of us or standing costs far more; otherwise it's not a sure shot.
+  if lands and shoot and st.target and best ~= 0 then
+    local t = st.target
+    local pvNow = player.Velocity * 0.5 + DIRS[best] * speed * 0.5
+    if not shotCanHitAt(room, player, shoot, ledPos or t.Position, t.Size, pvNow) then
+      local veryClose = false
+      for _, e in ipairs(w.enemies) do
+        if e.Type ~= EntityType.ENTITY_FIREPLACE and (e.Position - player.Position):Length() < S.plant_r then
+          veryClose = true; break
+        end
+      end
+      if not veryClose and standCost and standCost - bestCost < S.still_tolerance * 2 then
+        best = 0
+      else
+        lands = false
+        curved = false
+      end
+    end
   end
   -- Every tear starts a reload, so a shot that can't land delays the next real one: hold fire.
   -- (Gauntlet 2026-11-25: only 40-45% of shots could land against Gapers and Maggots.)
