@@ -794,7 +794,10 @@ function Reflex.ringFor(player, target, w, room)
   local function chaser(e)
     if e.Type == EntityType.ENTITY_FIREPLACE or not e:IsBoss() then return false end
     local pb, tac = playbookOf(e), Reflex.tacticsOf(e)
-    return (pb and pb.tags.chases) or (tac and tac.ring) or false
+    if tac and tac.ring then return true end
+    -- not for chasers that leave CREEP: following us round a fixed lane, they paint the lane (Gurglings: 5 creep
+    -- hits in the 1.2.21 boss bench, watcher queue 2026-11-25)
+    return (pb and pb.tags.chases and not pb.tags.leaves_creep) or false
   end
   local boss = (target.IsBoss and chaser(target)) and target or nil
   if not boss then
@@ -1248,19 +1251,33 @@ end
 
 -- Real accuracy (the author, 2026-11-25: "it feels like it's just shooting randomly"): tears fired vs tears that
 -- hit an enemy (main.lua counts the hits). Reported as an `aim` line.
-Reflex.acc = { fired = 0, hit = 0, hitTears = {} }
+-- Also per KIND of shot (sure = it lands standing still, curve = lands thanks to Isaac's movement, spray = roughly
+-- in line, any = whatever a shot would hit), so a low number points at the decision that's wasting tears.
+local function newAcc() return { fired = 0, hit = 0, hitTears = {}, kindOf = {}, byKind = {} } end
+Reflex.acc = newAcc()
+Reflex.lastShotKind = nil
 function Reflex.tearHit(tear, viaPlayer)
+  local a = Reflex.acc
+  local kind = nil
   if tear and not viaPlayer then
     local h = GetPtrHash(tear)
-    if Reflex.acc.hitTears[h] then return end -- piercing tears count once
-    Reflex.acc.hitTears[h] = true
+    if a.hitTears[h] then return end -- piercing tears count once
+    a.hitTears[h] = true
+    kind = a.kindOf[h]
   end
-  Reflex.acc.hit = math.min(Reflex.acc.fired, Reflex.acc.hit + 1)
+  a.hit = math.min(a.fired, a.hit + 1)
+  if kind and a.byKind[kind] then a.byKind[kind].hit = a.byKind[kind].hit + 1 end
 end
 function Reflex.accReport()
   local a = Reflex.acc
+  local parts = {}
+  for k, v in pairs(a.byKind) do
+    if v.fired >= 3 then parts[#parts + 1] = string.format("%s %d%%/%d", k, math.floor(100 * v.hit / v.fired), v.fired) end
+  end
+  table.sort(parts)
   local s = string.format("%d%% of %d tears hit", a.fired > 0 and math.floor(100 * a.hit / a.fired) or 0, a.fired)
-  Reflex.acc = { fired = 0, hit = 0, hitTears = {} }
+    .. (#parts > 0 and (" (" .. table.concat(parts, ", ") .. ")") or "")
+  Reflex.acc = newAcc()
   return s
 end
 
@@ -1268,7 +1285,14 @@ end
 local lastPlayerVel = Vector.Zero
 function Reflex.calibrateCurve(player)
   for _, e in ipairs(Isaac.FindByType(EntityType.ENTITY_TEAR)) do
-    if e.FrameCount == 1 and e.SpawnerType == EntityType.ENTITY_PLAYER then Reflex.acc.fired = Reflex.acc.fired + 1 end
+    if e.FrameCount == 1 and e.SpawnerType == EntityType.ENTITY_PLAYER then
+      local a = Reflex.acc
+      a.fired = a.fired + 1
+      local k = Reflex.lastShotKind or "other"
+      a.kindOf[GetPtrHash(e)] = k
+      a.byKind[k] = a.byKind[k] or { fired = 0, hit = 0 }
+      a.byKind[k].fired = a.byKind[k].fired + 1
+    end
     if e.FrameCount <= 1 and e.SpawnerType == EntityType.ENTITY_PLAYER then
       local v = e.Velocity
       local horizontal = math.abs(v.X) > math.abs(v.Y) -- fired left/right: sideways is Y
@@ -1379,6 +1403,11 @@ function Reflex.update(player)
     if ok and eta then w.windups[#w.windups + 1] = { e = e, eta = eta } end
     -- a shot coming soon (the animation that usually comes right before a shooting one): aimed at where Isaac is
     local ok3, coming = pcall(Tells.shotComing, e)
+    -- an animation that has HURT us before, on an enemy that isn't dashing (a dash is predicted as a straight line
+    -- anyway): its attack comes along a line toward Isaac (the Haunt's LaserNoSkin hurt 4 times, its shots ~12 px a
+    -- frame; a bigger circle around it didn't help: watcher queue 2026-11-25 "shot:260: more berth didn't help").
+    -- Treat it like a shot coming: step off the line in time.
+    if not (ok3 and coming) and okH and hh and hh >= 2 and e.Velocity:Length() < S.dash_speed then coming = true; ok3 = true end
     if ok3 and coming then
       w.aimed = w.aimed or {}
       w.aimed[#w.aimed + 1] = { from = e.Position, at = player.Position, eta = (ok and eta) or S.shot_coming_eta,
@@ -1706,6 +1735,7 @@ function Reflex.update(player)
   -- Run AND shoot (the author, 2026-11-25: "why is it not shooting behind itself against these flies? You can
   -- shoot and run"). The planned target's shot won't land -> any enemy a shot WOULD hit right now, in any of
   -- the 4 directions (behind us while fleeing included), nearest first.
+  local curvedOnly, anyShot, sprayShot = curved, false, false
   if S.any_shot > 0 and not lands and not curved and not (st.target and st.target.kind) then
     local pv = player.Velocity * 0.5 + DIRS[best] * speed * 0.5
     local bestD, pick, pickDir = math.huge, nil, nil
@@ -1722,7 +1752,7 @@ function Reflex.update(player)
         end
       end
     end
-    if pick then shoot, curved, st.target = pickDir, true, pick end
+    if pick then shoot, curved, st.target = pickDir, true, pick; anyShot = true end
   end
   -- Spray when roughly in line (the author, 2026-11-25: "way too carefully" vs spiders). Jumpy enemies are never a
   -- SURE hit, so "only fire if it lands" meant it never fired at all; tears are free and spiders die in two.
@@ -1736,18 +1766,25 @@ function Reflex.update(player)
       tpos = tpos + Reflex.leadVel(st.target) * math.min(tt, 30)
     end
     local rel = tpos - player.Position
+    -- a boss is big and moves predictably: past its own size + a tear the spray just flies by (1.2.21 bench:
+    -- 30-55% of tears hit Dingle while risk and boss windows had widened the spray to 60-100 px)
+    local loose = S.loose_aim
+    if st.target.IsBoss and st.target:IsBoss() then loose = math.min(loose, (st.target.Size or 20) + 10) end
     for _, sd in ipairs({ shoot, "left", "right", "up", "down" }) do
       local dir = ({ left = Vector(-1, 0), right = Vector(1, 0), up = Vector(0, -1), down = Vector(0, 1) })[sd]
       local along = rel:Dot(dir)
       local off = math.abs(dir.X ~= 0 and rel.Y or rel.X)
-      if along > 0 and along < player.TearRange and off < S.loose_aim
+      if along > 0 and along < player.TearRange and off < loose
          and Reflex.lane(room, player.Position, player.Position + dir * along) < 2 then
-        shoot, curved = sd, true -- counts as "worth firing"
+        shoot, curved, sprayShot = sd, true, true -- counts as "worth firing"
         break
       end
     end
   end
   if shoot and not lands and not curved and not (st.target and st.target.kind) then shoot = nil end
+  -- which decision fired this tear (for the per-kind aim report)
+  Reflex.lastShotKind = shoot and ((st.target and st.target.kind) and "object" or lands and "sure" or curvedOnly
+    and "curve" or anyShot and "any" or sprayShot and "spray" or "other") or nil
   lastChoice = best
   -- remember who we're shooting at (finishBonus: stick with the enemy we've been damaging)
   if st.target and not st.target.kind and shoot then Reflex.lastTargetHash = GetPtrHash(st.target) end

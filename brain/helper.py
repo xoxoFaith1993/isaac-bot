@@ -300,6 +300,10 @@ def send_playbook(pipe):
         en = json.loads(fp.read_text(encoding="utf-8")).get("enemies", {})
         parts = []
         for key, e in en.items():
+            # only hand-written and reviewed entries; the local-AI drafts (source "draft", 2026-11-25) wait until
+            # someone checks them: a wrong tag (say "chases") changes how the bot fights that enemy
+            if e.get("source") == "draft":
+                continue
             tags = [t for f in ("movement", "attacks", "defense") for t in (e.get(f) or []) if t in PLAYBOOK_TAGS]
             tags.append(f"k{e.get('kill_priority', 0)}")
             tags.append(f"d{e.get('danger', 0)}")

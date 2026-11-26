@@ -548,6 +548,9 @@ priority of the core fundamentals." Core = no damage on floors 1-2, natural move
 - **Burrowers:** plan the firing spot on the hole where a burrowed enemy last surfaced (Round Worms; mirror chat).
 - **Play style per item:** like the invincible window, e.g. homing tears = spray freely, flight = ignore pits.
 - **Two-input active items** (Bob's Rotten Head and similar).
+- **Pre-seed tells from the game's animation events** (bestiary: e.g. Dingle Spit Shoot@3, Haunt LaserNoSkin
+  Shoot@17) so the bot knows when each attack fires before it ever gets hit; kept in a gitignored file.
+- **Check the 201 draft playbook entries** (local AI from wiki text) before the helper sends them.
 - **Leading shots on the Haunt:** still not strong (the author, 2026-11-25: "doesn't have to change immediately").
   It slides and turns at the walls; the lead uses a settled average velocity clamped to the room.
 - **Laptop as a second test machine** (parked: usage cost).
