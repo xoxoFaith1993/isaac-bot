@@ -1033,7 +1033,8 @@ the C by the write-up session; each is noted where it happened. Labels: `[catego
   - normal Envy goes 1 → 2 → 4 → 8.
   - *Settled:* one reader gave the child speed as 0.4 × 10 = 4 and the other as 4. Same number.
 - **Child HP:** the 10s ÷ 3, the 20s ÷ 4, the 30s ÷ 5 (of the config HP). `[body · E3 0x47a480 · 2 readers]`
-- **A wall at y = 320** in one room kind (+0x1bb0 == 55) only. `[terrain · E3 0x47a480 · 2 readers]`
+- **A wall at y = 320**, only when the room's boss id (+0x1bb0, `_bossId` in the field table) is 55. That is
+  probably the Mega Satan arena (unconfirmed). Corrected in E3b from "room kind". `[terrain · E3 0x47a480 · 2 readers]`
 
 ### Pride (52.0, Super 52.1), `0x47e160`
 - **Walk:** a random axis walk at 1.0, with friction × 0.75. `[move · E3 0x47e160 · 2 readers]`
@@ -1072,3 +1073,172 @@ the C by the write-up session; each is noted where it happened. Labels: `[catego
 - **Greed:** fire at stateFrame 5, ≈ 12 px/update; summon type 29 (Hoppers).
 - **Envy:** child speed 4; the 3rd child for Super; push per size.
 - **Pride:** diagonal beams at stateFrame 20 after a sound at 12; bomb count 4 vs 2; state length 46.
+
+## Batch E3b (2026-11-26): the horsemen (Famine, Death, Pestilence, War, Conquest)
+
+Two blind readers (Sonnet, Haiku). Disagreements and lost arguments were settled by the write-up session in the C and
+the annotated assembly (`probe dis:`). Ghidra lost every spawn argument in Death and War's fire mode; the assembly
+gave them back. Shared facts:
+- **Friction and speeds:** all four multiply friction by 0.8. Steady speed = push / (1 − f), as in E3.
+- **The hard-mode boost:** "×1.25 in hard mode" means `0x6dfc20 > 0` or `game+0x26e68` is 1 or 3. That's Hard or
+  Greedier, likely but not confirmed.
+- **Bit 60** of the entity flags, likely "friendly", swaps in other behaviour. The lists below cover normal (hostile)
+  fights only.
+- **The y = 320 floor** in their code applies only when the room's boss id is 55 (see the Envy note). It doesn't apply
+  in normal fights.
+
+### Famine (63.0; subtype 1 = the alternate colour), `0x45a8d0`
+- **Phase 1, State 4, floating:** `[move · E3b 0x45a8d0 · 2 readers]`
+  - an unnamed move helper (`0x7eeba0`);
+  - y is held at ≥ 170 (it never goes into the top strip);
+  - grid class 3.
+- **The summon (State 13):** a 1-in-40 chance per update when the room has fewer than 3 enemies.
+  `[timing · E3b 0x45a8d0 · 2 readers]`
+  - On the anim's "Shoot" event it spawns **one Pooter (14.0) 50 px away** (subtype 1: a **6-shot ring at 8**
+    instead).
+  - It ends with the animation.
+  - `[attack · E3b 0x45a8d0 · 2 readers]`
+- **The dash (State 8):** `[timing · E3b 0x45a8d0 · 2 readers]`
+  - **Trigger:** when Isaac is **within 20 px of its row** (subtype 1: or a 1-in-4 roll), then a 1-in-5 roll; not while
+    confused or feared.
+  - **Tell:** a sound and "AttackDashStart". The dash launches on that animation's "Shoot" event.
+  - **Movement:** **velocity.x = ±18** (22.5 in hard mode), set every update, **toward Isaac's side**, grid class 2.
+    `[move · E3b 0x45a8d0 · 2 readers]`
+  - **Lap:** it **runs 200 px off-screen, reappears 80 px beyond the other edge, and stops when it gets back to its
+    starting x**. One full lap across the screen.
+  - **Subtype 1** also steers up or down toward Isaac (at most 0.4 per update before friction).
+- **Below 33% HP: the head phase (State 9)**, permanent. The horse bursts (effect 1000.2) and the head stays.
+  `[body · E3b 0x45a8d0 · 2 readers]`
+  - **The shot:** `[attack · E3b 0x45a8d0 · 2 readers]`
+    - **Trigger:** cooldown ≤ 0 and the can-shoot check passes (range set in a register, unreadable).
+    - **Tell:** "HeadAttack"; the cooldown is re-armed to **8**.
+    - **On the "Shoot" event:** a **triple (mode 2) aimed at Isaac: centre 10 × 1.2 = 12 px/update, sides 10.8 at
+      ±16°** (subtype 1: 10 boss shots).
+    - *Settled:* one reader read the aim as 10 / distance. With the hidden sqrt it's a unit vector × 10, which matches
+      the 11.9 px/update shots in live run 1.2.49.
+  - **Cadence:** a shot about every 9 updates while the can-shoot check passes. `[timing · E3b 0x45a8d0 · 2 readers]`
+  - **Movement:**
+    - it **only moves while it can't shoot** (cooldown ≤ 0 and check false);
+    - then it chases at push 0.5, a **steady ≈ 2.5 px/update**;
+    - in range it stands and shoots.
+    `[move · E3b 0x45a8d0 · 2 readers]`
+
+### Death (66.0 rider, 66.10 scythe, 66.20 horse, 66.30 on foot), `0x45d9b0`
+- **Rider (66.0), at 50% HP or more, State 4:** it walks, and each update rolls three things in turn:
+  `[timing · E3b 0x45d9b0 · 2 readers]`
+  - 1/90 → **State 13**, when enemy count A − B < 1 or 2;
+  - 1/180 → the **hourglass** (State 8), subtype 0 only, and only while the room slow timer is 0;
+  - 1/100 → **State 14**, when A − B < 4.
+- **State 13:** at stateFrame 20, **2 scythes (66.10)** at free spots more than 150 px from Isaac (subtype 1: **2
+  Kamikaze Leeches, 55.1**, at ±50 px). It ends at stateFrame > 48. `[attack · E3b 0x45d9b0 · 2 readers]`
+  - The spawn types come from the assembly.
+- **State 14:** at stateFrame 18, **up to 4 scythes**, one at each room edge on Death's row and column: (left, y),
+  (right, y), (x, top), (x, bottom). Each is skipped when within 80 px of Isaac. `[attack · E3b 0x45d9b0 · 2 readers]`
+  - These wait and then home (below). The state ends at stateFrame > 48.
+- **The hourglass (State 8):** at **stateFrame 22** (≈ 0.73 s of tell after the roll): `[timing · E3b 0x45d9b0 · 2 readers]`
+  - **Isaac is slowed:** `AddSlowing(160 updates, value 0.9)` on every player, so **5.3 s** of slow.
+    `[move · E3b 0x45d9b0 · 2 readers]`
+    - What 0.9 means to the engine (×0.9 or a strength) is unresolved.
+  - **The room slow timer** (`room+0x7244`) is set to at least 160. Two other game functions read it.
+    `[move · E3b 0x45d9b0, 0x659930, 0x6c09f0 · 1 reader (write-up session)]`
+    - While it's above 0, **friendly NPCs (entity flag `0x20000000`) and shots with projectile flags `0x80000080`
+      run at half speed**.
+    - **Ordinary enemies and enemy shots are not slowed by it.**
+    - A third reader of the timer is a 46 KB function, probably the tear update, so **Isaac's tears are probably
+      halved too (unproven)**.
+  - **No re-cast while the timer runs:** 160 updates, then a 1/180 roll, so **about 11 s apart** on average. The
+    state lasts 53 updates and Death attacks nothing else meanwhile.
+- **Scythes (66.10):** `[move · E3b 0x45d9b0 · 2 readers]`
+  - health 15, collision class 2 (touches Isaac and tears), **grid class 0 (flies over rocks)**, friction × 0.975;
+  - **State 14 scythes** wait still for 80 − 0.1 × (distance to Isaac) updates, then push 0.75 along a helper's
+    vector (`0xa29990`, likely toward Isaac) and vanish after 180 updates;
+  - **State 13 scythes** push 0.5 every update and have no timer;
+  - both vanish beyond 250 px of an anchor (unresolved which).
+  - **Homing is likely but not proven:** the helper's body is unread, and the readers flag that the steady speed would
+    be implausible (≈ 20-30) if it were a unit vector.
+- **Below 50% HP (State 6):** an animation, then **it morphs to 66.30 and spawns the horse 66.20** 15 px to its side.
+  `[body · E3b 0x45d9b0 · 2 readers]`
+  - *Settled:* one reader called 66.20 a scythe. The assembly shows the split spawning 66.20 and morphing into 66.30.
+- **The horse (66.20):** `[move · E3b 0x45d9b0 · 2 readers]`
+  - **velocity.x = ±18** every update (22.5 in hard mode); collision class 4, grid class 2;
+  - it **wraps 200 px off each side, and each wrap moves it down 0.3 × the room height** (back up near the bottom), so
+    it sweeps lane by lane;
+  - **it never aims in y**;
+  - a sound plays once per pass when it's within 150 px of Isaac's x;
+  - it drains 1 HP per update while within 40 HP of the rider.
+- **On foot (66.30):** walks. 1/90 → State 13: at stateFrame 16, **2 Knights (41.0)** (subtype 1: 2 Red Maws, 26.1)
+  at ±10 px. It ends at stateFrame > 41. No hourglass. `[attack · E3b 0x45d9b0 · 2 readers]`
+
+### Pestilence (64.0; subtype 1 alternate), `0x45b4d0`
+- **Phase 1:** a random axis walk at 1.0. Each update: `[timing · E3b 0x45b4d0 · 2 readers]`
+  - 1/40 → **summon**, when the room has fewer than 4 enemies;
+  - otherwise 1/20 and **Isaac within 230 px** → **Attack1**.
+- **Attack1:** **one boss shot at Isaac, trajectory 10, lobbed and green** at stateFrame 22 (subtype 1: a 6-shot ring
+  at 8, from 30 px above). It ends at 40. `[attack · E3b 0x45b4d0 · 2 readers]`
+- **Summon:** at stateFrame 25, **2 of Charger (23.0) or Spitty (31.0)** at ±10 px (subtype 1: one Trite, 29.1). It
+  ends at 57. `[attack · E3b 0x45b4d0 · 2 readers]`
+- **Below 50% HP: headless** (i1 = 1). **Stationary**, with the same rolls: `[body · E3b 0x45b4d0 · 2 readers]`
+  - **the shot** at stateFrame 9 (ends at 29);
+  - **the summon** at 25: **1-2 Attack Flies (18.0)** 40 px to its side (subtype 1: a thrown spider at 19).
+- Passive trail effects: 1000.7 every 3rd update (subtype 0), and 1000.23 (green creep) / 1000.25 every 7th. Whether
+  they hurt is unresolved. `[terrain · E3b 0x45b4d0 · 2 readers]`
+
+### War (65.0) and Conquest (65.1), `0x45c500`
+- **State 4:** a walk; x is clamped inside the room. Each update, in order: `[timing · E3b 0x45c500 · 2 readers]`
+  - 1/90 and **Isaac within 200 px** → the shot;
+  - 1/200 when farther than 150 px, or 1/30 when **Isaac is within 20 px of its row** → the **dash**;
+  - otherwise 1/180 → the **jump**.
+- **The shot (State 8):** at stateFrame 5. `[attack · E3b 0x45c500 · 2 readers]`
+  - **Mode 8, an 8-way ring at 10** (12 in hard mode), lobbed (height −45, fall 7.0). **Subtype 1 uses mode 6**.
+  - *Settled from the assembly:* both readers had lost the mode.
+  - It ends at 38.
+- **The jump (State 6):** `[body · E3b 0x45c500 · 2 readers]`
+  - **untouchable from stateFrame 21** (collision class 0, no shadow);
+  - **drops** from stateFrame 32, one every 5 updates: `[attack · E3b 0x45c500 · 2 readers]`
+    - War: **5 troll bombs (4.3)** at spots from `0x81baf0` (subtype 1: 2 mega troll bombs, 4.4);
+    - **Conquest: 15 light beams (effect 1000.19)** at random spots, **every 5th aimed at Isaac's position + 0.2 ×
+      distance × his velocity**;
+    - *Settled:* 2.8e-45 is 2, not the "4" one reader read.
+  - It lands after 5N + 113 updates: **War 138, Conquest 188**.
+  - It then **charges in from the side away from Isaac** (x ≤ 320 → enters from the right).
+- **The dash (State 9):** `[move · E3b 0x45c500 · 2 readers]`
+  - **±18 px/update** (22.5 in hard mode) once "DashStart" ends;
+  - **3 wraps, each moving it down 0.3 × the room height**;
+  - it ends back at its start x.
+  - **Conquest** spawns clones (65.1, parented, sharing damage) at the 2nd crossing, in spread lanes.
+  - **War subtype 1** drops a troll bomb after each wrap.
+- **Conquest shares damage:** a hit on one is applied to every clone. `[body · E3b 0x45c500 · 2 readers]`
+- **War below 50% HP:** it morphs to **65.10, on foot**: `[move · E3b 0x45c500 · 2 readers]`
+  - a path chase at 0.5 rising to ≈ 1.35;
+  - it **re-enters State 8 after losing about 75-82 HP since its last attack**;
+  - subtype 1 fires a 6-shot ring at 10 at stateFrame 3.
+
+### Bot meaning (E3b)
+- **Famine:**
+  - **stay off its row** in phase 1: the dash is a full-screen lap at 18;
+  - **below 33%, the head stands and fires a 12 px/update triple about every 9 updates while it can see Isaac.**
+    Break line of sight or move sideways between shots; it only creeps (≈ 2.5) when it can't shoot.
+- **Death:**
+  - **the hourglass** slows Isaac for 5.3 s, about every 11 s at most. The bot's movement model must apply the slow
+    while it lasts; record the real factor.
+  - **State 14 scythes come from the four edges on Death's row and column after a delay**: step off its row and column
+    when its State 14 animation starts.
+  - **Below 50%, the horse sweeps rows at 18.** Watch its lane, which drops 0.3 × the room height per wrap.
+- **Pestilence:** a slow single lobbed shot; its summons are the danger. Below 50% it's stationary: free damage.
+- **War:**
+  - stay off its row (the dash);
+  - the 8-ring needs Isaac within 200 px;
+  - **during the jump it's untouchable**, and bombs fall at random spots;
+  - after landing it charges from the side away from Isaac.
+  - **Conquest:** dodge the aimed light beam (every 5th) and the clone charges.
+
+### Record to confirm (E3b)
+- **Famine:** head-phase shot speed 12 / 10.8 (matches 1.2.49?); about 9 updates between triples; the can-shoot range
+  (≈ 140 px in 1.2.49?); the 33% threshold; the dash lap at 18.
+- **Death:**
+  - Isaac's speed during the hourglass (the factor for 0.9), the 160-update duration and the ≈ 11 s gap;
+  - **whether Isaac's tears halve while the room timer runs**;
+  - whether the scythes home in, and their speed;
+  - the horse lanes.
+- **Pestilence:** the 230 px attack range; the summon types.
+- **War:** the 8-ring at 10; the jump bomb count (5); the 138-update airtime; the dash entry side.
