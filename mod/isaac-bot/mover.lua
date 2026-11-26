@@ -16,6 +16,11 @@
 -- Shooting is part of the same plan: being lined up with an open lane to the target is a reward.
 
 local Danger = include("danger")
+-- forecast plan step 2 (2026-11-26): enemy cards (game facts read from the code, checked against recordings) predict
+-- where a body goes, for the move kinds where the card check showed them beating the learned guess
+local Forecast = include("forecast")
+local okCards, Cards = pcall(include, "cards")
+Forecast.setCards(okCards and Cards or {})
 local Mover = {}
 
 local H = { 6, 15, 30, 45 } -- learned look-ahead points (updates; 30 = 1 s)
@@ -205,6 +210,36 @@ end
 
 ----------------------------------------------------------------- search
 -- Sample times along the three moves (updates from now): precomputed predictions are shared by all plans.
+-- An enemy's "could be here" zone from its CARD (forecast plan step 2): the forecast body position, with a radius that
+-- grows with time (and faster when the card's rule doesn't apply right now). Only for the move kinds listed in
+-- forecast_kinds: the ones the card check (test/card_check.lua) showed beating the learned guess. Chasers keep the
+-- learned circle and its "homes in on wherever Isaac goes" handling for now.
+function Mover.cardZone(e, t, S, ctx)
+  local card = Forecast.cardFor(e.Type .. "." .. e.Variant)
+  local m = card and card.move
+  if not m or not m.kind then return nil end
+  if not (("," .. (S.forecast_kinds or "") .. ","):find("," .. m.kind .. ",", 1, true)) then return nil end
+  local h = GetPtrHash(e)
+  local s = ctx.fcCache[h]
+  if not s then
+    local p, v = e.Position, e.Velocity
+    local n = e.ToNPC and e:ToNPC()
+    local tp = n and n.TargetPosition
+    s = { x = p.X, y = p.Y, vx = v.X, vy = v.Y, size = e.Size or 13, state = n and n.State or -1,
+          tx = tp and tp.X or 0, ty = tp and tp.Y or 0 }
+    ctx.fcCache[h] = s
+  end
+  if not ctx.fcIsaac then
+    local pp, pv = ctx.player.Position, ctx.player.Velocity
+    ctx.fcIsaac = { x = pp.X, y = pp.Y, vx = pv.X, vy = pv.Y }
+    local tl, br = ctx.room:GetTopLeftPos(), ctx.room:GetBottomRightPos()
+    ctx.fcBounds = { x0 = tl.X, y0 = tl.Y, x1 = br.X, y1 = br.Y }
+  end
+  local x, y, sure = Forecast.body(card, s, t, ctx.fcIsaac, ctx.fcBounds)
+  local r = s.size + S.fc_pad + t * (S.fc_grow + (1 - sure) * S.fc_unsure)
+  return { c = Vector(x, y), cx = x, cy = y, r = r, mover = true, card = true }
+end
+
 local SEG = { { 2, 4, 6, 8 }, { 11, 14, 17, 20 }, { 25, 30, 35 } }
 local SEG_END = { 8, 20, 35 }
 
@@ -707,13 +742,18 @@ function Mover.choose(ctx)
   ctx.byT = {}
   ctx.arcMemo = {} -- lobbed shots' height per update ahead (one simulation per shot per update)
   ctx.knownCache, ctx.hasDash = {}, false -- known-AI zones (Dingle), one per enemy per update
+  ctx.fcCache, ctx.fcIsaac = {}, nil -- card forecasts: each enemy's state read once per update
   for si = 1, 3 do
     for _, t in ipairs(SEG[si]) do
       local zs, ss = {}, {}
       for _, e in ipairs(w.enemies) do
         local kz = (S.predict_known or 0) ~= 0 and e.Type ~= EntityType.ENTITY_FIREPLACE
                    and Mover.knownZone(e, t, S, ctx.knownCache) or nil
-        if kz then
+        local fz = (not kz) and (S.forecast or 0) ~= 0 and e.Type ~= EntityType.ENTITY_FIREPLACE
+                   and Mover.cardZone(e, t, S, ctx) or nil
+        if fz then
+          zs[#zs + 1] = fz -- its card's forecast (forecast.lua) instead of the learned circle
+        elseif kz then
           zs[#zs + 1] = kz -- known AI (Dingle): its real state instead of the learned circle
           if kz.dash then ctx.hasDash = true end
         elseif e.Type == EntityType.ENTITY_FIREPLACE then

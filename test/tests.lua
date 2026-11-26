@@ -1773,4 +1773,24 @@ run("strategy: deals, shop and risky rooms", function()
   St.ratings = {}
 end)
 
+-- 69. 1.2.41 forecast plan step 2: a darting spider's card puts its zone where the dart ENDS (its TargetPosition), not
+-- where its current velocity would carry it. The card check (2026-11-26) found the spider darts to a fixed point
+-- without re-aiming: forecast 24 px off after 16 updates vs 62 for coasting.
+run("a darting spider's zone is at the dart's end (card forecast)", function()
+  Mock.room(nil, { clear = false, player = Mock.tile(10, 6) })
+  local spider = Mock.enemy(94, 0, Mock.tile(3, 4), { hp = 20 })
+  spider.Velocity = Mock.vec(8, 0)
+  spider.TargetPosition = Mock.tile(7, 2)
+  spider.ToNPC = function(self) return self end
+  spider.State = 4
+  local S, M = Reflex.S, Reflex.mover
+  local ctx = { fcCache = {}, player = Isaac.GetPlayer(), room = Game():GetRoom() }
+  local z = M.cardZone(spider, 20, S, ctx)
+  local goal = Mock.tile(7, 2)
+  local d = z and math.sqrt((z.cx - goal.X) ^ 2 + (z.cy - goal.Y) ^ 2) or 999
+  check("a darting spider's zone is at the dart's end (card forecast)", z ~= nil and d < 30,
+        fmt("zone centre %s px from the dart's end after 20 updates (coasting would be ~%d px off)",
+            z and string.format("%.0f", d) or "none", math.floor(math.sqrt((spider.Position.X + 160 - goal.X) ^ 2 + (spider.Position.Y - goal.Y) ^ 2))))
+end)
+
 return table.concat(results, "\n")

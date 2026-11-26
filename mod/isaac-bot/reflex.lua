@@ -115,6 +115,11 @@ Reflex.S = {
   shot_coming_eta = 8,  -- updates until a 'shot coming' (pre-shooting animation) is assumed to fire
   body_r = 8,           -- px: walls/rocks are checked out to this far from Isaac's centre (his body must fit)
   predict_known = 0,    -- 1: Dingle predicted from its real AI state (mover.lua knownZone); 0 = learned circles (A/B)
+  forecast = 0,         -- 1: enemies with a card predicted by forecast.lua (forecast plan step 2); 0 = learned circles
+  forecast_kinds = "dart,hop,charge_line,bounce", -- move kinds the card check showed beating the learned guess
+  fc_pad = 8,           -- px added to a card zone's radius
+  fc_grow = 0.9,        -- px per update a card zone grows (card check: ~11-24 px median error after 16 updates)
+  fc_unsure = 1.0,      -- extra px per update when the card's rule doesn't apply right now (idle spider etc.)
                         -- (off until its offline test passes and its own A/B runs)
   dingle_lock = 5,      -- updates before Dingle's push that his aim locks (recordings: Slide start fits best; A/B-able)
   lob_overhead = -50,   -- a lobbed shot higher than this (more negative) is overhead: no danger yet (mover.lua).

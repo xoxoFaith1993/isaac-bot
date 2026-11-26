@@ -228,6 +228,9 @@ return {
   { test = "doesn't shoot poop next to a moving enemy in the open", why = "gates only for walled-in enemies",
     patches = { { file = "reflex", find = "if not t.kind and walledIn(t) and", replace = "if not t.kind and" } } },
 
+  { test = "a darting spider's zone is at the dart's end (card forecast)", why = "dart forecast missing (coasting)",
+    patches = { { file = "forecast", find = "  local x, y = steer(s, t, tx, ty, m.dart_speed or 9", replace = "  local x, y = coast(s, t, 1, b); if true then return x, y, 1 end\n  local x, y = steer(s, t, tx, ty, m.dart_speed or 9" } } },
+
   { test = "doesn't swap its card for a pill", why = "pocket slot check for pills/cards",
     patches = { { file = "nav", find = "(p:GetPill(0) == 0 and p:GetCard(0) == 0) and V.pill_card or 0",
                   replace = "V.pill_card" } } },

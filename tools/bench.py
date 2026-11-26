@@ -245,10 +245,19 @@ def run(label, suite_name, reps, arms, only):
 
 # ---------------------------------------------------------------------------------------------------- statistics
 def load_rows(name):
+    # "label:B" = only arm B of that run, so a paired A/B run can be gated arm against arm (2026-11-26)
+    arm = None
+    if ":" in name and not (OUT / f"{name}.jsonl").exists():
+        name, arm = name.rsplit(":", 1)
     fp = OUT / f"{name}.jsonl"
     if not fp.exists():
         sys.exit(f"no results {fp}")
-    return [json.loads(l) for l in fp.read_text(encoding="utf-8").splitlines() if l.strip()]
+    rows = [json.loads(l) for l in fp.read_text(encoding="utf-8").splitlines() if l.strip()]
+    if arm is not None:
+        rows = [r for r in rows if r.get("arm") == arm]
+        if not rows:
+            sys.exit(f"no rows for arm {arm} in {fp}")
+    return rows
 
 
 def per_item(rows):
