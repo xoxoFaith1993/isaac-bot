@@ -87,9 +87,26 @@ still guards its fix. A real bug found but not fixed yet goes in as a `known(...
 first. A failing test blocks the reload, so a broken mod never reaches the running game.
 
 ### 3f. Measure, and beware of outliers
-One run proves nothing: a strong item can make a bad bot look good. So:
-- **The real-room bench** (`tools/rooms.py collect` then `run`) replays rooms where the bot got hit, **item-free**,
-  worst first, and reports clear time and hits.
+One run proves nothing: a strong item can make a bad bot look good, and boss fights swing a lot by luck. So every
+behaviour change is judged on **the benchmark** (`tools/bench.py`), and has to pass its gate:
+- **Locked suites:** made once on your PC from your own logs: `rooms.py collect`, then
+  `bench.py freeze --name quick --floors 1,2 --rooms 6` (floors 1-2: every boss and miniboss plus the worst normal
+  rooms, about 30 minutes a rep) and `bench.py freeze --name v1 --rooms 16` (all floors, for overnight runs). A suite
+  never changes once used; a new one gets a new name, so old numbers stay comparable. (Not committed: the room names
+  come from the game's files.)
+- **Fair conditions:** the runner starts a fresh item-free run, freezes the bot's learning (`learn=0`) and pauses the
+  watcher (`runs/watch/PAUSED`), so A and B both start from the same learned state.
+- **Paired A/B in one run:** `bench.py run --label plantA_B --suite quick --reps 3 --arm "A:plant_feet=1"
+  --arm "B:plant_feet=0"` plays every room with both settings back to back, alternating which goes first. To compare
+  two code versions instead, run the same suite on each version (`--label v1.2.28`, `--label v1.2.29`).
+- **Error bars and a verdict:** `bench.py report A B` prints per-room numbers and the difference in hits per room,
+  clear rate and seconds with 90% error bars: **better**, **worse**, or **can't tell** (play more reps; it does not
+  mean "fine").
+- **The gate:** `bench.py gate <baseline> <candidate>` fails if the candidate is clearly worse. Don't ship a change
+  that fails it, and say in the commit which labels you compared. Every result row is tagged with the bot version,
+  git commit, suite and arm (`runs/bench/<label>.jsonl`).
+- **The real-room bench** (`tools/rooms.py collect` then `run`) is the quick, informal version: it replays rooms where
+  the bot got hit, worst first. Good for finding the next problem, not for proving a fix.
 - **The gauntlet** (`tools/gauntlet.py`) runs common enemies and bosses one by one.
 - **A/B tests** run the same thing with a setting on and off. For example, `risk|0.25` pins the old careful play.
 - `knowledge/ITEMS.md` gives every item a "carry" score, so results can say what the bot was holding.
@@ -177,7 +194,7 @@ and `hit` lines while watching. That's the fastest way to understand the bot.
 - *Either:* test it on Linux (the Linux setup hasn't been tried on a real Linux PC yet), or improve the tools.
 
 **Open a pull request** with: what was wrong (log lines or a frame help), the category you fixed, the test, and
-before/after numbers from the bench or gauntlet.
+the `tools/bench.py report` output for before vs after (the gate must pass).
 
 ## 8. Glossary
 

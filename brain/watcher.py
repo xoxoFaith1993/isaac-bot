@@ -117,8 +117,17 @@ class Watcher:
         self.send("lessons", self.lessons_payload())
 
     # ------------------------------------------------------------------ events
+    def paused(self):
+        """A benchmark is running (tools/bench.py writes runs/watch/PAUSED): no lessons, nudges or queue entries,
+        so A and B play with the same settings."""
+        return (self.dir / "PAUSED").exists()
+
     def on_event(self, kind, body):
         now = time.time()
+        if self.paused():
+            if kind == "start":
+                self.send_lessons()
+            return
         if kind not in ("ping", "pong", "eyes"):
             self.recent.append(f"{time.strftime('%H:%M:%S')} {kind} {body[:220]}")
         if kind == "why":
@@ -141,6 +150,8 @@ class Watcher:
 
     def on_state(self, state):
         now = time.time()
+        if self.paused():
+            return
         try:
             for e in state.get("e", []):
                 key = f"{e[0]}.{e[1]}"

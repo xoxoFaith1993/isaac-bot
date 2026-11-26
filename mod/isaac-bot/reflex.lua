@@ -118,6 +118,7 @@ Reflex.S = {
   m_corner = 500,       -- v2: cost of ending in a corner (wall on a side AND above/below), x0.5-2.5 by movers near
   m_nolane = 150,       -- v2: cost of standing still when the plan never lines up a shot (rock pockets vs worms)
   boss_aim = 1.8,       -- boss fights: lining up a shot is worth this much more (finish it, don't chip at it)
+  learn = 1,            -- 1: keep learning (enemy reach, tells, respect, tear speed/reach/curve); 0 = frozen (benchmarks)
   plant_feet = 1,       -- 1: re-check sure shots with the real move and plant for them (0 = off, for A/B tests)
   plant_r = 90,         -- px: "plant your feet" for a sure shot unless an enemy is closer than this
   tell_timing = 1,      -- 1: a learned "shot coming" only near the end of the animation's usual length (0 = always)
@@ -365,6 +366,7 @@ end
 -- (gauntlet 2026-11-25: Globins, a full heart per touch, killed it in 3 hits).
 Reflex.respect = {}
 function Reflex.learnHit(etype, amount)
+  if Reflex.S.learn == 0 then return end -- frozen for a benchmark
   local r = Reflex.respect[etype] or 1
   Reflex.respect[etype] = math.min(Reflex.S.respect_max, r + Reflex.S.respect_step * math.max(1, amount or 1))
 end
@@ -1325,7 +1327,7 @@ function Reflex.calibrateCurve(player)
       local dirv = (math.abs(v.X) > math.abs(v.Y)) and Vector(v.X > 0 and 1 or -1, 0) or Vector(0, v.Y > 0 and 1 or -1)
       local along = v:Dot(dirv) - lastPlayerVel:Dot(dirv) * Reflex.curveK
       local per = along / math.max(0.5, player.ShotSpeed)
-      if per > 4 and per < 25 then Reflex.tearSpeedK = Reflex.tearSpeedK * 0.95 + per * 0.05 end
+      if Reflex.S.learn ~= 0 and per > 4 and per < 25 then Reflex.tearSpeedK = Reflex.tearSpeedK * 0.95 + per * 0.05 end
     end
   end
   -- tears that are gone: how far did they get? (only ones that didn't hit anything: a hit ends a tear early)
@@ -1333,7 +1335,7 @@ function Reflex.calibrateCurve(player)
     if not alive[h] then
       if not Reflex.acc.hitTears[h] and tr.range and tr.range > 0 then
         local k = (tr.last - tr.spawn):Length() / tr.range
-        if k > 0.3 and k < 2.5 then Reflex.reachK = Reflex.reachK * 0.95 + k * 0.05 end
+        if Reflex.S.learn ~= 0 and k > 0.3 and k < 2.5 then Reflex.reachK = Reflex.reachK * 0.95 + k * 0.05 end
       end
       tearTrack[h] = nil
     end
@@ -1346,7 +1348,7 @@ function Reflex.calibrateCurve(player)
       local tSide = horizontal and v.Y or v.X
       if math.abs(pSide) > 1.5 then
         local k = tSide / pSide
-        if k > -0.2 and k < 1.5 then
+        if Reflex.S.learn ~= 0 and k > -0.2 and k < 1.5 then
           Reflex.curveK = Reflex.curveK * 0.9 + k * 0.1
           Reflex.curveSamples = Reflex.curveSamples + 1
         end
@@ -1430,8 +1432,13 @@ function Reflex.update(player)
   end
   st.threats = #w.shots + #w.lasers + #w.bombs
   Reflex.trackSpeeds(w.enemies, player)
-  pcall(Mover.observe, w.enemies, player, Game():GetFrameCount(), w.shots) -- learning runs whichever core drives
-  pcall(Mover.observePlayer, player, math.max(2.5, player.MoveSpeed * S.speed_mul)) -- and Isaac's own movement
+  -- learning runs whichever core drives; S.learn = 0 freezes it (benchmarks: A and B must play with the same
+  -- learned state, or B plays with what A just learned - blind review 2026-11-25)
+  if S.learn ~= 0 then
+    pcall(Mover.observe, w.enemies, player, Game():GetFrameCount(), w.shots)
+    pcall(Mover.observePlayer, player, math.max(2.5, player.MoveSpeed * S.speed_mul)) -- and Isaac's own movement
+  end
+  Tells.frozen = (S.learn == 0)
   local lightNear = 0
   for _, e in ipairs(w.enemies) do
     if e.Mass < S.light_mass and (e.Position - player.Position):Length() < S.swarm_r then lightNear = lightNear + 1 end

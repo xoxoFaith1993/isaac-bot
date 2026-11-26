@@ -10,7 +10,9 @@ Read `docs/HOW_WE_WORK.md` first: it's the method this repo is built with. Short
 3. **Add an offline test** in `test/tests.lua` that fails without the fix (and a `test/mutants.lua` entry if you can).
 4. **Reload safely:** `tools/reload.ps1` (Windows, run with 32-bit PowerShell) or `bash tools/check.sh --reload`
    (Linux). Never reload with failing tests.
-5. **Measure** with the bench (`tools/rooms.py run`) or gauntlet, item-free. One run proves nothing.
+5. **Measure, then gate:** `tools/bench.py run` on a locked suite (`quick` or `v1`), learning frozen, A/B paired;
+   `tools/bench.py gate <baseline> <candidate>` must pass before a behaviour change ships. "Can't tell" means more
+   reps, not "fine". Name the compared labels in the commit. One run proves nothing.
 6. **Write it down:** `PLAN.md`, `test/FOUND_BUGS.md`, `knowledge/*.md`.
 
 ## Hard rules

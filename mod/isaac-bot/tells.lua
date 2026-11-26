@@ -32,7 +32,7 @@ function Tells.update(enemies)
       if ok and anim and anim ~= "" then
         local c = Tells.cur[h]
         if not c or c.anim ~= anim then
-          if c then -- remember the transition from the previous animation to this one
+          if c and not Tells.frozen then -- remember the transition from the previous animation to this one
             local tt = Tells.trans[e.Type] or {}
             Tells.trans[e.Type] = tt
             tt[c.anim] = tt[c.anim] or {}
@@ -45,7 +45,7 @@ function Tells.update(enemies)
             dt[c.anim] = d
           end
           Tells.cur[h] = { anim = anim, start = f, shot = false, type = e.Type }
-          entry(e.Type, anim).seen = entry(e.Type, anim).seen + 1
+          if not Tells.frozen then entry(e.Type, anim).seen = entry(e.Type, anim).seen + 1 end
         end
       end
     end
@@ -55,7 +55,7 @@ function Tells.update(enemies)
   for _, s in ipairs(Isaac.FindByType(EntityType.ENTITY_PROJECTILE)) do
     if s.FrameCount <= 1 and s.SpawnerEntity then
       local c = Tells.cur[GetPtrHash(s.SpawnerEntity)]
-      if c and not c.shot then
+      if c and not c.shot and not Tells.frozen then
         c.shot = true
         local r = entry(c.type, c.anim)
         r.shots = r.shots + 1
@@ -69,7 +69,7 @@ end
 function Tells.onHit(src)
   if not src then return end
   local c = Tells.cur[GetPtrHash(src)]
-  if c then entry(c.type, c.anim).hits = entry(c.type, c.anim).hits + 1 end
+  if c and not Tells.frozen then entry(c.type, c.anim).hits = entry(c.type, c.anim).hits + 1 end
 end
 
 -- Is this enemy winding up an attack right now? (its current animation usually ends in a shot and we're

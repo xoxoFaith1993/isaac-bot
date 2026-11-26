@@ -89,6 +89,18 @@ w.still_since = time.time() - 25
 w.on_state({"e": [], "p": {"x": 302, "y": 301}, "bot": ["full", 0, 0, ""]})
 check("standing still while walking -> asks the bot to re-plan", ("rescue", "replan") in sent, str(sent))
 
+# 7. a benchmark is running (runs/watch/PAUSED): no lessons, no nudges, so A vs B starts from the same state
+w, sent, notes, root = make()
+(root / "runs" / "watch").mkdir(parents=True, exist_ok=True)
+(root / "runs" / "watch" / "PAUSED").write_text("bench")
+for i in range(7):
+    w.on_event("room", f"{84 if i % 2 == 0 else 85}|1|1|11|x")
+for i in range(4):
+    room_with(w, 10 + i, [(261, 0, True)])
+    w.on_event("hit", "261.0|1|1,1|move 3|via 261.0 d=16 size=13")
+check("paused during a benchmark: no deadhop, no lessons", not any(c in ("deadhop", "lessons") for c, _ in sent)
+      and not w.lessons, str(sent))
+
 print("\n".join(results))
 fails = sum(r.startswith("FAIL") for r in results)
 print(f"\n{len(results) - fails} passed, {fails} failed")
