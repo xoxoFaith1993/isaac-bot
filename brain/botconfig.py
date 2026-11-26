@@ -20,6 +20,10 @@ DEFAULTS = {
     "repentogon_ini": "",        # used by tools\start_bot.ps1; empty = Documents\My Games\repentogon_launcher.ini
     "bot_dir": "",               # empty = this repo (the folder holding brain\, tools\, knowledge\)
 }
+if sys.platform != "win32":
+    # Linux (Steam + Proton): the game's Windows files sit in Steam's library like on Windows
+    DEFAULTS["game_dir"] = str(Path.home() / ".local/share/Steam/steamapps/common/The Binding of Isaac Rebirth")
+    DEFAULTS["python"] = "python3"
 
 
 def load():
@@ -37,6 +41,11 @@ def load():
 CFG = load()
 ROOT = Path(CFG["bot_dir"]) if CFG["bot_dir"] else REPO
 GAME = Path(CFG["game_dir"])
+
+
+if __name__ == "__main__":  # python3 brain/botconfig.py --get python   (used by start-bot.sh)
+    if len(sys.argv) == 3 and sys.argv[1] == "--get":
+        print(CFG.get(sys.argv[2]) or ("python3" if sys.argv[2] == "python" else ""))
 
 
 def ffmpeg():

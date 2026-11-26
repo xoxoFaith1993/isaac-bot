@@ -716,6 +716,73 @@ end
 
 local function norm(v) return v and (v:Length() > 0 and v:Normalized() or v) end
 
+-- A goal square we can't walk to (2026-11-25: a trap-room button boxed in by rocks and TNT barrels; the bot walked
+-- into the wall for minutes). Work out how to open the way: poop in the way -> shoot it; a rock in the way with a
+-- TNT barrel next to it -> shoot the barrel from a safe spot in line with it (its blast breaks the rocks, free);
+-- otherwise -> bomb the first rock. Returns a shootAt/bomb goal for driveShoot/driveBomb, or nil.
+local TNT_SAFE = 110 -- stand at least this far from every intact barrel (blast ~85, chains)
+local function openWay(room, player, goalIdx)
+  local start = room:GetGridIndex(player.Position)
+  local stand, obstacle, isPoop = bombSpot(room, start, goalIdx, player.CanFly)
+  if not stand then return nil end
+  if isPoop then
+    return { kind = "shoot poop in the way", key = "ow" .. obstacle, shootAt = true, target = obstacle,
+             idx = stand, pos = room:GetGridPosition(stand) }
+  end
+  -- intact barrels, and the rocks on the rock-allowed path
+  local w, size = room:GetGridWidth(), room:GetGridSize()
+  local tnts = {}
+  for i = 0, size - 1 do
+    local ge = room:GetGridEntity(i)
+    if ge and ge:GetType() == GridEntityType.GRID_TNT and ge.CollisionClass ~= GridCollisionClass.COLLISION_NONE then
+      tnts[#tnts + 1] = i
+    end
+  end
+  local rocks = {}
+  for _, i in ipairs(findPath(room, start, goalIdx, player.CanFly, true) or {}) do
+    local ge = room:GetGridEntity(i)
+    if ge and BREAKABLE[ge:GetType()] and ge.CollisionClass ~= GridCollisionClass.COLLISION_NONE then rocks[#rocks + 1] = i end
+  end
+  local function safeFromTnt(pos)
+    for _, t in ipairs(tnts) do if (room:GetGridPosition(t) - pos):Length() < TNT_SAFE then return false end end
+    return true
+  end
+  local best, bestLen = nil, math.huge
+  for _, t in ipairs(tnts) do
+    local tpos = room:GetGridPosition(t)
+    local nearRock = false
+    for _, r in ipairs(rocks) do if (room:GetGridPosition(r) - tpos):Length() < 60 then nearRock = true; break end end
+    if nearRock then
+      local tx, ty = t % w, t // w
+      for _, d in ipairs({ { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } }) do
+        local clear = true
+        for k = 1, 7 do
+          local x, y = tx + d[1] * k, ty + d[2] * k
+          local ci = x + y * w
+          if x < 0 or x >= w or ci < 0 or ci >= size then break end
+          local col = room:GetGridCollision(ci)
+          if col ~= GridCollisionClass.COLLISION_NONE and col ~= GridCollisionClass.COLLISION_PIT then clear = false end
+          if not clear then break end -- tears stop at the first rock (they fly over pits)
+          if k >= 3 and col == GridCollisionClass.COLLISION_NONE and safeFromTnt(room:GetGridPosition(ci)) then
+            local path = (ci == start) and {} or findPath(room, start, ci, player.CanFly, false)
+            if path and #path < bestLen then best, bestLen = { t = t, stand = ci }, #path end
+          end
+        end
+      end
+    end
+  end
+  if best then
+    return { kind = "shoot TNT to open the way", key = "owt" .. best.t, shootAt = true, target = best.t,
+             idx = best.stand, pos = room:GetGridPosition(best.stand) }
+  end
+  if player:GetNumBombs() >= 1 then
+    return { kind = "bomb the rocks in the way", key = "owb" .. obstacle, bomb = true, idx = stand,
+             pos = room:GetGridPosition(stand) }
+  end
+  return nil
+end
+local plateWay = nil -- the current "open the way to the button" job
+
 ---------------------------------------------------------------- per update
 function Nav.update(player)
   local room = Game():GetRoom()
@@ -732,7 +799,34 @@ function Nav.update(player)
       Nav.status.goal = "pressing the button"
       local pos = room:GetGridPosition(plateIdx)
       local move = steer(room, player, plateIdx, pos)
-      if move and move:Length() > 0.5 then return norm(move), nil, false end
+      local here = level():GetCurrentRoomDesc().SafeGridIndex
+      if move then
+        plateWay = nil
+        if move:Length() > 0.5 then return norm(move), nil, false end
+        return norm(pos - player.Position), nil, false
+      end
+      -- walled in: open the way (shoot poop / a TNT barrel, or bomb), a few tries per room
+      if plateWay and (plateWay.room ~= here or plateWay.done) then plateWay = nil end
+      if not plateWay or not plateWay.job then
+        local tries = (plateWay and plateWay.room == here) and plateWay.tries or 0
+        local job = (tries < 4) and openWay(room, player, plateIdx) or nil
+        if job then job.started = f end
+        plateWay = { room = here, job = job, tries = tries + 1 }
+        if job and Nav.onNote then Nav.onNote("button walled in: " .. job.kind) end
+      end
+      local job = plateWay.job
+      if job then
+        Nav.status.goal = "button walled in: " .. job.kind
+        if f - job.started > 30 * 15 then plateWay.job = nil; return nil end -- took too long: think again
+        if job.bomb then
+          local m, bombNow, finished = driveBomb(room, player, job, f)
+          if finished then plateWay.job = nil end
+          return norm(m), nil, bombNow
+        end
+        local m, shoot, finished = driveShoot(room, player, job)
+        if finished then plateWay.job = nil; return nil end
+        return norm(m), shoot, false
+      end
       return norm(pos - player.Position), nil, false
     end
   end

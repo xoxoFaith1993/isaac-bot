@@ -137,12 +137,35 @@ def now_ms():
 # ---------------------------------------------------------------- Enter key for the game's menus
 # The title and save screens don't read the mod's fake inputs, so when the mod asks ("need|enter|..."),
 # the helper sends a real Enter key to the game window. The mod only asks on those two screens.
+# Windows: user32 calls. Linux (Proton): xdotool (X11 / XWayland), see press_enter_linux below.
 import ctypes
-from ctypes import wintypes
+import shutil
+import subprocess
 
-user32 = ctypes.WinDLL("user32", use_last_error=True)
+if sys.platform == "win32":
+    from ctypes import wintypes
+    user32 = ctypes.WinDLL("user32", use_last_error=True)
 WM_KEYDOWN, WM_KEYUP, VK_RETURN, SCAN_RETURN = 0x0100, 0x0101, 0x0D, 0x1C
 KEYEVENTF_KEYUP = 0x0002
+
+
+def press_enter_linux(attempt):
+    """Linux: find the game's window with xdotool and send it Return (focus it on later attempts)."""
+    if not shutil.which("xdotool"):
+        return "xdotool not installed (sudo apt install xdotool): press Enter in the game yourself"
+    out = subprocess.run(["xdotool", "search", "--name", "Binding of Isaac"], capture_output=True, text=True).stdout
+    wins = out.split()
+    if not wins:
+        return "no game window"
+    win = wins[-1]
+    if attempt <= 2:
+        subprocess.run(["xdotool", "key", "--window", win, "Return"])
+        return "sent Return to the game window"
+    prev = subprocess.run(["xdotool", "getactivewindow"], capture_output=True, text=True).stdout.strip()
+    subprocess.run(["xdotool", "windowactivate", "--sync", win, "key", "Return"])
+    if prev and prev != win:
+        subprocess.run(["xdotool", "windowactivate", prev])
+    return "focused the game and pressed Return"
 
 
 def game_window():
@@ -168,6 +191,8 @@ def game_window():
 def press_enter(attempt):
     """Attempts 1-2: post the key straight to the window (no focus change).
     Later attempts: bring the game to the front for a moment and type Enter, then give focus back."""
+    if sys.platform != "win32":
+        return press_enter_linux(attempt)
     hwnd = game_window()
     if not hwnd:
         return "no game window"

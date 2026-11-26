@@ -57,6 +57,17 @@ class MEMSTATUS(ctypes.Structure):
 
 
 def safe_to_continue():
+    if sys.platform != "win32":  # Linux: free space on / and available memory (MemAvailable)
+        c_free = shutil.disk_usage("/").free / 1e9
+        try:
+            info = dict(l.split(":", 1) for l in open("/proc/meminfo"))
+            commit_free = int(info["MemAvailable"].split()[0]) / 1e6
+        except (OSError, KeyError, ValueError):
+            commit_free = 99
+        ok = c_free >= 15 and commit_free >= 3
+        if not ok:
+            log(f"SAFETY STOP: / {c_free:.1f} GB free, available memory {commit_free:.1f} GB")
+        return ok
     c_free = shutil.disk_usage("C:\\").free / 1e9
     m = MEMSTATUS()
     m.dwLength = ctypes.sizeof(MEMSTATUS)
@@ -104,7 +115,10 @@ def log_age():
 
 def restart_bot(why):
     log(f"restarting the bot ({why})")
-    subprocess.Popen(["explorer.exe", str(RESTART)])
+    if sys.platform == "win32":
+        subprocess.Popen(["explorer.exe", str(RESTART)])
+    else:
+        subprocess.Popen(["bash", str(ROOT / "start-bot.sh"), "--restart"], start_new_session=True)
     t0 = time.time()
     time.sleep(10)
     while time.time() - t0 < 180:
@@ -265,7 +279,9 @@ def version():
 def main():
     # keep the PC from idle-sleeping while this runs (Windows' own "busy" flag: no settings change, ends with the job)
     ES_CONTINUOUS, ES_SYSTEM_REQUIRED = 0x80000000, 0x00000001
-    ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)
+    if sys.platform == "win32":
+        ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)
+    # Linux: run it as  systemd-inhibit python3 tools/overnight.py  to keep the PC awake
     log(f"overnight batch start: until {END:%Y-%m-%d %H:%M}, bench repeats {REPEATS}, real play {REAL_MINUTES} min")
     if not safe_to_continue():
         report()

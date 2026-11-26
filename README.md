@@ -13,7 +13,7 @@ for now: no damage on floors 1-2. See [PLAN.md](PLAN.md) for the full technical 
 
 ## Requirements
 
-- Windows (the start scripts use PowerShell; the helper uses the Win32 API to press Enter on the title screens)
+- Windows, or Linux with Steam + Proton (see [Linux](#linux))
 - The Binding of Isaac: Repentance+ (Steam)
 - [REPENTOGON](https://repentogon.com) and its launcher
 - Python 3 (standard library only)
@@ -46,6 +46,36 @@ for now: no damage on floors 1-2. See [PLAN.md](PLAN.md) for the full technical 
 `knowledge\gamedata.json` is not in the repo: the `isaac-bot-data` mod writes the game's own item data on the first
 launch and the helper saves it there.
 
+## Linux
+
+The game runs through Steam's Proton; the bot's mod runs inside the game the same as on Windows, and the helper is
+plain Python, so most of it works unchanged. The Linux pieces are `start-bot.sh`, `test/run.sh` and `tools/check.sh`.
+
+1. **The game with REPENTOGON under Proton.** Install the game in Steam (Proton is picked automatically) and start
+   it once. Then install REPENTOGON following [its own instructions](https://repentogon.com) for Linux/Steam Deck,
+   and check that the title screen shows REPENTOGON when you start the game from Steam. This is the one step that
+   hasn't been tested on Linux by us yet; everything below only needs the game to start with REPENTOGON.
+2. **Packages** (Debian/Ubuntu/Mint names):
+   ```
+   sudo apt install python3 xdotool lua5.3 ffmpeg
+   ```
+   `xdotool` presses Enter on the title and save screens (X11, or XWayland, which Proton games use). Without it,
+   press Enter on those two screens yourself. `lua5.3` is only for the offline tests, `ffmpeg` only for `look.py`.
+   Ollama is optional, as on Windows (`curl -fsSL https://ollama.com/install.sh | sh`).
+3. **Mods:** link the three mod folders into the game's `mods` folder (default Steam library path shown):
+   ```
+   GAME=~/.local/share/Steam/steamapps/common/"The Binding of Isaac Rebirth"
+   for m in isaac-bot isaac-bot-out isaac-bot-data; do ln -s "$PWD/mod/$m" "$GAME/mods/$m"; done
+   ```
+4. **config.json:** only needed if the game is in another Steam library. `game_dir` defaults to the path above and
+   `python` to `python3`; the `repentogon_*` keys are Windows-only.
+5. **Start:** `bash start-bot.sh` (opens the helper and log in terminal windows, starts Ollama if installed, then the
+   game through Steam). `bash start-bot.sh --restart` closes the game first.
+6. **After changing the mod:** `bash tools/check.sh --reload` (every Lua file compiles + offline tests, then the
+   running bot reloads the mod).
+
+`tools/overnight.py` works on Linux too (run it as `systemd-inhibit python3 tools/overnight.py` to keep the PC awake).
+
 ## How it works
 
 - **Eyes** (`eyes.lua`): ten snapshots a second of Isaac, enemies, shots, lasers, pickups, doors and the room grid.
@@ -70,6 +100,7 @@ launch and the helper saves it there.
   ```
   `-Prove` checks that every fix's test fails without the fix (`test\mutants.lua`). `tools\luacheck.ps1` compiles
   every Lua file the same way; `tools\reload.ps1` runs both, then reloads the mod in the running game.
+  On Linux: `bash test/run.sh` (system Lua 5.3) and `bash tools/check.sh`.
 - **Real-room bench:** `tools\rooms.py collect` saves every room where the bot took a hit (by layout ID);
   `tools\rooms.py run` replays them in the game, worst first.
 - **Gauntlet and A/B:** `tools\gauntlet.py` (every common Basement enemy plus bosses), `tools\ab_test.py`,
