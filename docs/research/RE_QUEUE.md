@@ -76,8 +76,8 @@ the author can move an item up.
 |---|---|---|
 | G1 | Common enemies of Caves, Catacombs, Flooded Caves, Mines (incl. the mole floors) and Depths, by future hit counts | [x] 294a96c, 0b191c0 |
 | G2 | Bosses: Chub, Pestilence, Peep, Loki, Mask of Infamy, Gurdy Jr. variants, Bloat, The Hollow, Carrion Queen, Mom | [x] e7bf184 |
-| G3 | Mom's Heart / It Lives, Satan, Isaac, ???, The Lamb, Hush | [ ] |
-| G4 | **Delirium**: how it picks and copies bosses | [ ] |
+| G3 | Mom's Heart / It Lives, Satan, Isaac, ???, The Lamb, Hush | [x] 2dd028b |
+| G4 | **Delirium**: how it picks and copies bosses | [x] eb64b87 |
 
 ## Log
 - 2026-11-26: queue made, from the main session's list, reordered by hit counts. "0.8" = grid type 8 (spikes):
@@ -113,3 +113,4 @@ the author can move an item up.
 - 2026-11-26: G1a done (294a96c; RE_ENEMIES.md Batch G1a). Not checked against recordings. G1b-G4 handover in runs/research/re/HANDOVER.md; the Ghidra session proposed a fresh Sonnet session (waits on the author).
 - 2026-11-26: G1b done (0b191c0; Record-to-confirm list in RE_ENEMIES.md), by the fresh Sonnet decompile session. Not checked against recordings. G2-G4 follow.
 - 2026-11-26: G2 done (e7bf184; 2 Sonnet readers). Not checked against recordings. G3 and G4 next.
+- 2026-11-26: G3 (2dd028b) and G4 (eb64b87) done; the queue's batches are all written. Not checked against recordings. Unread: Heart summon tables, Delirium's form list and timer table, anim frames. F2/G-tier checks happen when recordings exist. Level 4 (run rules) waits for the author.
