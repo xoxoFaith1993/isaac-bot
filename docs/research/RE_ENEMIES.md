@@ -1946,3 +1946,61 @@ and several beam and laser details are lost arguments.
 ### Record to confirm (G3)
 - Satan's spread speeds (8.4 / 10.2) and the 4-shot gap; Heart ring speeds; Isaac ring counts and beam delay.
 - Lamb dash warning length; Hush pop-out on touch, 60-shot ring gap.
+
+## Batch G4 (2026-11-26): Delirium (412), `0x4aa7f0` + helpers
+
+**Readers:** two blind Sonnet readers over the AI (`0x4aa7f0`) and its helpers (`0x4ace50` shots, `0x4adb40` form
+runner, `0x4aa570` cleanup); they agreed. Some post-change and teleport code is missing from the decompile (log
+calls treated as non-returning).
+
+### Which boss it becomes
+- **10%: itself.** Otherwise **uniform** from a list built at run time, never 412, 906, 907, a flagged config entry or
+  the current form (100 tries). No weights or floor conditions in this code; the list itself is unread. 266 becomes
+  variant 0, 45 variant 10, 84 variant 10 half the time. `[attack · G4 0x4aa7f0 · 2 readers]`
+
+### When it changes
+- When a timer ends (whole seconds, from a table indexed by HP fifth; values unread) **or after 2-4 attacks**.
+  `[timing · G4 0x4aa7f0 · 2 readers]`
+- Lasers, eternal flies and form copies of the old form are removed. `[body · G4 0x4aa570 · 1 reader]`
+
+### As Delirium (412)
+- **Stands still.** `[move · G4 0x4aa7f0 · 2 readers]`
+- **Teleport:** first countdown 300-899 updates (cut to 30 when off screen); lands **160-320 px from Isaac**, retried
+  while a player is within 160. Not in forms 36, 45, 78, 102, 262, 263, 266, 270, 273, 413. `[move · G4 0x4aa7f0 · 2 readers]`
+
+### As a copied boss
+- The boss's own AI runs **1 to several times per update** (likely more at low HP), with extra movement, plus 120-update
+  bursts whose chance rises 10% per change. **So copied attacks and moves can be much faster than the original.**
+  `[move · G4 0x4adb40 · 2 readers]`
+
+### Delirium's own shots (also fired inside forms, 4× less often; not as Mom 45 or 84.10) (`0x4ace50`)
+| # | Period | Shots | Speed | Volleys |
+|---|---|---|---|---|
+| 0 | 18 | ring 20 | 2.5 | 2 |
+| 1 | 25 | ring 8 | 4 | 1 |
+| 2 | 5 | ring 6 | 4.5 | 1 |
+| 3 | 25 | rotating 4-way (+60° every 10) | 4 | 3 |
+| 4 | 20 | ring 20 | 5 | 4 |
+| 5 | 20 | ring 10 | 3 | 2 |
+| 6, 7 | 25 | ring 14 | 5 | 2 |
+| 8 | 10 | ring 10 | 4 | 3 |
+| 9 | 30 | four ring 14, 5 apart (usually one fires) | 4 | - |
+| 10 | 18 | aimed 5-spread, 0/±12/±24° | 4 (× 1.2) | 4 |
+
+Big shots (scale 1.5-2.5, so **2 damage**); a pattern repeats with 30/20/10% before switching.
+`[attack · G4 0x4ace50 · 2 readers]`
+
+### HP and death
+- Forms can't change its HP. A shield of (1 − HP/max) × 80 applies in forms, none as 412.
+  `[body · G4 0x4aa7f0 · 2 readers]`
+- **Fake death:** shots cleared, HP 1, invincible, hallucination flashes, a scream, then it dies.
+  `[body · G4 0x4aa7f0 · 2 readers]`
+
+### Bot meaning (G4)
+- Treat every form as that boss, but **expect it to move and attack faster**, and keep dodging the rings on top.
+- Delirium's own shots cost 2: weigh them above normal shots.
+- After a form change, keep distance briefly: teleports land 160-320 px away.
+
+### Record to confirm (G4)
+- Ring counts and speeds in a Delirium fight; teleport distance; whether copied bosses really move faster; the form
+  list (log which types appear).
