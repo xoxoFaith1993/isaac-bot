@@ -118,6 +118,8 @@ Reflex.S = {
   m_corner = 500,       -- v2: cost of ending in a corner (wall on a side AND above/below), x0.5-2.5 by movers near
   m_nolane = 150,       -- v2: cost of standing still when the plan never lines up a shot (rock pockets vs worms)
   boss_aim = 1.8,       -- boss fights: lining up a shot is worth this much more (finish it, don't chip at it)
+  finish_w = 220,       -- target choice: bonus for an enemy our next 1 shot kills, fading to 0 at 5 shots
+  commit_w = 90,        -- target choice: bonus for staying on the (damaged) enemy we've been shooting
   ring_margin = 70,     -- ring-kite vs chasing bosses: px from the walls to the lane...
   ring_r = 90,          -- ...whose corners are arcs this big (cuts every corner)
   ring_w = 3,           -- cost per px off the lane
@@ -598,6 +600,7 @@ local function planFire(player, room, w, targets, prefDist)
           if safe then
             local score = steps * 40 + c.lane * 80 + math.abs(c.dist - prefDist) * 0.3
             if hash and w.spawners and w.spawners[hash] then score = score - S.spawner_w end
+            score = score - Reflex.finishBonus(t, player) * 1.5 -- finish it / stick with it (as pickTarget)
             -- boss fights (pickTarget's rule): the boss first, an add only when it's the threat; and keep
             -- boss_dist from the boss (Mega Fatty's blood bursts hit twice from 85-92 px, 2026-11-25)
             if bossOn and t.IsBoss then
@@ -843,6 +846,26 @@ local function minionThreat(e, player, crowded)
 end
 Reflex.bossAliveIn, Reflex.minionThreat = bossAliveIn, minionThreat
 
+-- Finish it / stick with it (the author, 2026-11-25, Gurglings: "it doesn't make sense to target something, start
+-- to do damage on it and then stop just because whatever's closest is closest and isn't in harm's way... he was
+-- close to dying and all it would take was redirecting your shots a few times... it would immediately remove one
+-- variable from taking damage"). A bonus (lower score = better) for:
+--   * how few of OUR shots it would take to kill (1 shot = full finish_w, 5+ shots = none), and
+--   * being the target we've already been damaging (commit_w), so it doesn't hop to whatever is nearest.
+-- Threats still win: a close or dangerous enemy's own score outweighs this.
+Reflex.lastTargetHash = nil
+local function finishBonus(e, player)
+  if not e or e.kind or not e.HitPoints or e.HitPoints <= 0 then return 0 end
+  -- only enemies already worn down: a fresh spider is "one tear from dead" too, and outranked its Sack (tests 17, 17b)
+  if not e.MaxHitPoints or e.HitPoints >= e.MaxHitPoints * 0.95 then return 0 end
+  local S = Reflex.S
+  local shots = e.HitPoints / math.max(0.5, player.Damage)
+  local b = S.finish_w * math.max(0, math.min(1, (5 - shots) / 4))
+  if Reflex.lastTargetHash == GetPtrHash(e) then b = b + S.commit_w end
+  return b
+end
+Reflex.finishBonus = finishBonus
+
 local function pickTarget(player, enemies, room)
   local best, bestScore = nil, math.huge
   local shielded = nil
@@ -868,6 +891,7 @@ local function pickTarget(player, enemies, room)
       elseif policy == "kill_first" then score = d - 250                      -- the adds shield or feed the boss
       elseif policy == "ignore" then score = 150 + d - minionThreat(e, player, crowded) * (d < 90 and 1 or 0.4)
       else score = 150 + d - minionThreat(e, player, crowded) end
+      score = score - finishBonus(e, player) -- a nearly dead boss/add, or the one we've been hitting
       if score < bestScore then best, bestScore = e, score end
     elseif e:IsVulnerableEnemy() and not e:IsInvincible() then
       local d = (e.Position - player.Position):Length()
@@ -878,6 +902,7 @@ local function pickTarget(player, enemies, room)
       if Reflex.S.kill_w > 0 and e.HitPoints > 0 then
         score = score - Reflex.S.kill_w * 0.5 * (respectOf(e) - 0.9) * math.min(1, 20 / e.HitPoints)
       end
+      score = score - finishBonus(e, player) -- finish what's nearly dead; stick with what we've been hitting
       if score < bestScore then best, bestScore = e, score end
     else
       shielded = shielded or e
@@ -1701,6 +1726,8 @@ function Reflex.update(player)
   end
   if shoot and not lands and not curved and not (st.target and st.target.kind) then shoot = nil end
   lastChoice = best
+  -- remember who we're shooting at (finishBonus: stick with the enemy we've been damaging)
+  if st.target and not st.target.kind and shoot then Reflex.lastTargetHash = GetPtrHash(st.target) end
   st.move, st.cost = best, math.floor(bestCost)
   st.shoot = shoot or ""
   st.curved = curved

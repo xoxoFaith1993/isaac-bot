@@ -545,6 +545,20 @@ run("ring-kites a chasing boss round the room", function()
             sw, sw0, corner, closest, aimed))
 end)
 
+-- 43. 1.2.19 (the author, Gurglings: it switched away from one that was nearly dead just because another was
+-- closer): finish the nearly dead one, stick with the one we've been damaging
+run("finishes a nearly dead enemy instead of the nearest one", function()
+  Mock.room(nil, { clear = false, player = Mock.tile(2, 4) })
+  Mock.enemy(EntityType.ENTITY_GAPER, 0, Mock.tile(5, 4), { hp = 20 })          -- near, full health
+  local weak = Mock.enemy(EntityType.ENTITY_GAPER, 0, Mock.tile(9, 2), { hp = 4 }) -- farther, one tear from dead
+  weak.MaxHitPoints = 20
+  Reflex.plan.at = -999
+  Reflex.update(Isaac.GetPlayer())
+  local t = Reflex.status.target or Reflex.plan.target
+  check("finishes a nearly dead enemy instead of the nearest one", t == weak,
+        "target: " .. (t and (t == weak and "the nearly dead one" or ("hp " .. tostring(t.HitPoints))) or "none"))
+end)
+
 -- 37. 1.2.7 boss tactics (knowledge/boss_tactics.json via the helper): loads, finds the boss, adds policy decides
 run("boss tactics: loaded and used", function()
   Reflex.loadBossTactics("261.0=200,k,kill_close,BeforeSlide|Dance|Whistle;260.0=160,c,kill_first,")
