@@ -832,17 +832,20 @@
       "state": 4,
       "kind": "hop",
       "air": 16,
-      "updates": 45
+      "updates": 45,
+      "speed": 5.5
      },
      {
       "state": 7,
       "kind": "hop",
       "air": 37,
-      "updates": 64
+      "updates": 64,
+      "speed": 13
      }
     ],
-    "notes": "Hop: Walk animation 45 frames, Jump event 6, Land event 22, so 16 updates airborne; push 1.2 per update over friction x0.9. Big jump: airborne from JumpUp frame 10 (of 15) to JumpDown frame 32, about 37 updates (derived from the frame numbers); homing pull 0.006 x offset + 0.3 x direction. Landing cell = Isaac's position at the first update of the state, snapped to its 40 px cell, stored in TargetPosition.",
-    "friction": 0.9
+    "notes": "Hop: Walk animation 45 frames, Jump event 6, Land event 22, so 16 updates airborne; push 1.2 per update over friction x0.9. Big jump: airborne from JumpUp frame 10 (of 15) to JumpDown frame 32, about 37 updates (derived from the frame numbers); homing pull 0.006 x offset + 0.3 x direction. Landing cell = Isaac's position at the first update of the state, snapped to its 40 px cell, stored in TargetPosition. | 2026-11-26 card check: hop only in the listed states (it keeps a stale TargetPosition otherwise), and as a push of 1.2/update over x0.9 (not a glide).",
+    "friction": 0.9,
+    "push": 1.2
    },
    "attacks": [
     {
@@ -943,6 +946,18 @@
      "text": "StateFrame is not used; read the animation frame.",
      "src": "RE_ENEMIES Monstro 0x470020",
      "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Recorded: the hop is Walk in state 4 and peaks about 5.6 px/update (not 12 from push 1.2 / (1-0.9)); the big jump is JumpUp state 6 (TargetPosition 0, barely moves) then JumpDown state 7 at up to 13 px/update toward TargetPosition. Phase speeds 5.5 / 13 are fitted from recordings.",
+     "src": "recorder 2026-11-26",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "The read hop push (1.2/update over x0.9 = 12 px/update steady) does not match the recorded hop peak (5.6): the push probably applies only part of the airborne frames. Queued as a possible targeted read.",
+     "src": "card check 2026-11-26",
+     "checked": "contradicted"
     }
    ]
   },
@@ -5451,20 +5466,12 @@
   "260.0": {
    "name": "Haunt",
    "move": {
-    "kind": "axis_walk",
-    "notes": "y pinned to the top wall (top + 30) except the State-4 side dash. How it moves along x outside State 4 is NOT in the notes: queued for a targeted read. 2026-11-26 card check: \"pinned\" was 7x worse than coasting (it does move along the wall).",
-    "unknown": [
-     "x movement outside State 4"
-    ],
-    "phases": [
-     {
-      "state": 4,
-      "kind": "axis_walk",
-      "speed_min": 10,
-      "speed_max": 15,
-      "updates": null
-     }
-    ]
+    "kind": "wall_slide",
+    "push": 0.3,
+    "friction": 0.96,
+    "kick": 15,
+    "wander_state": 4,
+    "notes": "States 3/8/9 (no skin): velocity += push x sign(TargetPosition.X), x0.96, steady 7.5 px/update; at a side wall the push flips and velocity gets 15 x the new push. y pinned to top + 30 except state 4. State 4 = phase 1 (skin on, Lil Haunts alive): MoveRandomlyBoss wander, invulnerable. The side dash is in state 3 (AngryNoSkin): Isaac within 40 px vertically, 1/40 per update, +10-15 px/update toward him."
    },
    "attacks": [
     {
@@ -5553,6 +5560,30 @@
      "text": "It moves left and right along the top wall outside the dash (recordings: coasting predicts it within 11 px over 16 updates; \"pinned\" was 80 px off).",
      "src": "card check 2026-11-26",
      "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Slides left and right along the top wall in states 3/8/9: push 0.3 per update along x (sign of TargetPosition.X), friction 0.96, steady 7.5 px/update; at a side wall the push flips and it gets a kick of 15 x push. Does not steer toward Isaac.",
+     "src": "RE_PILOT 0x4855e0",
+     "checked": "2 readers + recording"
+    },
+    {
+     "cat": "move",
+     "text": "Side dash is in state 3 (AngryNoSkin), not state 4: with Isaac within 40 px vertically of its line, a 1/40 roll per update adds 10-15 px/update toward him.",
+     "src": "RE_PILOT 0x4855e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "State 4 is phase 1 (skin on, Lil Haunts alive): a random wander (MoveRandomlyBoss, not decoded), body not pinned, invulnerable.",
+     "src": "RE_PILOT 0x4855e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Correction: the earlier card said the side dash was state 4; it is state 3.",
+     "src": "vetting session 2026-11-26",
+     "checked": "contradicted"
     }
    ]
   },

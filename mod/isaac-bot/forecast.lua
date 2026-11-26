@@ -112,9 +112,56 @@ end
 KIND.hop = function(m, s, t, isaac, b)
   local tx, ty = s.tx or 0, s.ty or 0
   if tx == 0 and ty == 0 then return s.x, s.y, 0.5 end
+  -- only in its hop states when the card lists them: Monstro keeps a stale TargetPosition while it spits or idles,
+  -- and heading there anyway made the forecast worse than coasting (card check, 2026-11-26: 24 vs 14 px)
+  if m.phases then
+    local hopping = nil
+    for _, ph in ipairs(m.phases) do if ph.state == s.state and ph.kind == "hop" then hopping = ph end end
+    if not hopping then
+      local x, y = coast(s, t, m.friction or 0.9, b)
+      return x, y, 0.5
+    end
+    -- a phase's own steady speed (fitted from recordings where the read numbers didn't match: Monstro's hop peaks
+    -- ~5.6 px/update, its big jump ~13)
+    if hopping.speed then
+      local x, y = steer(s, t, tx, ty, hopping.speed, m.friction or 0.9, b, 4)
+      return x, y, 1
+    end
+  end
+  -- a push toward the target over friction (Monstro: 1.2 per update, x0.9 -> up to 12 px/update), not a glide
+  if m.push then
+    local f = m.friction or 0.9
+    local x, y = steer(s, t, tx, ty, m.push / (1 - f), f, b, 4)
+    return x, y, 1
+  end
   local air = m.air or 20
   local k = min(1, t / air)
   return s.x + (tx - s.x) * k, s.y + (ty - s.y) * k, 1
+end
+
+-- wall slide (the Haunt without its skin, states 3/8/9): a push of `push` px/update^2 along x whose sign is the sign of
+-- its TargetPosition.X, friction 0.96 (steady 7.5 px/update), and at a side wall the push flips and it gets a kick of
+-- `kick` x push. y stays where it is (pinned to the top wall). In other states (phase 1, state 4) it wanders.
+-- (decoded in the RE pilot, community Haunt.lua line for line, recordings: mean 6.45, max 8.6, straightness 0.96)
+KIND.wall_slide = function(m, s, t, isaac, b)
+  if m.wander_state and s.state == m.wander_state then
+    local x, y = coast(s, t, 1, b)
+    return x, y, 0.5
+  end
+  local push = m.push or 0.3
+  local dir = (s.tx or 0) < 0 and -1 or 1
+  if (s.tx or 0) == 0 then dir = s.vx < 0 and -1 or 1 end
+  local x, vx, f, pad = s.x, s.vx, m.friction or 0.96, s.size or 10
+  for _ = 1, t do
+    vx = (vx + push * dir) * f
+    x = x + vx
+    if b and (x < b.x0 + pad or x > b.x1 - pad) then
+      x = (x < b.x0 + pad) and (b.x0 + pad) or (b.x1 - pad)
+      dir = -dir
+      vx = vx * 0 + (m.kick or 15) * push * dir
+    end
+  end
+  return x, s.y, 1
 end
 
 -- dart (spiders): picks a point (Isaac + 10 x his velocity, or a random spot) and darts there without re-aiming,
