@@ -1055,9 +1055,9 @@
    "name": "Bob's Rotten Head",
    "kind": "active",
    "quality": 1,
-   "rating": 1,
+   "rating": 2,
    "carry": 1,
-   "reason": "Lift then throw (press, then fire a direction). Needs two-step support.",
+   "reason": "Lift, then throw at a fire direction: the bot arms it only with a sure shot lined up, then presses toward the target (1.2.26).",
    "tags": [
     "active: two-step (press, then throw/act)"
    ],
@@ -1187,9 +1187,9 @@
    "name": "Shoop da Whoop!",
    "kind": "active",
    "quality": 2,
-   "rating": 2,
+   "rating": 3,
    "carry": 1,
-   "reason": "Press, then the next shot is a beam; the bot fires anyway so it works.",
+   "reason": "Beam: armed only with a sure shot lined up, then a fresh fire press toward the target (1.2.26); big boss damage.",
    "tags": [
     "active: two-step (press, then throw/act)"
    ],
@@ -8762,9 +8762,9 @@
    "name": "Mega Blast",
    "kind": "active",
    "quality": 4,
-   "rating": 1,
+   "rating": 2,
    "carry": 5,
-   "reason": "15 s Mega Satan beam in the facing direction; huge if the bot aims; very long charge.",
+   "reason": "Mega Satan beam: armed only with a sure shot lined up (1.2.26); very long charge.",
    "tags": [
     "active: one press",
     "unsure"
@@ -12570,9 +12570,9 @@
    "name": "Urn of Souls",
    "kind": "active",
    "quality": 3,
-   "rating": 1,
+   "rating": 2,
    "carry": 1,
-   "reason": "Flamethrower aimed by fire direction; unsure handling.",
+   "reason": "Flamethrower aimed by the fire direction: armed only with a sure shot lined up (1.2.26).",
    "tags": [
     "never use automatically",
     "active: needs aiming"

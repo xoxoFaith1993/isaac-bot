@@ -131,6 +131,9 @@ R.value = {
 -- reroll, restart, swap the character or eat things - a player picks the moment for those, so the bot leaves them.
 R.active = {
   min_enemies = 3,   -- or any boss
+  -- aim-then-fire actives: the press arms it, the next fresh fire press aims it (main.lua aimedFire). Only armed when
+  -- a sure shot is lined up. Shoop da Whoop (beam), Bob's Rotten Head (throw), Mega Blast (beam), Urn of Souls (flames)
+  aimed = { [49] = true, [42] = true, [441] = true, [640] = true },
   never = {
     44, 419, 324,            -- Teleport!, Teleport 2.0, Undefined
     126, 135, 186, 530, 486, -- Razor Blade, IV Bag, Blood Rights, Potato Peeler, Dull Razor (self-damage)

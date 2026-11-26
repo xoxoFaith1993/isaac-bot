@@ -514,9 +514,29 @@ local function wantActive(p)
     end
   end
   if not boss and n < Rules.active.min_enemies then return false end
+  -- aim-then-fire items (rules.lua R.active.aimed: Shoop da Whoop, Bob's Rotten Head...): only arm with a real shot
+  -- lined up, so the beam/throw goes where it should
+  if Rules.active.aimed and Rules.active.aimed[id] and Reflex.lastShotKind ~= "sure" then return false end
   lastActiveUse = f
   send("active", id .. "|" .. (cfg.Name or "?") .. "|" .. (boss and "boss" or (n .. " enemies")))
   return true
+end
+
+-- Two-step actives (2026-11-25, the author: "still having that active item issue... Shoop da Whoop"): the item press
+-- only ARMS it; the beam/throw goes with the next fresh press of a fire direction. The bot holds fire down all the
+-- time, so no fresh press ever came, and a second later it pressed the item again (which can cancel it). Now: after
+-- arming, let go of fire for a few updates, then press toward the target; no new item press while armed.
+local armed = nil -- { f = frame armed, dir = direction to fire }
+local function aimedFire(p, shoot)
+  if not armed then return shoot end
+  local f = Game():GetFrameCount()
+  local into = f - armed.f
+  if into > 90 then armed = nil; return shoot end            -- never went off: give up, normal play
+  armed.dir = shoot or armed.dir
+  if into <= 3 then return nil end                              -- release fire...
+  if into == 4 or into == 5 then return armed.dir end           -- ...then a fresh press toward the target
+  armed = nil
+  return shoot
 end
 
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, function()
@@ -562,7 +582,12 @@ mod:AddCallback(ModCallbacks.MC_POST_UPDATE, function()
     end
     if ok then
       ctl.move, ctl.shoot, ctl.bomb = move, shoot, bomb and true or false
-      ctl.item = Reflex.status.active and Reflex.status.mode == "full" and wantActive(p)
+      ctl.item = (not armed) and Reflex.status.active and Reflex.status.mode == "full" and wantActive(p)
+      if ctl.item then
+        local id = p:GetActiveItem(ActiveSlot and ActiveSlot.SLOT_PRIMARY or 0)
+        if Rules.active.aimed and Rules.active.aimed[id] then armed = { f = f, dir = shoot } end
+      end
+      ctl.shoot = aimedFire(p, ctl.shoot)
       -- Level 3: cards and pills (strategy.lua wantPocket; needs knowledge/consumable_ratings.json)
       ctl.pocket = false
       if Reflex.status.mode == "full" and not ctl.item then
