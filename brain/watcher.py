@@ -193,7 +193,8 @@ class Watcher:
         self._save()
 
     def _bounce(self, now):
-        recent = [r for t, r in self.room_hist if now - t < 45]
+        # 4 minutes, not 45 s: the 2026-11-25 bounce (rooms 100/87) took 21 s a trip and slipped under a 45 s window
+        recent = [r for t, r in self.room_hist if now - t < 240]
         if len(recent) >= 6 and len(set(recent[-6:])) <= 2:
             a, b = recent[-1], recent[-2]  # in a, came from b: write off going BACK to b (one direction only)
             pair = "-".join(sorted((a, b)))

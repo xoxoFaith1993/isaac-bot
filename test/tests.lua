@@ -235,6 +235,23 @@ run("shoots open a door walled off by poop", function()
         "rooms entered: " .. rooms(seq) .. " | first goal: " .. tostring(goals[1]))
 end)
 
+-- 40. 1.2.16 (2026-11-25): the level's data for some unvisited rooms came back as garbage types (1065353216...), and
+-- the game itself crashed loading one (corrupted by a data-dump mod mid-run). The door's sane type is used; with
+-- no sane type anywhere, the room is never entered.
+run("garbage room type: door type used, corrupt room never entered", function()
+  Mock.floor({
+    [84] = { visited = true, doors = { [2] = { to = 85, type = 1 }, [0] = { to = 83, type = -404104361 } } },
+    [85] = { type = 1065353216, doors = { [0] = 84 } },
+    [83] = { type = -404104361, doors = { [2] = 84 } },
+  })
+  Mock.enter(84); Nav.newRoom()
+  local seq = Mock.walk(Nav, 30 * 20)
+  local into83 = false
+  for _, r in ipairs(seq) do if r == 83 then into83 = true end end
+  check("garbage room type: door type used, corrupt room never entered", seq[1] == 85 and not into83,
+        "rooms entered: " .. rooms(seq))
+end)
+
 -- 11. 1.0.11: 15 minutes stuck. The secret-room guess was a wall with pits in front: it couldn't get there and
 -- re-picked the same guess every update. Now that wall is crossed off from this room, and it tries the same
 -- spot from a neighbour room instead.

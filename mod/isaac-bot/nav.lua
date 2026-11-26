@@ -48,10 +48,33 @@ local function safeIndex(idx)
   return d and d.SafeGridIndex or idx
 end
 
+-- Room type as the DOOR into it reported it (doors always know where they lead). For rooms we haven't been in, the
+-- level's room data sometimes comes back as garbage (2026-11-25: types like 1065353216 and -404104361 for three
+-- unvisited rooms): no rule matched them, they were never explored, the boss room stayed off the map, and the bot
+-- bounced between two rooms every 21 s with "nothing to do".
+local doorType = {}
+local function sane(t) return type(t) == "number" and t >= 1 and t <= 40 and t == math.floor(t) end
 local function roomInfo(idx)
   local d = level():GetRoomByIdx(idx)
   if not d or not d.Data then return nil end
-  return { type = d.Data.Type, shape = d.Data.Shape, visited = d.VisitedCount, clear = d.Clear,
+  local t, shape = d.Data.Type, d.Data.Shape
+  if not sane(t) then
+    -- the door's type if it had a sane one; otherwise the room's data is CORRUPT (2026-11-25: the game itself crashed
+    -- loading such a room, "Room -404104361.-1945855990((null))", after a data-dump mod read every floor's room list
+    -- mid-run). Never walk into it: no type = not explored. Logged once so the watcher/log shows it.
+    t = doorType[d.SafeGridIndex] or doorType[idx]
+    if not t then
+      if Nav.onNote and not Nav.corruptSeen then Nav.corruptSeen = {} end
+      if Nav.onNote and not Nav.corruptSeen[idx] then
+        Nav.corruptSeen[idx] = true
+        Nav.onNote("room " .. idx .. " has corrupt room data: not going in (the game crashes loading it)")
+      end
+      return { type = -1, shape = 1, visited = d.VisitedCount, clear = d.Clear, grid = d.GridIndex,
+               safe = d.SafeGridIndex }
+    end
+  end
+  if not (type(shape) == "number" and shape >= 1 and shape <= 12) then shape = 1 end
+  return { type = t, shape = shape, visited = d.VisitedCount, clear = d.Clear,
            grid = d.GridIndex, safe = d.SafeGridIndex }
 end
 
@@ -102,6 +125,7 @@ function Nav.newRoom()
     graph, graphFloor, secretTried, secretCount, Nav.lastResort = {}, floorKey, {}, 0, false
     secretBlocked = {}
     deadEdge, entries, lastHere = {}, {}, nil
+    doorType = {}
   end
   local desc = lv:GetCurrentRoomDesc()
   cameFrom, lastHere = lastHere, desc.SafeGridIndex
@@ -179,6 +203,7 @@ function Nav.recordDoors()
     local d = room:GetDoor(slot)
     if visibleDoor(d) then
       local there = safeIndex(d.TargetRoomIndex)
+      if sane(d.TargetRoomType) then doorType[there] = d.TargetRoomType end
       graph[here][there] = true
       graph[there] = graph[there] or {}
       graph[there][here] = true
