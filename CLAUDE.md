@@ -31,6 +31,14 @@ Read `docs/HOW_WE_WORK.md` first: it's the method this repo is built with. Short
   never a bare `git commit` or `git commit -a`. Check `git show --stat HEAD` before pushing.
 - Long jobs (overnight batches) run detached; don't reload the mod while one is running.
 
+## GitHub issues (jobs for helpers)
+- **Before starting work** that an open issue covers (`gh issue list`), read its comments and assignee. If someone has
+  claimed it, don't start: tell the author.
+- **When a commit finishes the job**, put `Fixes #N` in its message so GitHub closes the issue on push. If only part is
+  done, write `Part of #N` and comment what is left.
+- **Refill when low** (fewer than 3 open): draft a few from `docs/BACKLOG.md` and `test/FOUND_BUGS.md`, give the
+  author a one-line summary of each, and post only the numbers they approve. Never post issues automatically.
+
 ## Usage: the right model for the job (the author, 2026-11-26: "make everything as efficient as possible... so I don't burn through the rest of my usage before the week ends")
 | Job | Model | Effort |
 |---|---|---|
