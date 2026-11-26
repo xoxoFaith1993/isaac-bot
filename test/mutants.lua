@@ -265,6 +265,13 @@ return {
     patches = { { file = "nav", find = "if d.TargetRoomIndex < 0 and not (R.room[d.TargetRoomType] or {}).deal then",
                   replace = "if d.TargetRoomIndex < 0 then" } } },
 
+  { test = "never bombs where the blast could kill it", why = "no health check before a bomb",
+    patches = { { file = "nav", find = "if Danger.hp(player) <= (R.danger.bomb or 2) + 1 then return false",
+                  replace = "if false then return false" } } },
+  { test = "never bombs where the blast could kill it", why = "no escape check before a bomb",
+    patches = { { file = "nav", find = "  return false, \"no way out of the blast from there\"",
+                  replace = "  return true" } } },
+
   { test = "doesn't swap its card for a pill", why = "pocket slot check for pills/cards",
     patches = { { file = "nav", find = "(p:GetPill(0) == 0 and p:GetCard(0) == 0) and V.pill_card or 0",
                   replace = "V.pill_card" } } },

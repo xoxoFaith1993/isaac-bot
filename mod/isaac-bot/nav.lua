@@ -782,6 +782,38 @@ end
 
 -- Walk to the bomb spot, drop the bomb, then let the reflexes run from it (bombs count as danger).
 -- Returns move, bombNow, finished
+-- Before ANY bomb leaves Isaac's hands (rescue, siege, loot, secret walls all come through driveBomb): the blast must not
+-- be able to kill him, and there must be open floor outside the blast that he can reach in time. (The author,
+-- 2026-11-26: "Why did he just bomb himself?... It's like he gave up, committed suicide... It was such a good run."
+-- The stuck-rescue walked to a rock in a pocket by the wall at one heart, dropped a bomb, and every way out was closed:
+-- "closed ways 16", killed by its own bomb.)
+local BOMB_ESCAPE_TILES = 8 -- about the walk a fuse allows
+local function bombSafe(room, player, standPos)
+  if Danger.hp(player) <= (R.danger.bomb or 2) + 1 then return false, "too little health for a bomb" end
+  local need = (R.danger.bomb_radius or 95) + (player.Size or 10) + 10
+  local start = room:GetGridIndex(standPos)
+  local W, N = room:GetGridWidth(), room:GetGridSize()
+  local seen, q, head = { [start] = 0 }, { start }, 1
+  while q[head] do
+    local i = q[head]; head = head + 1
+    if (room:GetGridPosition(i) - standPos):Length() >= need then return true end
+    if seen[i] < BOMB_ESCAPE_TILES then
+      for _, d in ipairs({ 1, -1, W, -W }) do
+        local j = i + d
+        local wrap = (d == 1 and j % W == 0) or (d == -1 and i % W == 0)
+        if not wrap and j >= 0 and j < N and seen[j] == nil
+           and (player.CanFly or room:GetGridCollision(j) == GridCollisionClass.COLLISION_NONE)
+           and (player.CanFly or Danger.staticCell(j) == 0) then
+          seen[j] = seen[i] + 1
+          q[#q + 1] = j
+        end
+      end
+    end
+  end
+  return false, "no way out of the blast from there"
+end
+Nav.bombSafe = bombSafe
+
 local function driveBomb(room, player, g, f)
   if g.placed then
     if math.abs(f - g.placed) < 80 then return nil, false, false end -- (abs: frame counter restarts in a new run)
@@ -804,6 +836,12 @@ local function driveBomb(room, player, g, f)
   end
   local d = (g.pos - player.Position):Length()
   if d < 14 then
+    local okB, why = bombSafe(room, player, g.pos)
+    if not okB then
+      Nav.status.detail = "no bomb: " .. why
+      if Nav.onNote then Nav.onNote(Nav.status.detail) end
+      return nil, false, true -- give the job up (the caller moves on)
+    end
     g.asked, g.bombsBefore = f, player:GetNumBombs()
     -- the walker's heading was THIS spot: clear it, or the dodge code "keeps walking there" into its own blast
     -- (2026-11-25: it bombed itself at a secret wall)

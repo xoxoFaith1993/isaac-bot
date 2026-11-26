@@ -2003,6 +2003,35 @@ run("deals: walks into an open devil room after the boss", function()
         fmt("goal %s, move %s", goal, tostring(move)))
 end)
 
+-- 80. 1.2.50 (the author, 2026-11-26: "Why did he just bomb himself?... It's like he gave up, committed suicide... It was
+-- such a good run"): the stuck-rescue dropped a bomb at one heart, from a pocket by the wall with every way out closed.
+-- No bomb when the blast could kill, or when no floor outside the blast can be reached in time.
+run("never bombs where the blast could kill it", function()
+  local rows = {
+    "WWWWWWWDWWWWWWW",
+    "W.............W",
+    "W###..........W",
+    "W..#..........W",
+    "D..#..........D",
+    "W###..........W",
+    "W.............W",
+    "W.............W",
+    "WWWWWWWDWWWWWWW",
+  }
+  Mock.room(rows, { clear = true, player = Mock.tile(7, 4) })
+  local p = Isaac.GetPlayer()
+  local room = Game():GetRoom()
+  p._hearts, p._soul = 6, 0
+  local openOK = Nav.bombSafe(room, p, Mock.tile(7, 4))
+  p._hearts = 2
+  local lowOK, lowWhy = Nav.bombSafe(room, p, Mock.tile(7, 4))
+  p._hearts = 6
+  local pocketOK, pocketWhy = Nav.bombSafe(room, p, Mock.tile(1, 4)) -- the pocket at the left, closed by rocks
+  check("never bombs where the blast could kill it", openOK and not lowOK and not pocketOK,
+        fmt("open floor, 3 hearts: %s | 1 heart: %s (%s) | rock pocket: %s (%s)", tostring(openOK), tostring(lowOK),
+            tostring(lowWhy), tostring(pocketOK), tostring(pocketWhy)))
+end)
+
 ------------------------------------------------------------------------ forecast plan step 3: the positioning brain
 -- (position.lua over roommap.lua; docs/FORECAST_PLAN.md step 3). Each test is one of the author's live notes
 -- (docs/LIVE_NOTES.md). The brain is behind S.position (A/B), so each test switches it on itself.
