@@ -109,6 +109,7 @@ Reflex.S = {
   m_escape = 120,       -- v2: px of open floor a way out needs (about a second of running)
   m_turn = 90,          -- v2: cost of turning (half-turn = full cost, slight bend ~0): flow, not twitching
   m_corner = 500,       -- v2: cost of ending in a corner (wall on a side AND above/below), x0.5-2.5 by movers near
+  m_nolane = 150,       -- v2: cost of standing still when the plan never lines up a shot (rock pockets vs worms)
   corner_gap = 60,      -- v2: px to a wall on both axes that counts as a corner
   fire_pad = 14,        -- px: extra no-touch distance around lit fires
   deep_k = 6,           -- how many of the best moves get the expensive checks (speed: the rest are cut early)

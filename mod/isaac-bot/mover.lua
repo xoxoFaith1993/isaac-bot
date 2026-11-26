@@ -395,6 +395,10 @@ local function total(ctx, plan)
   -- Something underground (a burrowing worm, Pin, mid-jump bosses): it surfaces where Isaac stands. Standing still
   -- while one is hidden costs extra (hit review #8: Pin and Gluttony hit it while it stood; a worm in an L room).
   if ctx.hidden > 0 and plan.firstIdx == 0 then c = c + S.m_burrow end
+  -- Standing still with no open lane to the target never ends a fight. A rock pocket is cheap on danger, so against
+  -- Round Worms popping up beyond the rocks it stood in one for half the fight (mirror chat, 2026-11-25: "shoot -"
+  -- in 49% of frames). Standing costs extra whenever this plan never lines up a shot.
+  if ctx.target and plan.firstIdx == 0 and not plan.aimT then c = c + S.m_nolane end
   -- turning costs by how sharp the turn is: a slight bend is nearly free, a reversal is expensive
   local nd, od = ctx.DIRS[plan.firstIdx], Mover.lastDir
   if od then
