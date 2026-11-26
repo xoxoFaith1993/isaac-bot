@@ -58,9 +58,9 @@ the author can move an item up.
 | E2 | Red/gold chest and curse-room door damage | | few | | [x] d7216e5 (curse door) |
 | E3 | **Gluttony** | 49.0 | 12-16 | attack tells and windows | [x] ccb19e7 |
 | E3 | Envy, Pride, Lust, Greed, Wrath | 51, 52, 47, 50, 48 | 0-5 | | [x] ccb19e7 |
-| E3b | **Famine** (+ variants) | 63.0 | 1 (live 1.2.49) | first: the low-HP blood-shot fan (seen at 11.9 px/update from ~140 px), its tells, the dash | [ ] |
-| E3b | **Death** (+ variants) | 66.0 | 0 (never met) | next: the hourglass slowdown (what it slows, for how long), scythes, the horse phase | [ ] |
-| E3b | Pestilence, War, Conquest (+ variants) | 64.0, 65.0, 65.1 | 0 | bosses: two readers each | [ ] |
+| E3b | **Famine** (+ variants) | 63.0 | 1 (live 1.2.49) | first: the low-HP blood-shot fan (seen at 11.9 px/update from ~140 px), its tells, the dash | [x] 67d32e4 |
+| E3b | **Death** (+ variants) | 66.0 | 0 (never met) | next: the hourglass slowdown (what it slows, for how long), scythes, the horse phase | [x] 67d32e4 |
+| E3b | Pestilence, War, Conquest (+ variants) | 64.0, 65.0, 65.1 | 0 | bosses: two readers each | [x] 67d32e4 |
 | E4 | Big Spider, Fatty, Round Worm (shots), Wall Hugger, Boom Fly, Pooter, Horf, Maggot, Hopper | 94, 208, 244, 218, 25, 14, 12, 21, 29.0 | 2-13 each | in that order | [ ] |
 | E4 | Fat Bat, Tumor, Mega Maw (shooters seen in the logs) | 258, 229, 262 | 2-3 shot hits | | [ ] |
 | E5 | Mulligan, Hive, Clotty, Sucker, Spitty, Embryo, Leaper, Knight, Mr. Maw, Night Crawler, Para-Bite, Ragling, Kamikaze Leech, Moter, Wall Creep | | 0 logged | the author's list; floors 1-2 regulars | [ ] |
@@ -90,3 +90,7 @@ the author can move an item up.
   Delirium, no stopping. Added **E3b, the four horsemen** ahead of E4 (Famine first: it hit the bot in live run
   1.2.49; Death next: his slowdown matters to the bot's timing). Sent to the Ghidra session; E4 and E5 follow without
   a pause.
+- 2026-11-26: E3b done (67d32e4; 2 readers each). Checked: the one Famine hit (live run 1.2.49, 14:29) was a 9.0
+  shot from 63 at 11.9 px/update, height -38: fits the centre shot of the low-HP triple (code: 10 x 1.2 = 12), not
+  the 10.8 sides. The recorder wasn't on for that fight, so the cadence, the dash, Death's hourglass, the scythes and
+  War's ring aren't covered yet. E4 is already running (Mega Maw read).
