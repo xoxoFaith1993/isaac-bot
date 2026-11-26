@@ -18,7 +18,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "brain"))
 import botconfig  # noqa: E402  (bot folder: config.json "bot_dir", default this repo)
-
 ROOT = botconfig.ROOT
 LIVE = ROOT / "runs" / "live.log"
 SEND = ROOT / "runs" / "send.txt"
@@ -40,12 +39,23 @@ def lines():
     return LIVE.read_text(encoding="utf-8", errors="replace").splitlines() if LIVE.exists() else []
 
 
+def all_log_lines():
+    """The current live.log plus every archived session log (runs\\logs\\live-*.log), oldest first."""
+    out = []
+    for f in sorted((LIVE.parent / "logs").glob("live-*.log")):
+        out += f.read_text(encoding="utf-8", errors="replace").splitlines()
+    return out + lines()
+
+
 def collect():
+    # counts are rebuilt from all logs every time (re-running used to count the same hits again); rooms seen only
+    # in logs that have since been deleted keep their old counts
     rooms = load()
     known = {(r["stage"], r["kind"], r["variant"]): r for r in rooms}
+    fresh = {}
     cur = None
     added = 0
-    for l in lines():
+    for l in all_log_lines():
         m = re.match(r"^\S+ room +(-?\d+)\|(\d+)\|(\d+)\|(\d+)\|(.*)$", l)
         if m:
             idx, rtype, variant, stage, name = m.groups()
@@ -63,6 +73,9 @@ def collect():
                 known[key] = r
                 rooms.append(r)
                 added += 1
+            if key not in fresh:
+                fresh[key] = True
+                r["hits_seen"], r["causes"] = 0, {}
             r["hits_seen"] += 1
             r["causes"][h.group(1)] = r["causes"].get(h.group(1), 0) + 1
     save(rooms)

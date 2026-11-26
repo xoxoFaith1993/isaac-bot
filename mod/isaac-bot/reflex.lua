@@ -76,10 +76,17 @@ Reflex.S = {
   m_hurtful = 1.3,      -- v2: danger circle grows this much while an enemy is in a 'hurtful' animation
   m_caution = 60,       -- v2: cost of standing on a TNT 'caution' square
   m_trap_r = 0.45,      -- v2: share of an enemy's 'could be here' circle that blocks a way out (likely spot)
+  pb_kill_w = 60,       -- playbook kill priority (0-3) bonus per level for targeting (scaled by low HP)
+  m_charge_line = 80,   -- v2: cost per sample of standing in the row/column of an enemy that charges on line
+  shot_coming_eta = 8,  -- updates until a 'shot coming' (pre-shooting animation) is assumed to fire
+  aim_line_w = 34,      -- v2: px either side of an aimed shot's line that counts as in its way
+  m_edge_hit = 0.15,    -- v2: share of the hit cost at the edge of an enemy's 'could be here' circle (graded)
+  m_grade_r = 40,       -- v2: px: circles bigger than this are graded (uncertain); smaller ones stay full cost
   m_crowd = 60,         -- v2: per enemy, cost of a plan ending close to it (closer = more): drift to open space
   crowd_r2 = 260,       -- v2: px: enemies within this of a plan's end count for crowd pressure
   m_pincer = 200,       -- v2: cost of ending between two enemies on opposite sides (scaled by closeness)
   pincer_r = 160,       -- v2: px: enemies closer than this count for the sandwich rule
+  pincer_w = 70,        -- v2: px off the line between the two enemies at which the sandwich cost has faded out
   bomb_r = 90,          -- v2: px from a live bomb's centre to the blast edge (Isaac's size is added)
   m_burrow = 200,       -- v2: cost of standing still while an enemy is hidden (underground / in the air)
   m_center = 0.25,      -- v2: cost per px of a plan's end from the room's middle (steady pull away from corners)
@@ -304,6 +311,32 @@ function Reflex.learnHit(etype, amount)
 end
 local function respectOf(e) return Reflex.respect[e.Type] or 1 end
 
+-- Enemy playbook (knowledge\enemy_playbook.json, sent by the helper): each enemy type's known behaviour, so the bot
+-- starts with it instead of learning it by getting hit (the author's idea, 2026-11-25). Key "type.variant".
+Reflex.playbook = {}
+function Reflex.loadPlaybook(text)
+  local n = 0
+  for entry in string.gmatch(text or "", "[^;]+") do
+    local key, rest = entry:match("^([^=]+)=(.*)$")
+    if key then
+      local p = { tags = {}, k = 0, d = 0 }
+      for t in string.gmatch(rest, "[^,]+") do
+        local kv = t:match("^k(%d)$")
+        local dv = t:match("^d(%d)$")
+        if kv then p.k = tonumber(kv) elseif dv then p.d = tonumber(dv) else p.tags[t] = true end
+      end
+      Reflex.playbook[key] = p
+      n = n + 1
+    end
+  end
+  return n
+end
+local function playbookOf(e)
+  if not e or e.kind or not e.Type then return nil end
+  return Reflex.playbook[e.Type .. "." .. e.Variant] or Reflex.playbook[e.Type .. ".0"]
+end
+Reflex.playbookOf = playbookOf
+
 -- respect carries over between launches too ("type=value,...")
 function Reflex.respectDump()
   local parts = {}
@@ -434,6 +467,11 @@ local function planFire(player, room, w, targets, prefDist)
     -- only for targets that (nearly) stand still: a chaser's square goes stale and the plan walked Isaac
     -- straight into Gapers (batch review: "fire from 25,13 at 25,13" right before a hit)
     local still = (t.Velocity == nil) or (Reflex.avgSpeed(t) < (relax >= 2 and 1.0 or S.plan_max_speed))
+    -- no fixed firing spot for enemies that dash or charge (playbook): with Dingle in a corner the only line onto it
+    -- ran down a wall, the planner sent the bot there, straight into the dash and spit lane (2026-11-25). The movement
+    -- core keeps to open space instead and fires when the target comes roughly into line.
+    local pbd = playbookOf(t)
+    if pbd and (pbd.tags.dashes_at_isaac or pbd.tags.charges_on_line) then still = false end
     if still and not (hash and plan.banned[hash] and plan.banned[hash] > f) then
       for _, c in ipairs(firingCells(room, t, range, relax >= 1 and 1 or 2)) do
         local steps = dist[c.idx]
@@ -450,6 +488,8 @@ local function planFire(player, room, w, targets, prefDist)
             if hash and w.spawners and w.spawners[hash] then score = score - S.spawner_w end
             -- most danger per hit point first: weak things that keep hurting us die first (Sloth's Chargers did
             -- 9 of 18 hits while it chipped at Sloth's 90+ HP). Danger = learned respect (rises with hits taken).
+            local pbt = playbookOf(t) -- the playbook's kill priority (0-3)
+            if pbt and t.HitPoints and t.HitPoints > 0 then score = score - S.pb_kill_w * pbt.k * math.min(1, 20 / t.HitPoints) end
             if hash and t.HitPoints and t.HitPoints > 0 and S.kill_w > 0 then
               score = score - S.kill_w * (respectOf(t) - 0.9) * math.min(1, 20 / t.HitPoints)
             end
@@ -604,6 +644,8 @@ local function pickTarget(player, enemies, room)
       local d = (e.Position - player.Position):Length()
       local score = d + (e:IsBoss() and -60 or 0) + e.HitPoints * 0.5
       -- most danger per hit point first (see planFire): Sloth's Chargers before Sloth
+      local pbe = playbookOf(e)
+      if pbe and e.HitPoints > 0 then score = score - Reflex.S.pb_kill_w * 0.5 * pbe.k * math.min(1, 20 / e.HitPoints) end
       if Reflex.S.kill_w > 0 and e.HitPoints > 0 then
         score = score - Reflex.S.kill_w * 0.5 * (respectOf(e) - 0.9) * math.min(1, 20 / e.HitPoints)
       end
@@ -614,7 +656,7 @@ local function pickTarget(player, enemies, room)
   end
   if best or not shielded then return best end
   -- Nothing we can hurt, but something is shielded (e.g. a fly tied to a poop): break the nearest
-  -- poop or fireplace to it, the way a player would. (The author spotted this, 2026-11-25.)
+  -- poop or fireplace to it, the way a player would. (the author spotted this, 2026-11-25.)
   -- ...but only something that's really AT it (2026-11-25: a Host, invulnerable while closed, made the bot
   -- "break" a fire across the room and then bomb it). Hosts and the like are fought by baiting them open.
   for _, b in ipairs(breakables(room)) do
@@ -904,7 +946,7 @@ local function score(player, room, w, d, speed, target, prefDist, center, choice
   return cost
 end
 
--- Aim quality (so bad aiming shows up as a number, not something to spot by eye):
+-- Aim quality (so bad aiming shows up as a number, not something the author has to spot by eye):
 -- every update we fire, could that shot actually hit the target? Counted per enemy type.
 Reflex.aim = {}
 local DIRV = { left = Vector(-1, 0), right = Vector(1, 0), up = Vector(0, -1), down = Vector(0, 1) }
@@ -1011,6 +1053,12 @@ function Reflex.update(player)
     if okW and warn then w.warnings[#w.warnings + 1] = e end
     local ok, eta = pcall(Tells.windingUp, e)
     if ok and eta then w.windups[#w.windups + 1] = { e = e, eta = eta } end
+    -- a shot coming soon (the animation that usually comes right before a shooting one): aimed at where Isaac is
+    local ok3, coming = pcall(Tells.shotComing, e)
+    if ok3 and coming then
+      w.aimed = w.aimed or {}
+      w.aimed[#w.aimed + 1] = { from = e.Position, at = player.Position, eta = (ok and eta) or S.shot_coming_eta }
+    end
     local ok2, sh = pcall(Tells.isShooter, e.Type)
     if ok2 and sh then w.shooters[#w.shooters + 1] = e end
   end
@@ -1021,7 +1069,9 @@ function Reflex.update(player)
     local dir = ({ left = Vector(-1, 0), right = Vector(1, 0), up = Vector(0, -1), down = Vector(0, 1) })[lastShot]
     local reach = player.TearRange
     for _, e in ipairs(w.enemies) do
-      if e.Mass < S.light_mass then
+      -- light enemies, or ones the playbook says tears knock back (Suckers are heavier than the light-mass cut)
+      local pbk = playbookOf(e)
+      if e.Mass < S.light_mass or (pbk and pbk.tags.knocked_back_by_tears) then
         local rel = e.Position - player.Position
         local along = rel:Dot(dir)
         local side = math.abs(dir.X ~= 0 and rel.Y or rel.X)
@@ -1219,7 +1269,7 @@ function Reflex.update(player)
     local okM, mi, mc = pcall(Mover.choose, { S = S, w = w, room = room, player = player, speed = speed, DIRS = DIRS,
       target = target, prefDist = prefDist, wayPos = wayPos, spot = plateSpot or navSpot or (plan.target and plan.cellPos) or nil, calm = calm, blocked = blocked, creepAt = creepAt,
       bounce = function(pos, r) return bounced(w, pos, r) end, lane = Reflex.lane, segDist = segDist,
-      laserEnd = laserEnd })
+      laserEnd = laserEnd, playbookOf = playbookOf })
     Reflex.prof.move = Reflex.prof.move + (Isaac.GetTime() - tMove0)
     if okM and mi then best, bestCost, usedV2 = mi, mc, true; Reflex.v2err = nil
     else Reflex.v2err = tostring(mi) end -- falls back to the old core this update; main.lua reports it

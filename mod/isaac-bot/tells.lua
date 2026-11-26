@@ -135,6 +135,27 @@ local function hurtRate(etype, anim)
   if not r or r.seen < 3 then return 0 end
   return r.hits / r.seen
 end
+-- A shot is COMING: the current animation usually leads into a shooting one (Dingle: "Dance"/"Whistle" -> "Spit",
+-- whose shots come ~3 frames in: far too late to react to "Spit" itself, 2026-11-25). Learned from the transitions.
+function Tells.shotComing(e)
+  local c = Tells.cur[GetPtrHash(e)]
+  if not c then return false end
+  local book = Tells.book[c.type] or {}
+  local function shoots(anim)
+    local r = book[anim]
+    return r and r.seen >= 2 and r.shots / r.seen >= 0.4
+  end
+  if shoots(c.anim) then return true end -- already in the shooting animation
+  local nexts = (Tells.trans[c.type] or {})[c.anim]
+  if not nexts then return false end
+  local total, toShot = 0, 0
+  for to, n in pairs(nexts) do
+    total = total + n
+    if shoots(to) then toShot = toShot + n end
+  end
+  return total >= 3 and toShot / total >= 0.5
+end
+
 function Tells.warning(e)
   local c = Tells.cur[GetPtrHash(e)]
   if not c then return false end

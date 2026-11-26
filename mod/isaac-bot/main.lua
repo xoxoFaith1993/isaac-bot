@@ -1,4 +1,4 @@
--- Isaac Bot: an AI player for The Binding of Isaac: Repentance+.
+-- Isaac Bot: the author's AI player.
 --   Stage 0: two-way pipe to the helper on the PC + main-menu autopilot (slot 2, new run as Isaac).
 --   Stage 1: eyes (eyes.lua) - the whole room as data, 10x a second, plus an in-game overlay.
 --
@@ -8,8 +8,8 @@
 --                   mod's save-data file; we read it 10x a second with mod:LoadData() and run each new one.
 --
 -- Auto-start only happens while the helper runs with --auto (it sends "autostart").
--- Without the helper, the mod never touches the menu, so your own play is untouched.
--- A run is only ever started when SAVE SLOT 2 is the loaded slot (slot 1 is the player's own save).
+-- Without the helper, the mod never touches the menu, so the author's own play is untouched.
+-- A run is only ever started when SAVE SLOT 2 is the loaded slot (slot 1 is the author's own save).
 
 local mod = RegisterMod("Isaac Bot", 1)
 local json = require("json")
@@ -23,7 +23,7 @@ local Options = include("options")
 -- handed to the watchdog so it can build the brain's multiple-choice menu
 local MODS = { Reflex = Reflex, Nav = Nav, Danger = Danger, Options = Options, Rescue = Rescue, json = json }
 
-local VERSION = "1.1.53"
+local VERSION = "1.2.3"
 Reflex.status.mode = "full" -- fight + walk + explore (Stage 3); "combat" = fights only, "off" = hands off
 local TAG = "IBOT|"
 local BOT_SLOT = 2
@@ -71,7 +71,7 @@ Nav.onNote = function(text) send("nav", text) end -- doors given up on, bounce b
 -- The title, save and game-over screens don't read buttons through MC_MENU_INPUT_ACTION (only restart
 -- and fullscreen go through it), so the helper sends a real Enter key to the game window instead.
 -- We only ever ask for it on the title and save screens and on the bot's own (slot 2) game-over screen,
--- never on the game menu, where Enter could "Continue" the player's own run on slot 1.
+-- never on the game menu, where Enter could "Continue" the author's own run on slot 1.
 local function needEnter(where)
   auto.asks = auto.asks + 1
   send("need", "enter|" .. where .. "|" .. auto.asks)
@@ -79,7 +79,7 @@ end
 
 ---------------------------------------------------------------- reflexes + controls (Stage 2)
 -- The bot only drives in its own slot-2 runs. In "combat" mode it takes over while there's a fight and
--- hands the controls back when the room is clear, so the player can walk it to the next room.
+-- hands the controls back when the room is clear, so the author can walk it to the next room.
 local ctl = { move = nil, shoot = nil, bomb = false }
 local MOVE = { left = ButtonAction.ACTION_LEFT, right = ButtonAction.ACTION_RIGHT,
                up = ButtonAction.ACTION_UP, down = ButtonAction.ACTION_DOWN }
@@ -172,7 +172,7 @@ local function startArena(n)
 end
 
 -- Enemy gauntlet: random rocks + N of one enemy type, measured (clear time, hits, aim quality). So bad
--- fighting against any enemy shows up in a table instead of someone having to spot it. "gauntlet|T.V|N|ROCKS"
+-- fighting against any enemy shows up in a table instead of the author having to spot it. "gauntlet|T.V|N|ROCKS"
 local function startGauntlet(spec)
   local t, v, n, rocks, seed = spec:match("^(%d+)%.(%d+)|(%d+)|(%d+)|?(%d*)$")
   if not t then send("gauntlet", "bad spec " .. spec); return end
@@ -376,6 +376,9 @@ local function handle(seq, cmd, payload)
     -- reload this mod's code inside the running game (seconds, instead of closing and relaunching Isaac)
     send("reload", "reloading the bot's code")
     Isaac.ExecuteCommand("luamod isaac-bot")
+  elseif cmd == "playbook" then
+    local ok, n = pcall(Reflex.loadPlaybook, payload)
+    send("learned", "loaded the enemy playbook: " .. tostring(ok and n or 0) .. " enemy types")
   elseif cmd == "motionload" then
     local ok, n = pcall(Reflex.mover.load, payload)
     send("learned", "loaded remembered movement of " .. tostring(ok and n or 0) .. " enemy types")

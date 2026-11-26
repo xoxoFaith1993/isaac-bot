@@ -513,6 +513,19 @@ long it takes to "complete the game". Pieces still missing: getting past the dea
 and a total-playtime counter in the run logs (Stage 6). "Complete the game" could mean beating the main endings or
 full 100% (Dead God). That's a huge goal, so scope it once the bot can beat Mom.
 
+### Done since the first upload (bot 1.2.x, 2026-11-25)
+- **Enemy playbook** (`knowledge/enemy_playbook.json`, 238 enemies): tags, danger 1–5 and kill priority, sent to the
+  mod at start. Chargers get danger lines, spawners are killed first, unkillable shooters switch to dodge-only.
+- **Movement core v2** (`mover.lua`): learned enemy reach and shots, Isaac's own learned top speed and acceleration,
+  a 3-move beam search, graded danger circles (so flies don't push it into corners), crowd and sandwich pressure,
+  aimed-shot lines from learned animation tells (Dingle's spit).
+- **Real-room bench** (`tools/rooms.py`): replay real rooms item-free with the console `goto` command.
+- **Overnight batch** (`tools/overnight.py`): bench repeats + real play with a watchdog and a morning report.
+- **Offline tests** (`test/`): 37 scenario tests run in the game's own Lua DLL; `tools/reload.ps1` checks before reloading.
+- **Privacy guard** (`tools/privacy_check.py`, hook via `tools/install_hooks.py`).
+
+Still open: walls counted as a sandwich side (test K3), Sloth item-free, devil/angel deals, two-input active items.
+
 ## Open decisions
 | When | Decision |
 |---|---|

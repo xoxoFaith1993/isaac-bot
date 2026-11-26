@@ -17,3 +17,13 @@ __pycache__/
 resources/
 resources-dlc3/
 *.anm2
+
+# private working notes and local-only files
+PLAN.private.md
+LAPTOP_SETUP.md
+laptop-results/
+knowledge/magicaleye/
+knowledge/*.overgrown-*
+tools/setup_laptop_share.ps1
+
+privacy_words.txt

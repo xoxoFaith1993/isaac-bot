@@ -39,6 +39,8 @@
 -- 32  leaves a secret room the way it came in ............ 1.1.48: inside a secret room only open doors count
 -- 33  gets clear of a bomb it just placed ................. 1.1.49: v2 bomb danger = bomb_r + Isaac's size, full cost
 -- 34  doesn't shoot poop next to a moving enemy in the open 1.1.50: poop gates only for walled-in enemies
+-- 35  leaves a crowded corner of a big room .............. 1.1.53 crowd pressure (behaviour check, no proof entry)
+-- K3  steps off the line between two chasers ............. 1.1.51/54 sandwich cost: OPEN (FOUND_BUGS.md #3)
 -- 28  no bounce between two rooms with a locked door each  1.1.41 (found here): forgive weak write-offs only, once
 -- 29  sprays down a corridor at a target roughly in line . 1.1.41 (found here): loose aim tries all 4 directions
 
@@ -485,7 +487,7 @@ run("fights an enemy that has no collision yet (Boils)", function()
 end)
 
 ------------------------------------------------------------------------ pickups (nav.lua, rules.lua)
--- 23. The author, 2026-11-25: it died walking over spikes for a coin. Value vs damage at this health decides.
+-- 23. the author, 2026-11-25: it died walking over spikes for a coin. Value vs damage at this health decides.
 run("doesn't cross spikes for a penny", function()
   Mock.room({
     "WWWWWWWDWWWWWWW",
@@ -737,6 +739,40 @@ run("doesn't shoot poop next to a moving enemy in the open", function()
   end
   check("doesn't shoot poop next to a moving enemy in the open", poopTarget == 0 and enemyTarget > 0,
         fmt("updates aimed at the poop %d, at the enemy %d", poopTarget, enemyTarget))
+end)
+
+-- 35. 1.1.53 crowd pressure (big rooms: 18 enemies, it never went for the empty half and got pinned in a corner).
+-- A 2x2-sized room (28x16), Isaac in the top-left corner, 10 enemies along the top-left (one run circling, one
+-- run slowly chasing); open floor below and to the right -> over seconds 2-4 he's on average 120+ px from the
+-- corner and never touched. NOT a proof of m_crowd itself: with m_crowd 0 he leaves the corner too (measured
+-- 2026-11-25: 158/362 px with it, 191/340 without), so there's no mutants.lua entry. See FOUND_BUGS.md #4.
+run("leaves a crowded corner of a big room for the open side", function()
+  local rows = { string.rep("W", 28) }
+  for _ = 1, 14 do rows[#rows + 1] = "W" .. string.rep(".", 26) .. "W" end
+  rows[#rows + 1] = string.rep("W", 28)
+  local spots = {}
+  for y = 1, 5, 2 do for x = 5, 13, 2 do spots[#spots + 1] = { x + ((y // 2) % 2), y } end end
+  local res, ok = {}, true
+  for _, kind in ipairs({ "circling", "chasing" }) do
+    Mock.room(rows, { clear = false, player = Mock.tile(2, 2) })
+    local p = Isaac.GetPlayer()
+    for k = 1, 10 do
+      local c = Mock.tile(spots[k][1], spots[k][2])
+      if kind == "circling" then Mock.orbiter(EntityType.ENTITY_TEST_CROWD, c, 30, 0.08, k, { hp = 999 })
+      else Mock.enemy(EntityType.ENTITY_TEST_CROWD, 0, c, { chase = 1.2, hp = 999 }) end
+    end
+    local corner = Mock.vec(60, 140)
+    local sum, touched = 0, 0
+    for i = 1, 120 do
+      local move = Reflex.update(p)
+      Mock.step(move)
+      if i > 60 then sum = sum + (p.Position - corner):Length() end
+      if Mock.touching() then touched = touched + 1 end
+    end
+    if sum / 60 < 120 or touched > 0 then ok = false end
+    res[#res + 1] = fmt("%s: %.0f px from the corner, touched %d", kind, sum / 60, touched)
+  end
+  check("leaves a crowded corner of a big room for the open side", ok, table.concat(res, "; "))
 end)
 
 -- K3. FOUND_BUGS.md #3 (1.1.51 sandwich cost, open): two chasers closing from opposite sides along Isaac's row.

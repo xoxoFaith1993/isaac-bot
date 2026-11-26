@@ -19,7 +19,6 @@ import time
 from pathlib import Path
 
 from botconfig import GAME, ROOT  # game folder and bot folder come from config.json (see config.example.json)
-
 DATA = GAME / "data" / "isaac-bot"
 OUTBOX = GAME / "data" / "isaac-bot-out"
 RUNS = ROOT / "runs"
@@ -258,13 +257,38 @@ FLOOR_NAMES = {1: "Basement I", 2: "Basement II", 3: "Caves I", 4: "Caves II", 5
                12: "The Void", 13: "Home"}
 
 
+PLAYBOOK_TAGS = {"charges_on_line", "dashes_at_isaac", "knocked_back_by_tears", "burrows", "flies", "jumps",
+                 "invulnerable_until", "invulnerable", "spawns_enemies", "explodes_on_death", "explodes_on_contact",
+                 "leaves_creep", "shoots_single", "shoots_spread", "shoots_ring", "shoots_burst", "lobbed", "laser",
+                 "stomp", "hops", "erratic", "splits", "heavy", "tethered"}
+
+
+def send_playbook(pipe):
+    """Enemy baseline (the author, 2026-11-25: give it each enemy's behaviour instead of learning it by getting hit).
+    Compact: "type.variant=tag,tag,...,k<kill_priority>,d<danger>;..." with only the tags the bot uses."""
+    fp = KNOWLEDGE / "enemy_playbook.json"
+    if not fp.exists():
+        return
+    try:
+        en = json.loads(fp.read_text(encoding="utf-8")).get("enemies", {})
+        parts = []
+        for key, e in en.items():
+            tags = [t for f in ("movement", "attacks", "defense") for t in (e.get(f) or []) if t in PLAYBOOK_TAGS]
+            tags.append(f"k{e.get('kill_priority', 0)}")
+            tags.append(f"d{e.get('danger', 0)}")
+            parts.append(key + "=" + ",".join(tags))
+        pipe.send("playbook", ";".join(parts))
+    except (ValueError, OSError):
+        pass
+
+
 HITFRAMES = RUNS / "hitframes"
 HITFRAMES_KEEP = 15  # newest hits kept (3 small JPGs each, ~4 MB in all); older ones are deleted
 _last_capture = [0.0]
 
 
 def capture_hit_frames(body):
-    """The author's idea (2026-11-25): look at the game, not just the log. ~4 s after a hit (Steam finishes the 3 s
+    """the author's idea (2026-11-25): look at the game, not just the log. ~4 s after a hit (Steam finishes the 3 s
     chunk), save 3 frames of the moments before it from Steam's background recording (tools\\look.py)."""
     if time.time() - _last_capture[0] < 5:  # hits in quick succession share one capture
         return
@@ -323,6 +347,17 @@ def run_live(auto):
     state_times = collections.deque(maxlen=20)
 
     RUNS.mkdir(exist_ok=True)
+    # keep the previous session's log (rooms.py collects problem rooms from all of them; a wiped log lost rooms),
+    # newest 30 kept in runs\logs\
+    if LIVE_LOG.exists() and LIVE_LOG.stat().st_size > 0:
+        logs = RUNS / "logs"
+        logs.mkdir(exist_ok=True)
+        try:
+            LIVE_LOG.replace(logs / time.strftime("live-%Y%m%d-%H%M%S.log", time.localtime(LIVE_LOG.stat().st_mtime)))
+            for old in sorted(logs.glob("live-*.log"))[:-30]:
+                old.unlink()
+        except OSError:
+            pass
     live = open(LIVE_LOG, "w", encoding="utf-8", buffering=1)  # fresh log each session, one line at a time
 
     def log(kind, text):
@@ -448,6 +483,7 @@ def run_live(auto):
                 (KNOWLEDGE / (kind.replace("raw", "") + ".dat")).write_text(body, encoding="utf-8")
                 continue
             if kind == "start":  # a run (or the game) started: hand back what was learned before
+                send_playbook(pipe)  # each enemy's known behaviour (knowledge\enemy_playbook.json)
                 for name, cmd in (("tells.dat", "tellsload"), ("respect.dat", "respectload"), ("motion.dat", "motionload")):
                     fp = KNOWLEDGE / name
                     if fp.exists() and fp.read_text(encoding="utf-8").strip():

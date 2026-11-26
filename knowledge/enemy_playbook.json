@@ -1,0 +1,6871 @@
+{
+ "about": "Enemy playbook for the Isaac bot: a baseline of how each enemy behaves, so the bot starts with known behaviour instead of learning it by getting hit. See ENEMIES.md.",
+ "made": "2026-11-25",
+ "sources": [
+  "types: game's resources/scripts/enums.lua (EntityType)",
+  "floor lists: bindingofisaacrebirth.wiki.gg floor pages (Basement, Cellar, Burning Basement, Downpour, Dross; Caves, Catacombs, Flooded Caves, Mines, Ashpit partly)",
+  "behaviour: Isaac knowledge; anything not certain is in 'unsure'",
+  "bot_hits_logged: runs/hits.jsonl as of 2026-11-25 (tests + real play)"
+ ],
+ "key_format": "type.variant, same as hits.jsonl causes (e.g. '23.0'). Variants not listed: fall back to type.0 and treat as unsure.",
+ "vocabulary": {
+  "movement": {
+   "stationary": "never moves (may still turn or shoot)",
+   "wanders": "drifts or walks at random, not toward Isaac",
+   "chases": "walks or floats straight toward Isaac",
+   "flees": "keeps away from Isaac",
+   "flies": "ignores rocks, pits and poop",
+   "hops": "moves in short hops (airborne mid-hop, lands on a spot)",
+   "jumps": "long leaps that land at or near Isaac's spot",
+   "bursts": "sudden fast bursts in a random direction (spiders): position a moment later is a circle, not a line",
+   "dashes_at_isaac": "sudden fast dash toward Isaac's current spot",
+   "charges_on_line": "dashes in a straight line when Isaac lines up on its row or column",
+   "burrows": "goes underground (untouchable), surfaces near or under Isaac",
+   "orbits": "circles something (its parent, a boss, a point)",
+   "tethered": "on a cord or tied to a parent; can't go further than the cord allows",
+   "bounces": "flies diagonally and bounces off walls",
+   "wall_crawler": "moves along the walls only",
+   "teleports": "vanishes and reappears elsewhere",
+   "slides_on_line": "slides fast along a row or column when Isaac lines up (Slide/Poky style)",
+   "erratic": "fast unpredictable direction changes"
+  },
+  "attacks": {
+   "contact": "hurts on touch",
+   "shoots_single": "fires one shot aimed at Isaac",
+   "shoots_spread": "fires a fan of shots toward Isaac",
+   "shoots_ring": "fires shots in fixed directions (plus, X or full ring), not aimed",
+   "shoots_burst": "fires a cluster or volley of many shots at once (shotgun / random burst)",
+   "homing_shots": "its shots curve toward Isaac",
+   "lobbed": "arcing shots that land on a spot (shadow on the floor shows where)",
+   "leaves_creep": "leaves damaging floor puddles",
+   "spawns_enemies": "makes more enemies while alive",
+   "explodes_on_death": "bomb-size explosion when it dies",
+   "shots_on_death": "releases shots when it dies",
+   "laser": "fires a laser / brimstone beam",
+   "stomp": "lands on a spot from above (shadow shows where)",
+   "explodes_on_contact": "runs at Isaac and explodes",
+   "fire": "is or leaves fire that hurts on touch",
+   "slam": "melee wave/shockwave or ground slam around itself",
+   "steals": "steals pickups / drains (no direct damage)"
+  },
+  "defense": {
+   "invulnerable_until": "can't be hurt until something happens (opens, surfaces, lands)",
+   "invulnerable": "can never be killed by tears; avoid or ignore",
+   "knocked_back_by_tears": "tears push it away (light/flying things)",
+   "heavy": "not pushed by tears",
+   "splits": "turns into smaller enemies on death",
+   "reforms": "comes back after 'death' unless hit again (Globin puddle)",
+   "shielded_front": "blocks tears from the front; hit from behind/side",
+   "phases": "boss changes attacks at low health",
+   "linked": "shares health or behaviour with another part (twins, segments)",
+   "flees_when_hurt": "runs away at low health",
+   "speeds_up_when_hurt": "gets faster as it loses health"
+  }
+ },
+ "scales": {
+  "danger": "1 = harmless unless touched ... 5 = top threat for a no-hit bot",
+  "kill_priority": "3 = kill first (spawners, homers, shooters, line-chargers), 2 = normal, 1 = whenever, 0 = can't or shouldn't (invulnerable, hazards)"
+ },
+ "floor_codes_used": {
+  "B": "Basement",
+  "C": "Cellar",
+  "U": "Burning Basement",
+  "D": "Downpour",
+  "X": "Dross",
+  "V": "Caves",
+  "T": "Catacombs",
+  "F": "Flooded Caves",
+  "M": "Mines",
+  "A": "Ashpit",
+  "*": "special rooms (any floor)"
+ },
+ "non_enemy_hit_causes": {
+  "0.8": "spikes (floor hazard) - check against Isaac's edge, not centre",
+  "0.14": "unsure: non-entity damage (curse room door / sacrifice spikes?)",
+  "0.0": "no source: explosion (TNT, bomb), crushed etc.",
+  "1.0": "Isaac's own bomb/explosion",
+  "2.0": "Isaac's own tear (exploding tears like Fire Mind / Ipecac)",
+  "4.0": "bomb (normal)",
+  "4.1": "big bomb (Mr. Boom) - bigger radius",
+  "4.3": "troll bomb",
+  "9.0": "enemy projectile (normal)",
+  "9.2": "enemy projectile (fire)",
+  "9.3": "enemy projectile (puke/blood)",
+  "1000.22": "red creep effect"
+ },
+ "hit_causes_not_in_playbook": {},
+ "enemies": {
+  "10.0": {
+   "name": "Gaper",
+   "type": 10,
+   "variant": 0,
+   "enum": "ENTITY_GAPER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Kite it in a circle and shoot; never let it pin you in a corner.",
+   "numbers": {
+    "speed": "medium"
+   },
+   "bot_hits_logged": 29
+  },
+  "10.1": {
+   "name": "Frowning Gaper",
+   "type": 10,
+   "variant": 1,
+   "enum": "ENTITY_GAPER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Same as Gaper; it's a bit tougher, keep your distance.",
+   "numbers": {
+    "speed": "medium"
+   },
+   "bot_hits_logged": 14
+  },
+  "10.2": {
+   "name": "Flaming Gaper",
+   "type": 10,
+   "variant": 2,
+   "enum": "ENTITY_GAPER",
+   "kind": "enemy",
+   "floors": [
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "fire"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Same as Gaper but it leaves fires; don't walk where it walked.",
+   "numbers": {
+    "speed": "medium"
+   },
+   "unsure": "variant id (10.2 vs 10.3) and how long its fire trail lasts"
+  },
+  "11.0": {
+   "name": "Gusher",
+   "type": 11,
+   "variant": 0,
+   "enum": "ENTITY_GUSHER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "wanders",
+    "erratic"
+   ],
+   "attacks": [
+    "contact",
+    "lobbed"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Its blood shots go in random arcs: keep at medium range and don't stand near it.",
+   "numbers": {
+    "speed": "medium"
+   },
+   "unsure": "exact shot pattern",
+   "bot_hits_logged": 6
+  },
+  "11.1": {
+   "name": "Pacer",
+   "type": 11,
+   "variant": 1,
+   "enum": "ENTITY_GUSHER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "wanders",
+    "erratic"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 1,
+   "kill_priority": 1,
+   "how": "Harmless apart from touch; shoot it and don't walk into it.",
+   "numbers": {
+    "speed": "medium"
+   },
+   "bot_hits_logged": 1
+  },
+  "12.0": {
+   "name": "Horf",
+   "type": 12,
+   "variant": 0,
+   "enum": "ENTITY_HORF",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "shoots_single"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Fires one shot when you're in range; never stand still on its line, sidestep after it shakes.",
+   "numbers": {
+    "range": "medium (~5 tiles)"
+   }
+  },
+  "248.0": {
+   "name": "Psychic Horf",
+   "type": 248,
+   "variant": 0,
+   "enum": "ENTITY_PSY_HORF",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "shoots_single",
+    "homing_shots"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Its shot homes; shoot the shot or keep moving sideways, kill it early."
+  },
+  "13.0": {
+   "name": "Fly",
+   "type": 13,
+   "variant": 0,
+   "enum": "ENTITY_FLY",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "wanders"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "knocked_back_by_tears"
+   ],
+   "danger": 1,
+   "kill_priority": 1,
+   "how": "Slow and weak; shoot it when it comes close, don't chase it.",
+   "numbers": {
+    "speed": "slow"
+   }
+  },
+  "18.0": {
+   "name": "Attack Fly",
+   "type": 18,
+   "variant": 0,
+   "enum": "ENTITY_ATTACKFLY",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "knocked_back_by_tears"
+   ],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Shoot it away, don't flee: it's faster than running and follows you into corners.",
+   "numbers": {
+    "speed": "fast"
+   },
+   "bot_hits_logged": 95
+  },
+  "214.0": {
+   "name": "Level 2 Fly",
+   "type": 214,
+   "variant": 0,
+   "enum": "ENTITY_FLY_L2",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "flies",
+    "wanders"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "knocked_back_by_tears"
+   ],
+   "danger": 1,
+   "kill_priority": 1,
+   "how": "Tougher black fly; shoot it from range.",
+   "unsure": "exact behaviour"
+  },
+  "249.0": {
+   "name": "Full Fly",
+   "type": 249,
+   "variant": 0,
+   "enum": "ENTITY_FULL_FLY",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "wanders"
+   ],
+   "attacks": [
+    "contact",
+    "spawns_enemies"
+   ],
+   "defense": [
+    "splits"
+   ],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Bursts into flies when killed: kill it from far away and be ready to shoot the flies.",
+   "unsure": "what it splits into"
+  },
+  "256.0": {
+   "name": "Dart Fly",
+   "type": 256,
+   "variant": 0,
+   "enum": "ENTITY_DART_FLY",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves",
+    "Dross"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "dashes_at_isaac"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "knocked_back_by_tears"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Pauses, then darts at you: sidestep at the pause, shoot it away, never be in a corner.",
+   "numbers": {
+    "speed": "very_fast bursts"
+   },
+   "bot_hits_logged": 6
+  },
+  "868.0": {
+   "name": "Army Fly",
+   "type": 868,
+   "variant": 0,
+   "enum": "ENTITY_ARMYFLY",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "flies",
+    "orbits"
+   ],
+   "attacks": [
+    "contact",
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "A fly with an orbiting escort; kill the escort flies from range then the core.",
+   "unsure": "behaviour detail",
+   "bot_hits_logged": 3
+  },
+  "222.0": {
+   "name": "Ring of Flies",
+   "type": 222,
+   "variant": 0,
+   "enum": "ENTITY_RING_OF_FLIES",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves",
+    "Dross"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "orbits",
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "knocked_back_by_tears"
+   ],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "A ring of flies drifting at you; shoot into the ring from range, keep out of corners.",
+   "numbers": {
+    "speed": "slow-medium"
+   },
+   "note": "wiki name: Ring Fly",
+   "bot_hits_logged": 2
+  },
+  "281.0": {
+   "name": "Swarm",
+   "type": 281,
+   "variant": 0,
+   "enum": "ENTITY_SWARM",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves",
+    "Dross"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "knocked_back_by_tears"
+   ],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "A cloud of flies that follows you; back off in open space and keep shooting.",
+   "unsure": "exact behaviour",
+   "bot_hits_logged": 2
+  },
+  "80.0": {
+   "name": "Moter",
+   "type": 80,
+   "variant": 0,
+   "enum": "ENTITY_MOTER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "spawns_enemies"
+   ],
+   "defense": [
+    "splits"
+   ],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Splits into 2 Attack Flies when killed: kill it far away, then shoot the flies.",
+   "numbers": {
+    "speed": "fast"
+   }
+  },
+  "61.0": {
+   "name": "Sucker",
+   "type": 61,
+   "variant": 0,
+   "enum": "ENTITY_SUCKER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "shots_on_death"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Bursts into 4 shots (+ shape) when it dies: kill it at range, not on top of you.",
+   "numbers": {
+    "shots_on_death": 4,
+    "pattern": "plus"
+   }
+  },
+  "61.1": {
+   "name": "Spit",
+   "type": 61,
+   "variant": 1,
+   "enum": "ENTITY_SUCKER",
+   "kind": "enemy",
+   "floors": [
+    "Cellar",
+    "Burning Basement",
+    "Catacombs"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "leaves_creep"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Leaves creep where it dies: kill it away from where you need to walk.",
+   "unsure": "death effect",
+   "bot_hits_logged": 10
+  },
+  "61.5": {
+   "name": "Bulb",
+   "type": 61,
+   "variant": 5,
+   "enum": "ENTITY_SUCKER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves",
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "steals"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Touch drains your active item charge; shoot it before it reaches you."
+  },
+  "14.0": {
+   "name": "Pooter",
+   "type": 14,
+   "variant": 0,
+   "enum": "ENTITY_POOTER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_single"
+   ],
+   "defense": [
+    "knocked_back_by_tears"
+   ],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Fires one slow shot every so often; sidestep and shoot it.",
+   "numbers": {
+    "shots": 1
+   }
+  },
+  "14.1": {
+   "name": "Super Pooter",
+   "type": 14,
+   "variant": 1,
+   "enum": "ENTITY_POOTER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_spread"
+   ],
+   "defense": [
+    "knocked_back_by_tears"
+   ],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Fires a double shot; sidestep wider than for a Pooter.",
+   "numbers": {
+    "shots": 2
+   },
+   "unsure": "shot count"
+  },
+  "15.0": {
+   "name": "Clotty",
+   "type": 15,
+   "variant": 0,
+   "enum": "ENTITY_CLOTTY",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "hops",
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_ring"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Fires 4 shots in a + every few hops: don't stand on its row or column.",
+   "numbers": {
+    "shots": 4,
+    "pattern": "plus"
+   }
+  },
+  "15.1": {
+   "name": "Clot",
+   "type": 15,
+   "variant": 1,
+   "enum": "ENTITY_CLOTTY",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "hops",
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_ring"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Like Clotty but its shots are diagonal: stay off its diagonals.",
+   "numbers": {
+    "shots": 4,
+    "pattern": "X"
+   },
+   "unsure": "pattern (X vs plus)"
+  },
+  "15.2": {
+   "name": "I.Blob",
+   "type": 15,
+   "variant": 2,
+   "enum": "ENTITY_CLOTTY",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "hops",
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_ring"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Fires shots in 8 directions: stay at range and move between volleys.",
+   "numbers": {
+    "shots": 8,
+    "pattern": "ring"
+   },
+   "unsure": "shot count"
+  },
+  "15.3": {
+   "name": "Grilled Clotty",
+   "type": 15,
+   "variant": 3,
+   "enum": "ENTITY_CLOTTY",
+   "kind": "enemy",
+   "floors": [
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "hops",
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_ring",
+    "fire"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Burning Clotty: same + shots, keep off its lines.",
+   "numbers": {
+    "pattern": "plus"
+   },
+   "unsure": "extra fire effect"
+  },
+  "16.0": {
+   "name": "Mulligan",
+   "type": 16,
+   "variant": 0,
+   "enum": "ENTITY_MULLIGAN",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "flees",
+    "wanders"
+   ],
+   "attacks": [
+    "spawns_enemies",
+    "shots_on_death"
+   ],
+   "defense": [
+    "splits"
+   ],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Runs away and spawns flies; kill it early, it bursts into flies when killed.",
+   "unsure": "death burst = flies"
+  },
+  "16.1": {
+   "name": "Mulligoon",
+   "type": 16,
+   "variant": 1,
+   "enum": "ENTITY_MULLIGAN",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "flees",
+    "wanders"
+   ],
+   "attacks": [
+    "explodes_on_death"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Explodes like a bomb when killed: kill it from more than 2 tiles away.",
+   "numbers": {
+    "blast_px": 85
+   },
+   "unsure": "blast size"
+  },
+  "16.2": {
+   "name": "Mulliboom",
+   "type": 16,
+   "variant": 2,
+   "enum": "ENTITY_MULLIGAN",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "explodes_on_contact"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Runs at you and explodes: shoot it early from range; never let it reach you.",
+   "numbers": {
+    "speed": "fast",
+    "blast_px": 85
+   },
+   "bot_hits_logged": 5
+  },
+  "16.3": {
+   "name": "Mullighoul",
+   "type": 16,
+   "variant": 3,
+   "enum": "ENTITY_MULLIGAN",
+   "kind": "enemy",
+   "floors": [
+    "Downpour"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "flees",
+    "wanders"
+   ],
+   "attacks": [
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Spawns ghosts; kill it early from range.",
+   "unsure": "what it spawns"
+  },
+  "22.0": {
+   "name": "Hive",
+   "type": 22,
+   "variant": 0,
+   "enum": "ENTITY_HIVE",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "stationary",
+    "wanders"
+   ],
+   "attacks": [
+    "spawns_enemies"
+   ],
+   "defense": [
+    "splits"
+   ],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Spawns flies: kill it first.",
+   "unsure": "moves slowly or not"
+  },
+  "205.0": {
+   "name": "Nest",
+   "type": 205,
+   "variant": 0,
+   "enum": "ENTITY_NEST",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Spawns spiders/Trites: kill it first, from range.",
+   "unsure": "spawn type"
+  },
+  "29.0": {
+   "name": "Hopper",
+   "type": 29,
+   "variant": 0,
+   "enum": "ENTITY_HOPPER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "hops",
+    "wanders"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 1,
+   "kill_priority": 1,
+   "how": "Hops at random; harmless if you never stand where it lands. Shoot it.",
+   "bot_hits_logged": 5
+  },
+  "29.1": {
+   "name": "Trite",
+   "type": 29,
+   "variant": 1,
+   "enum": "ENTITY_HOPPER",
+   "kind": "enemy",
+   "floors": [
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "jumps"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Long leap at your spot: keep moving sideways after it crouches; shoot it while it sits.",
+   "numbers": {
+    "leap": "about 4-5 tiles"
+   },
+   "bot_hits_logged": 41
+  },
+  "54.0": {
+   "name": "Flaming Hopper",
+   "type": 54,
+   "variant": 0,
+   "enum": "ENTITY_FLAMINGHOPPER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "hops",
+    "wanders"
+   ],
+   "attacks": [
+    "contact",
+    "fire"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Hops randomly and can leave fire; don't stand where it lands."
+  },
+  "217.0": {
+   "name": "Dip",
+   "type": 217,
+   "variant": 0,
+   "enum": "ENTITY_DIP",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves",
+    "Mines"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "wanders",
+    "erratic"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 1,
+   "kill_priority": 1,
+   "how": "Slides around fast but harmless; shoot it, don't walk into it.",
+   "numbers": {
+    "speed": "fast"
+   },
+   "bot_hits_logged": 5
+  },
+  "217.2": {
+   "name": "Brownie Corn",
+   "type": 217,
+   "variant": 2,
+   "enum": "ENTITY_DIP",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "wanders",
+    "erratic"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 1,
+   "kill_priority": 1,
+   "how": "Like a Dip; shoot it.",
+   "unsure": "variant id"
+  },
+  "217.3": {
+   "name": "Big Corn",
+   "type": 217,
+   "variant": 3,
+   "enum": "ENTITY_DIP",
+   "kind": "enemy",
+   "floors": [
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "contact",
+    "spawns_enemies"
+   ],
+   "defense": [
+    "splits"
+   ],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Splits into smaller dips; kill from range.",
+   "unsure": "variant id and split"
+  },
+  "220.0": {
+   "name": "Squirt",
+   "type": 220,
+   "variant": 0,
+   "enum": "ENTITY_SQUIRT",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "dashes_at_isaac",
+    "wanders"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "splits"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Dashes at you; splits into 2 Dips. Sidestep the dash and shoot.",
+   "bot_hits_logged": 7
+  },
+  "208.0": {
+   "name": "Fatty",
+   "type": 208,
+   "variant": 0,
+   "enum": "ENTITY_FATTY",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "heavy"
+   ],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Slow but tanky; kite it in a loop, don't get trapped behind it in narrow rooms.",
+   "numbers": {
+    "speed": "slow"
+   },
+   "bot_hits_logged": 7
+  },
+  "208.1": {
+   "name": "Pale Fatty",
+   "type": 208,
+   "variant": 1,
+   "enum": "ENTITY_FATTY",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "shots_on_death"
+   ],
+   "defense": [
+    "heavy"
+   ],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Like Fatty; can burst when it dies, kill it at range.",
+   "numbers": {
+    "speed": "slow"
+   },
+   "unsure": "death effect"
+  },
+  "208.2": {
+   "name": "Flaming Fatty",
+   "type": 208,
+   "variant": 2,
+   "enum": "ENTITY_FATTY",
+   "kind": "enemy",
+   "floors": [
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "fire"
+   ],
+   "defense": [
+    "heavy"
+   ],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Slow, leaves fire; kite wide.",
+   "numbers": {
+    "speed": "slow"
+   },
+   "unsure": "fire trail"
+  },
+  "210.0": {
+   "name": "Blubber",
+   "type": 210,
+   "variant": 0,
+   "enum": "ENTITY_BLUBBER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_burst"
+   ],
+   "defense": [
+    "heavy"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Throws up a burst of shots: stay out of its face, side-on and at range.",
+   "unsure": "attack pattern"
+  },
+  "257.0": {
+   "name": "Conjoined Fatty",
+   "type": 257,
+   "variant": 0,
+   "enum": "ENTITY_CONJOINED_FATTY",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "heavy",
+    "splits"
+   ],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Splits into a Fatty on death; slow, keep distance.",
+   "numbers": {
+    "speed": "slow"
+   }
+  },
+  "226.0": {
+   "name": "Skinny",
+   "type": 226,
+   "variant": 0,
+   "enum": "ENTITY_SKINNY",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "speeds_up_when_hurt"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Speeds up once hurt: finish it fast from range, keep a way out.",
+   "numbers": {
+    "speed": "slow -> fast"
+   }
+  },
+  "226.2": {
+   "name": "Crispy",
+   "type": 226,
+   "variant": 2,
+   "enum": "ENTITY_SKINNY",
+   "kind": "enemy",
+   "floors": [
+    "Burning Basement",
+    "Mines"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "fire"
+   ],
+   "defense": [
+    "speeds_up_when_hurt"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Burning Skinny; finish it quickly, it speeds up."
+  },
+  "244.0": {
+   "name": "Round Worm",
+   "type": 244,
+   "variant": 0,
+   "enum": "ENTITY_ROUND_WORM",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "burrows"
+   ],
+   "attacks": [
+    "shoots_single"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Pops up and fires one shot: keep moving while it's underground, sidestep when it surfaces.",
+   "numbers": {
+    "shots": 1
+   }
+  },
+  "244.1": {
+   "name": "Tube Worm",
+   "type": 244,
+   "variant": 1,
+   "enum": "ENTITY_ROUND_WORM",
+   "kind": "enemy",
+   "floors": [
+    "Downpour",
+    "Dross",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "burrows"
+   ],
+   "attacks": [
+    "lobbed"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Pops up and lobs a shot: watch the landing shadow, keep moving.",
+   "unsure": "shot type"
+  },
+  "255.0": {
+   "name": "Night Crawler",
+   "type": 255,
+   "variant": 0,
+   "enum": "ENTITY_NIGHT_CRAWLER",
+   "kind": "enemy",
+   "floors": [
+    "Cellar",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "burrows",
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Only hittable when up: keep moving, never stand still while it's under."
+  },
+  "85.0": {
+   "name": "Spider",
+   "type": 85,
+   "variant": 0,
+   "enum": "ENTITY_SPIDER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "bursts"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Moves in sudden random bursts: treat its reach as a circle, shoot it from 3+ tiles.",
+   "numbers": {
+    "speed": "very_fast bursts",
+    "burst_reach": "about 2 tiles"
+   },
+   "bot_hits_logged": 25
+  },
+  "94.0": {
+   "name": "Big Spider",
+   "type": 94,
+   "variant": 0,
+   "enum": "ENTITY_BIGSPIDER",
+   "kind": "enemy",
+   "floors": [
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "bursts"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "splits"
+   ],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Bigger bursts; splits into 2 Spiders. Shoot from range.",
+   "bot_hits_logged": 4
+  },
+  "215.0": {
+   "name": "Level 2 Spider",
+   "type": 215,
+   "variant": 0,
+   "enum": "ENTITY_SPIDER_L2",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "bursts"
+   ],
+   "attacks": [
+    "contact",
+    "leaves_creep"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Red spider that leaves creep; shoot from range and avoid its trail.",
+   "unsure": "creep",
+   "bot_hits_logged": 1
+  },
+  "250.0": {
+   "name": "Ticking Spider",
+   "type": 250,
+   "variant": 0,
+   "enum": "ENTITY_TICKING_SPIDER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "bursts",
+    "chases"
+   ],
+   "attacks": [
+    "explodes_on_contact"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Hops at you and explodes: shoot it before it's close, back away from it.",
+   "numbers": {
+    "blast_px": 85
+   },
+   "bot_hits_logged": 5
+  },
+  "206.0": {
+   "name": "Baby Long Legs",
+   "type": 206,
+   "variant": 0,
+   "enum": "ENTITY_BABY_LONG_LEGS",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "spawns_enemies",
+    "stomp"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Lays Sacks/spiders; kill it fast, kill the spiders it makes.",
+   "unsure": "stomp vs only spawning"
+  },
+  "206.1": {
+   "name": "Small Baby Long Legs",
+   "type": 206,
+   "variant": 1,
+   "enum": "ENTITY_BABY_LONG_LEGS",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Smaller version; kill it early."
+  },
+  "207.0": {
+   "name": "Crazy Long Legs",
+   "type": 207,
+   "variant": 0,
+   "enum": "ENTITY_CRAZY_LONG_LEGS",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "erratic",
+    "jumps"
+   ],
+   "attacks": [
+    "stomp",
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Winds up then stomps where you stand: move off the spot when it rears up; kill spawns.",
+   "unsure": "tell timing (get from its anm2)",
+   "bot_hits_logged": 11
+  },
+  "207.1": {
+   "name": "Small Crazy Long Legs",
+   "type": 207,
+   "variant": 1,
+   "enum": "ENTITY_CRAZY_LONG_LEGS",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "erratic",
+    "jumps"
+   ],
+   "attacks": [
+    "stomp"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Same as Crazy Long Legs, smaller."
+  },
+  "30.2": {
+   "name": "Sack",
+   "type": 30,
+   "variant": 2,
+   "enum": "ENTITY_BOIL",
+   "kind": "enemy",
+   "floors": [
+    "Cellar",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Spawns spiders: kill it first."
+  },
+  "88.2": {
+   "name": "Walking Sack",
+   "type": 88,
+   "variant": 2,
+   "enum": "ENTITY_WALKINGBOIL",
+   "kind": "enemy",
+   "floors": [
+    "Cellar",
+    "Catacombs"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Spawns spiders; kill it first."
+  },
+  "231.0": {
+   "name": "Nerve Ending",
+   "type": 231,
+   "variant": 0,
+   "enum": "ENTITY_NERVE_ENDING",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 1,
+   "kill_priority": 1,
+   "how": "Doesn't move; just don't walk into it."
+  },
+  "240.0": {
+   "name": "Wall Creep",
+   "type": 240,
+   "variant": 0,
+   "enum": "ENTITY_WALL_CREEP",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "wall_crawler"
+   ],
+   "attacks": [
+    "shoots_single"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Crawls on a wall and fires when lined up with you: don't stand in front of it."
+  },
+  "242.0": {
+   "name": "Blind Creep",
+   "type": 242,
+   "variant": 0,
+   "enum": "ENTITY_BLIND_CREEP",
+   "kind": "enemy",
+   "floors": [
+    "Cellar",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "wall_crawler"
+   ],
+   "attacks": [
+    "shoots_single"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Wall crawler that shoots along its line; stay off its line.",
+   "unsure": "shoots or lasers"
+  },
+  "218.0": {
+   "name": "Wall Hugger",
+   "type": 218,
+   "variant": 0,
+   "enum": "ENTITY_WALL_HUGGER",
+   "kind": "hazard",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves",
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "wall_crawler"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "invulnerable"
+   ],
+   "danger": 3,
+   "kill_priority": 0,
+   "how": "Can't be killed; it slides along the walls, so keep off the edge of the room."
+  },
+  "44.1": {
+   "name": "Slide",
+   "type": 44,
+   "variant": 1,
+   "enum": "ENTITY_POKY",
+   "kind": "hazard",
+   "floors": [
+    "Cellar",
+    "Caves",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "slides_on_line"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "invulnerable"
+   ],
+   "danger": 3,
+   "kill_priority": 0,
+   "how": "Can't be killed; it slides when you line up with it, so don't stay on its row/column.",
+   "unsure": "variant id"
+  },
+  "284.0": {
+   "name": "Cyclopia",
+   "type": 284,
+   "variant": 0,
+   "enum": "ENTITY_CYCLOPIA",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "flies",
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_single"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Fires aimed shots; keep moving across its line.",
+   "unsure": "shot pattern",
+   "bot_hits_logged": 2
+  },
+  "276.0": {
+   "name": "Roundy",
+   "type": 276,
+   "variant": 0,
+   "enum": "ENTITY_ROUNDY",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "hops",
+    "jumps"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_ring"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Jumps around and sprays shots when it lands: keep away from its landing spot and lines.",
+   "unsure": "landing attack",
+   "bot_hits_logged": 9
+  },
+  "282.0": {
+   "name": "Mega Clotty",
+   "type": 282,
+   "variant": 0,
+   "enum": "ENTITY_MEGA_CLOTTY",
+   "kind": "enemy",
+   "floors": [
+    "Cellar"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "hops",
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_ring"
+   ],
+   "defense": [
+    "heavy",
+    "splits"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Big Clotty: bigger + volleys, splits into Clotties; stay far off its lines.",
+   "unsure": "split"
+  },
+  "289.0": {
+   "name": "Ulcer",
+   "type": 289,
+   "variant": 0,
+   "enum": "ENTITY_ULCER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "stationary",
+    "teleports"
+   ],
+   "attacks": [
+    "shoots_single",
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Pops up, fires and spawns flies; kill it when it appears.",
+   "unsure": "behaviour detail"
+  },
+  "302.0": {
+   "name": "Stoney",
+   "type": 302,
+   "variant": 0,
+   "enum": "ENTITY_STONEY",
+   "kind": "hazard",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves",
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "invulnerable"
+   ],
+   "danger": 2,
+   "kill_priority": 0,
+   "how": "Can't be killed; walks after you. Keep moving and clear the room around it.",
+   "numbers": {
+    "speed": "slow"
+   }
+  },
+  "305.0": {
+   "name": "Ministro",
+   "type": 305,
+   "variant": 0,
+   "enum": "ENTITY_MINISTRO",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "hops",
+    "jumps"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Hops toward you; shoot it before it lands near you."
+  },
+  "306.0": {
+   "name": "Portal",
+   "type": 306,
+   "variant": 0,
+   "enum": "ENTITY_PORTAL",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Spawns enemies until killed: kill it first."
+  },
+  "291.1": {
+   "name": "Suction Pitfall",
+   "type": 291,
+   "variant": 1,
+   "enum": "ENTITY_PITFALL",
+   "kind": "hazard",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "invulnerable"
+   ],
+   "danger": 3,
+   "kill_priority": 0,
+   "how": "Pulls you in: stay away from it.",
+   "unsure": "variant id and pull strength"
+  },
+  "299.0": {
+   "name": "Greed Gaper",
+   "type": 299,
+   "variant": 0,
+   "enum": "ENTITY_GREED_GAPER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "steals"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Steals coins on touch; kite and shoot like a Gaper."
+  },
+  "297.0": {
+   "name": "Blue Gaper",
+   "type": 297,
+   "variant": 0,
+   "enum": "ENTITY_HUSH_GAPER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Gaper-like; kite and shoot.",
+   "unsure": "behaviour"
+  },
+  "246.1": {
+   "name": "Rag Man's Ragling",
+   "type": 246,
+   "variant": 1,
+   "enum": "ENTITY_RAGLING",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "chases",
+    "hops"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "reforms"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Becomes a pile after 'death' that revives: kill it, then keep shooting the pile.",
+   "unsure": "variant id"
+  },
+  "246.0": {
+   "name": "Ragling",
+   "type": 246,
+   "variant": 0,
+   "enum": "ENTITY_RAGLING",
+   "kind": "enemy",
+   "floors": [
+    "Cellar",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "chases",
+    "hops"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "reforms"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Falls into a pile and gets up again; shoot the pile too.",
+   "unsure": "revive"
+  },
+  "279.0": {
+   "name": "Black Globin's Head",
+   "type": 279,
+   "variant": 0,
+   "enum": "ENTITY_BLACK_GLOBIN_HEAD",
+   "kind": "enemy",
+   "floors": [
+    "Cellar"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Fast head; shoot it while kiting."
+  },
+  "280.0": {
+   "name": "Black Globin's Body",
+   "type": 280,
+   "variant": 0,
+   "enum": "ENTITY_BLACK_GLOBIN_BODY",
+   "kind": "enemy",
+   "floors": [
+    "Cellar"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "chases",
+    "wanders"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Headless body; avoid and shoot."
+  },
+  "869.0": {
+   "name": "Migraine",
+   "type": 869,
+   "variant": 0,
+   "enum": "ENTITY_MIGRAINE",
+   "kind": "enemy",
+   "floors": [
+    "Cellar",
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_ring"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Unsure; keep at range and off its lines.",
+   "unsure": "behaviour"
+  },
+  "884.0": {
+   "name": "Swarm Spider",
+   "type": 884,
+   "variant": 0,
+   "enum": "ENTITY_SWARM_SPIDER",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "bursts",
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Comes in swarms of fast spiders: back into open space and spray.",
+   "unsure": "behaviour"
+  },
+  "881.0": {
+   "name": "Needle",
+   "type": 881,
+   "variant": 0,
+   "enum": "ENTITY_NEEDLE",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Burning Basement",
+    "Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "burrows"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Pokes up from the ground where you are: keep moving.",
+   "unsure": "behaviour"
+  },
+  "77.0": {
+   "name": "Embryo",
+   "type": 77,
+   "variant": 0,
+   "enum": "ENTITY_EMBRYO",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "hops",
+    "wanders"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 1,
+   "kill_priority": 1,
+   "how": "Small hopping thing; shoot it."
+  },
+  "76.0": {
+   "name": "Blastocyst (small)",
+   "type": 76,
+   "variant": 0,
+   "enum": "ENTITY_BLASTOCYST_SMALL",
+   "kind": "enemy",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "hops",
+    "jumps"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Hops toward you; shoot it before it lands near."
+  },
+  "96.0": {
+   "name": "Eternal Fly",
+   "type": 96,
+   "variant": 0,
+   "enum": "ENTITY_ETERNALFLY",
+   "kind": "enemy",
+   "floors": [
+    "Dross",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "orbits"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "invulnerable"
+   ],
+   "danger": 2,
+   "kill_priority": 0,
+   "how": "Orbits its host; can't die while it's alive, kill the host and dodge the orbit.",
+   "bot_hits_logged": 6
+  },
+  "288.0": {
+   "name": "Dukie",
+   "type": 288,
+   "variant": 0,
+   "enum": "ENTITY_DUKIE",
+   "kind": "enemy",
+   "floors": [
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "wanders"
+   ],
+   "attacks": [
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Spawns flies; kill it first."
+  },
+  "25.0": {
+   "name": "Boom Fly",
+   "type": 25,
+   "variant": 0,
+   "enum": "ENTITY_BOOMFLY",
+   "kind": "enemy",
+   "floors": [
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "bounces"
+   ],
+   "attacks": [
+    "contact",
+    "explodes_on_death"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Bounces diagonally and explodes when killed: kill it while it's far away.",
+   "numbers": {
+    "blast_px": 85
+   },
+   "bot_hits_logged": 3
+  },
+  "33.0": {
+   "name": "Fire (Fireplace)",
+   "type": 33,
+   "variant": 0,
+   "enum": "ENTITY_FIREPLACE",
+   "kind": "hazard",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves",
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "contact",
+    "fire"
+   ],
+   "defense": [],
+   "danger": 1,
+   "kill_priority": 1,
+   "how": "Don't touch; shoot it out if it blocks the way.",
+   "bot_hits_logged": 8
+  },
+  "33.1": {
+   "name": "Red Fire",
+   "type": 33,
+   "variant": 1,
+   "enum": "ENTITY_FIREPLACE",
+   "kind": "hazard",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "contact",
+    "fire",
+    "shoots_single"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Shoots at you: put it out early from range or keep off its line.",
+   "bot_hits_logged": 9
+  },
+  "292.0": {
+   "name": "Movable TNT",
+   "type": 292,
+   "variant": 0,
+   "enum": "ENTITY_MOVABLE_TNT",
+   "kind": "hazard",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "explodes_on_death"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 0,
+   "how": "Explodes when shot: don't shoot it while close; never stand next to it.",
+   "numbers": {
+    "blast_px": 85
+   }
+  },
+  "806.0": {
+   "name": "Bubbles",
+   "type": 806,
+   "variant": 0,
+   "enum": "ENTITY_BUBBLES",
+   "kind": "enemy",
+   "floors": [
+    "Downpour",
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "splits"
+   ],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Splits into smaller bubbles; shoot from range.",
+   "unsure": "behaviour"
+  },
+  "807.0": {
+   "name": "Wraith",
+   "type": 807,
+   "variant": 0,
+   "enum": "ENTITY_WRAITH",
+   "kind": "enemy",
+   "floors": [
+    "Downpour",
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "teleports",
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_single"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Fades in and out; only hittable when visible. Keep moving.",
+   "unsure": "behaviour"
+  },
+  "808.0": {
+   "name": "Willo",
+   "type": 808,
+   "variant": 0,
+   "enum": "ENTITY_WILLO",
+   "kind": "enemy",
+   "floors": [
+    "Downpour"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "flies",
+    "dashes_at_isaac"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "knocked_back_by_tears"
+   ],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Darts at you: shoot it away, sidestep."
+  },
+  "838.0": {
+   "name": "Level 2 Willo",
+   "type": 838,
+   "variant": 0,
+   "enum": "ENTITY_WILLO_L2",
+   "kind": "enemy",
+   "floors": [
+    "Downpour"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "flies",
+    "dashes_at_isaac"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Stronger Willo; same as Willo."
+  },
+  "810.0": {
+   "name": "Small Leech",
+   "type": 810,
+   "variant": 0,
+   "enum": "ENTITY_SMALL_LEECH",
+   "kind": "enemy",
+   "floors": [
+    "Downpour",
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Fast little leech: shoot it before it's close.",
+   "numbers": {
+    "speed": "fast"
+   }
+  },
+  "811.0": {
+   "name": "Deep Gaper",
+   "type": 811,
+   "variant": 0,
+   "enum": "ENTITY_DEEP_GAPER",
+   "kind": "enemy",
+   "floors": [
+    "Downpour",
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Gaper-like; kite and shoot.",
+   "unsure": "behaviour"
+  },
+  "812.0": {
+   "name": "Sub Horf",
+   "type": 812,
+   "variant": 0,
+   "enum": "ENTITY_SUB_HORF",
+   "kind": "enemy",
+   "floors": [
+    "Downpour",
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "burrows",
+    "stationary"
+   ],
+   "attacks": [
+    "shoots_single"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Surfaces and fires; sidestep when it rises."
+  },
+  "813.0": {
+   "name": "Blurb",
+   "type": 813,
+   "variant": 0,
+   "enum": "ENTITY_BLURB",
+   "kind": "enemy",
+   "floors": [
+    "Downpour",
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_ring"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Sprays shots; keep at range off its lines.",
+   "unsure": "pattern"
+  },
+  "814.0": {
+   "name": "Strider",
+   "type": 814,
+   "variant": 0,
+   "enum": "ENTITY_STRIDER",
+   "kind": "enemy",
+   "floors": [
+    "Downpour"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Unsure; kite and shoot.",
+   "unsure": "behaviour"
+  },
+  "815.0": {
+   "name": "Fissure",
+   "type": 815,
+   "variant": 0,
+   "enum": "ENTITY_FISSURE",
+   "kind": "enemy",
+   "floors": [
+    "Downpour"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "shoots_ring"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Unsure; keep off its lines.",
+   "unsure": "behaviour"
+  },
+  "816.0": {
+   "name": "Polty",
+   "type": 816,
+   "variant": 0,
+   "enum": "ENTITY_POLTY",
+   "kind": "enemy",
+   "floors": [
+    "Downpour"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Throws rocks/objects; keep moving.",
+   "unsure": "behaviour"
+  },
+  "817.0": {
+   "name": "Prey",
+   "type": 817,
+   "variant": 0,
+   "enum": "ENTITY_PREY",
+   "kind": "enemy",
+   "floors": [
+    "Downpour",
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Unsure; kite and shoot.",
+   "unsure": "behaviour"
+  },
+  "879.0": {
+   "name": "Bloaty",
+   "type": 879,
+   "variant": 0,
+   "enum": "ENTITY_BLOATY",
+   "kind": "enemy",
+   "floors": [
+    "Downpour"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "explodes_on_death"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Bursts when killed; kill at range.",
+   "unsure": "death effect"
+  },
+  "870.0": {
+   "name": "Drip",
+   "type": 870,
+   "variant": 0,
+   "enum": "ENTITY_DRIP",
+   "kind": "enemy",
+   "floors": [
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "contact",
+    "leaves_creep"
+   ],
+   "defense": [],
+   "danger": 1,
+   "kill_priority": 1,
+   "how": "Small and weak; shoot it, avoid its creep.",
+   "unsure": "creep"
+  },
+  "871.0": {
+   "name": "Splurt",
+   "type": 871,
+   "variant": 0,
+   "enum": "ENTITY_SPLURT",
+   "kind": "enemy",
+   "floors": [
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "dashes_at_isaac"
+   ],
+   "attacks": [
+    "contact",
+    "shots_on_death"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Pops into shots/poop when killed; kill from range.",
+   "unsure": "behaviour"
+  },
+  "872.0": {
+   "name": "Cloggy",
+   "type": 872,
+   "variant": 0,
+   "enum": "ENTITY_CLOGGY",
+   "kind": "enemy",
+   "floors": [
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "contact",
+    "leaves_creep"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Unsure; kite and shoot.",
+   "unsure": "behaviour"
+  },
+  "873.0": {
+   "name": "Fly Trap",
+   "type": 873,
+   "variant": 0,
+   "enum": "ENTITY_FLY_TRAP",
+   "kind": "enemy",
+   "floors": [
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "spawns_enemies",
+    "contact"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Unsure; kill it first from range.",
+   "unsure": "behaviour"
+  },
+  "874.0": {
+   "name": "Gas Dwarf",
+   "type": 874,
+   "variant": 0,
+   "enum": "ENTITY_FARTIGAN",
+   "kind": "enemy",
+   "floors": [
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "contact",
+    "leaves_creep"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Unsure: leaves gas clouds; keep away from them.",
+   "unsure": "id and behaviour"
+  },
+  "875.0": {
+   "name": "Poot Mine",
+   "type": 875,
+   "variant": 0,
+   "enum": "ENTITY_POOT_MINE",
+   "kind": "hazard",
+   "floors": [
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "explodes_on_death"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 0,
+   "how": "Mine: blows up when touched or shot; don't stand near it.",
+   "unsure": "behaviour"
+  },
+  "876.0": {
+   "name": "Dump",
+   "type": 876,
+   "variant": 0,
+   "enum": "ENTITY_DUMP",
+   "kind": "enemy",
+   "floors": [
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "contact",
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Unsure; kill from range.",
+   "unsure": "behaviour"
+  },
+  "876.1": {
+   "name": "Dump Head",
+   "type": 876,
+   "variant": 1,
+   "enum": "ENTITY_DUMP",
+   "kind": "enemy",
+   "floors": [
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_single"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Unsure; keep moving.",
+   "unsure": "behaviour"
+  },
+  "837.0": {
+   "name": "Henry",
+   "type": 837,
+   "variant": 0,
+   "enum": "ENTITY_HENRY",
+   "kind": "enemy",
+   "floors": [
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Unsure; kite and shoot.",
+   "unsure": "behaviour"
+  },
+  "20.0": {
+   "name": "Monstro",
+   "type": 20,
+   "variant": 0,
+   "enum": "ENTITY_MONSTRO",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "hops",
+    "jumps"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_burst",
+    "stomp"
+   ],
+   "defense": [
+    "heavy"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Big jump lands where you were: run when it leaves the ground; dodge sideways from its spit burst.",
+   "numbers": {
+    "burst_shots": "about 10, toward Isaac"
+   },
+   "bot_hits_logged": 33
+  },
+  "19.0": {
+   "name": "Larry Jr.",
+   "type": 19,
+   "variant": 0,
+   "enum": "ENTITY_LARRYJR",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "contact",
+    "leaves_creep"
+   ],
+   "defense": [
+    "linked",
+    "splits"
+   ],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Worm segments: stay out of its path, don't get boxed in by its body.",
+   "unsure": "creep",
+   "bot_hits_logged": 1
+  },
+  "79.0": {
+   "name": "Gemini",
+   "type": 79,
+   "variant": 0,
+   "enum": "ENTITY_GEMINI",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "chases",
+    "tethered"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "linked",
+    "phases"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Big twin chases; baby on a cord swings around it. Circle the room centre, never a corner.",
+   "bot_hits_logged": 157
+  },
+  "79.1": {
+   "name": "Steven",
+   "type": 79,
+   "variant": 1,
+   "enum": "ENTITY_GEMINI",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "chases",
+    "tethered"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_single"
+   ],
+   "defense": [
+    "linked"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Like Gemini; the small one shoots. Circle in open space."
+  },
+  "79.2": {
+   "name": "Blighted Ovum",
+   "type": 79,
+   "variant": 2,
+   "enum": "ENTITY_GEMINI",
+   "kind": "boss",
+   "floors": [
+    "Cellar"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "chases",
+    "tethered"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_spread"
+   ],
+   "defense": [
+    "linked"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Gemini-like with shots; circle the room centre and dodge sideways.",
+   "bot_hits_logged": 120
+  },
+  "79.10": {
+   "name": "Gemini baby (Suture)",
+   "type": 79,
+   "variant": 10,
+   "enum": "ENTITY_GEMINI",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "tethered",
+    "charges_on_line"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "linked"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Can't go further than its cord from the big twin: stay out of that circle.",
+   "bot_hits_logged": 28
+  },
+  "79.11": {
+   "name": "Steven baby",
+   "type": 79,
+   "variant": 11,
+   "enum": "ENTITY_GEMINI",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "tethered"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_single"
+   ],
+   "defense": [
+    "linked"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Tied to big Steven; keep out of its cord circle."
+  },
+  "79.12": {
+   "name": "Blighted Ovum baby",
+   "type": 79,
+   "variant": 12,
+   "enum": "ENTITY_GEMINI",
+   "kind": "boss",
+   "floors": [
+    "Cellar"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "tethered",
+    "charges_on_line"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "linked"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Tied to the Ovum; keep out of its cord circle.",
+   "bot_hits_logged": 27
+  },
+  "99.0": {
+   "name": "Gurdy Jr.",
+   "type": 99,
+   "variant": 0,
+   "enum": "ENTITY_GURDY_JR",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "charges_on_line",
+    "wanders"
+   ],
+   "attacks": [
+    "contact",
+    "spawns_enemies",
+    "shoots_spread"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Dashes along rows/columns: never line up with it; kill its flies.",
+   "unsure": "shot pattern"
+  },
+  "67.0": {
+   "name": "The Duke of Flies",
+   "type": 67,
+   "variant": 0,
+   "enum": "ENTITY_DUKE",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "flies",
+    "wanders",
+    "bounces"
+   ],
+   "attacks": [
+    "spawns_enemies",
+    "contact"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Spawns and blows out flies: keep killing the flies, stay out of corners.",
+   "bot_hits_logged": 2
+  },
+  "261.0": {
+   "name": "Dingle",
+   "type": 261,
+   "variant": 0,
+   "enum": "ENTITY_DINGLE",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "charges_on_line",
+    "wanders"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_spread",
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Slides across the room in a line: step off its path when it winds up.",
+   "bot_hits_logged": 223
+  },
+  "261.1": {
+   "name": "Dangle",
+   "type": 261,
+   "variant": 1,
+   "enum": "ENTITY_DINGLE",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "charges_on_line",
+    "wanders"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_spread"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Like Dingle but faster; step off its line early."
+  },
+  "100.0": {
+   "name": "Widow",
+   "type": 100,
+   "variant": 0,
+   "enum": "ENTITY_WIDOW",
+   "kind": "boss",
+   "floors": [
+    "Cellar"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "jumps",
+    "wanders"
+   ],
+   "attacks": [
+    "contact",
+    "stomp",
+    "spawns_enemies",
+    "leaves_creep"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Jumps up and lands on you: move when it leaves; kill its spiders.",
+   "bot_hits_logged": 6
+  },
+  "62.0": {
+   "name": "Pin",
+   "type": 62,
+   "variant": 0,
+   "enum": "ENTITY_PIN",
+   "kind": "boss",
+   "floors": [
+    "Cellar"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "burrows",
+    "jumps"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_spread"
+   ],
+   "defense": [
+    "invulnerable_until",
+    "linked"
+   ],
+   "danger": 5,
+   "kill_priority": 3,
+   "how": "Underground most of the time: keep moving, never stand still; hit the head when it pops up.",
+   "bot_hits_logged": 11
+  },
+  "62.3": {
+   "name": "Wormwood",
+   "type": 62,
+   "variant": 3,
+   "enum": "ENTITY_PIN",
+   "kind": "boss",
+   "floors": [
+    "Downpour",
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "burrows",
+    "jumps"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_spread"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 5,
+   "kill_priority": 3,
+   "how": "Dives in and out: keep moving, dodge the arc it surfaces on."
+  },
+  "260.0": {
+   "name": "The Haunt",
+   "type": 260,
+   "variant": 0,
+   "enum": "ENTITY_THE_HAUNT",
+   "kind": "boss",
+   "floors": [
+    "Cellar"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "flies",
+    "wanders"
+   ],
+   "attacks": [
+    "laser",
+    "shoots_single"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Kill the 3 Lil Haunts first; then dodge its beam line.",
+   "note": "wiki: not in Repentance on Burning Basement; still in Cellar"
+  },
+  "260.10": {
+   "name": "Lil Haunt",
+   "type": 260,
+   "variant": 10,
+   "enum": "ENTITY_THE_HAUNT",
+   "kind": "boss",
+   "floors": [
+    "Cellar"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "flies",
+    "orbits",
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_single"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Shoot them as they come; keep moving, don't stand still.",
+   "bot_hits_logged": 4
+  },
+  "63.0": {
+   "name": "Famine",
+   "type": 63,
+   "variant": 0,
+   "enum": "ENTITY_FAMINE",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "charges_on_line"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_spread",
+    "spawns_enemies"
+   ],
+   "defense": [
+    "phases"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Charges across the room: stay off its line; it gets wild at low health."
+  },
+  "81.0": {
+   "name": "The Fallen",
+   "type": 81,
+   "variant": 0,
+   "enum": "ENTITY_FALLEN",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "special rooms (any floor)"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "flies",
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_spread",
+    "laser"
+   ],
+   "defense": [
+    "splits",
+    "phases"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Splits in two at half health; keep moving, dodge spreads.",
+   "unsure": "laser"
+  },
+  "82.0": {
+   "name": "Headless Horseman (body)",
+   "type": 82,
+   "variant": 0,
+   "enum": "ENTITY_HEADLESS_HORSEMAN",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "charges_on_line"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "linked"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Rides across the screen: stay off the row it rides on."
+  },
+  "83.0": {
+   "name": "Headless Horseman (head)",
+   "type": 83,
+   "variant": 0,
+   "enum": "ENTITY_HORSEMAN_HEAD",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "flies",
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_spread",
+    "laser"
+   ],
+   "defense": [
+    "linked"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Fires shots/beam; move across its line.",
+   "unsure": "attack"
+  },
+  "237.1": {
+   "name": "Gurglings (boss)",
+   "type": 237,
+   "variant": 1,
+   "enum": "ENTITY_GURGLING",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "chases",
+    "dashes_at_isaac"
+   ],
+   "attacks": [
+    "contact",
+    "leaves_creep",
+    "spawns_enemies"
+   ],
+   "defense": [
+    "linked"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Two dashing blobs leaving red creep: move sideways, never walk on creep.",
+   "bot_hits_logged": 4
+  },
+  "237.2": {
+   "name": "Turdlings / Turdling",
+   "type": 237,
+   "variant": 2,
+   "enum": "ENTITY_GURGLING",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "chases",
+    "dashes_at_isaac"
+   ],
+   "attacks": [
+    "contact",
+    "leaves_creep"
+   ],
+   "defense": [
+    "linked"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Like Gurglings with brown creep.",
+   "unsure": "variant id"
+  },
+  "404.0": {
+   "name": "Little Horn",
+   "type": 404,
+   "variant": 0,
+   "enum": "ENTITY_LITTLE_HORN",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "teleports",
+    "stationary"
+   ],
+   "attacks": [
+    "shoots_single",
+    "spawns_enemies"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Drops holes under you and bombs: keep moving.",
+   "unsure": "attack list"
+  },
+  "405.0": {
+   "name": "Rag Man",
+   "type": 405,
+   "variant": 0,
+   "enum": "ENTITY_RAG_MAN",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "flies",
+    "wanders"
+   ],
+   "attacks": [
+    "spawns_enemies",
+    "shoots_single"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Revives Raglings; kill Raglings fully, stay at range."
+  },
+  "908.0": {
+   "name": "Baby Plum",
+   "type": 908,
+   "variant": 0,
+   "enum": "ENTITY_BABY_PLUM",
+   "kind": "boss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "flies",
+    "bounces",
+    "charges_on_line"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_ring"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Bounces round the room spraying tears: stay mid-room, dodge.",
+   "unsure": "pattern"
+  },
+  "901.0": {
+   "name": "Lil Blub",
+   "type": 901,
+   "variant": 0,
+   "enum": "ENTITY_LIL_BLUB",
+   "kind": "boss",
+   "floors": [
+    "Downpour",
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "spawns_enemies",
+    "leaves_creep"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Unsure; keep at range.",
+   "unsure": "behaviour"
+  },
+  "902.0": {
+   "name": "The Rainmaker",
+   "type": 902,
+   "variant": 0,
+   "enum": "ENTITY_RAINMAKER",
+   "kind": "boss",
+   "floors": [
+    "Downpour"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "flies",
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_burst",
+    "lobbed"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Rains shots; keep moving, watch shadows.",
+   "unsure": "behaviour"
+  },
+  "913.0": {
+   "name": "Min-Min",
+   "type": 913,
+   "variant": 0,
+   "enum": "ENTITY_MIN_MIN",
+   "kind": "boss",
+   "floors": [
+    "Downpour"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "teleports",
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_single"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Turns invisible; keep moving.",
+   "unsure": "behaviour"
+  },
+  "914.0": {
+   "name": "Clog",
+   "type": 914,
+   "variant": 0,
+   "enum": "ENTITY_CLOG",
+   "kind": "boss",
+   "floors": [
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "lobbed",
+    "leaves_creep"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Lobs gunk; keep moving, watch shadows.",
+   "unsure": "behaviour"
+  },
+  "917.0": {
+   "name": "Colostomia",
+   "type": 917,
+   "variant": 0,
+   "enum": "ENTITY_COLOSTOMIA",
+   "kind": "boss",
+   "floors": [
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "hops",
+    "jumps"
+   ],
+   "attacks": [
+    "stomp",
+    "lobbed"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Jumps; move when it leaves the ground.",
+   "unsure": "behaviour"
+  },
+  "918.0": {
+   "name": "Turdlet",
+   "type": 918,
+   "variant": 0,
+   "enum": "ENTITY_TURDLET",
+   "kind": "boss",
+   "floors": [
+    "Dross"
+   ],
+   "stages": [
+    "1-2"
+   ],
+   "movement": [
+    "flies",
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_single"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Unsure; keep at range.",
+   "unsure": "behaviour"
+  },
+  "46.0": {
+   "name": "Sloth",
+   "type": 46,
+   "variant": 0,
+   "enum": "ENTITY_SLOTH",
+   "kind": "miniboss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_single",
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Its shot is the danger, not its body: never stand on its row/column, sidestep each shot; kill its Chargers.",
+   "numbers": {
+    "shots": 1,
+    "speed": "slow"
+   },
+   "unsure": "shot path (bot predicted danger 0 before hits: maybe arcs/curves)",
+   "bot_hits_logged": 87
+  },
+  "47.0": {
+   "name": "Lust",
+   "type": 47,
+   "variant": 0,
+   "enum": "ENTITY_LUST",
+   "kind": "miniboss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Gets faster as you hurt it: kite in open space.",
+   "numbers": {
+    "speed": "fast"
+   },
+   "bot_hits_logged": 2
+  },
+  "48.0": {
+   "name": "Wrath",
+   "type": 48,
+   "variant": 0,
+   "enum": "ENTITY_WRATH",
+   "kind": "miniboss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "explodes_on_death"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Drops bombs: keep away from bombs, never stand next to it."
+  },
+  "49.0": {
+   "name": "Gluttony",
+   "type": 49,
+   "variant": 0,
+   "enum": "ENTITY_GLUTTONY",
+   "kind": "miniboss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "laser",
+    "leaves_creep"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Fires a beam along its line: stay off its row/column, keep moving.",
+   "bot_hits_logged": 4
+  },
+  "50.0": {
+   "name": "Greed",
+   "type": 50,
+   "variant": 0,
+   "enum": "ENTITY_GREED",
+   "kind": "miniboss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_spread",
+    "steals"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Takes coins and fires spreads; dodge sideways at range."
+  },
+  "51.0": {
+   "name": "Envy",
+   "type": 51,
+   "variant": 0,
+   "enum": "ENTITY_ENVY",
+   "kind": "miniboss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "bounces"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "splits"
+   ],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Splits into many bouncing heads: shoot from mid-room, watch bounces."
+  },
+  "52.0": {
+   "name": "Pride",
+   "type": 52,
+   "variant": 0,
+   "enum": "ENTITY_PRIDE",
+   "kind": "miniboss",
+   "floors": [
+    "Basement",
+    "Cellar",
+    "Burning Basement",
+    "Downpour",
+    "Dross",
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "laser"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Beams: stay off its lines."
+  },
+  "81.1": {
+   "name": "Krampus",
+   "type": 81,
+   "variant": 1,
+   "enum": "ENTITY_FALLEN",
+   "kind": "boss",
+   "floors": [
+    "special rooms (any floor)"
+   ],
+   "stages": [],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "laser",
+    "contact"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Devil-room fight: stay off its row/column (brimstone)."
+  },
+  "23.0": {
+   "name": "Charger",
+   "type": 23,
+   "variant": 0,
+   "enum": "ENTITY_CHARGER",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves",
+    "Basement",
+    "Cellar",
+    "Burning Basement"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "charges_on_line",
+    "wanders"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Stay off its row and column; shoot it from a diagonal.",
+   "numbers": {
+    "speed": "very_fast charge"
+   },
+   "note": "also spawned by Sloth on floor 1-2",
+   "bot_hits_logged": 27
+  },
+  "23.1": {
+   "name": "Drowned Charger",
+   "type": 23,
+   "variant": 1,
+   "enum": "ENTITY_CHARGER",
+   "kind": "enemy",
+   "floors": [
+    "Flooded Caves",
+    "Downpour"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "charges_on_line",
+    "wanders"
+   ],
+   "attacks": [
+    "contact",
+    "shots_on_death"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Stay off its lines; kill at range (shots on death).",
+   "unsure": "death shots"
+  },
+  "22.1": {
+   "name": "Drowned Hive",
+   "type": 22,
+   "variant": 1,
+   "enum": "ENTITY_HIVE",
+   "kind": "enemy",
+   "floors": [
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Spawns Drowned Chargers: kill it first."
+  },
+  "25.2": {
+   "name": "Drowned Boom Fly",
+   "type": 25,
+   "variant": 2,
+   "enum": "ENTITY_BOOMFLY",
+   "kind": "enemy",
+   "floors": [
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "bounces"
+   ],
+   "attacks": [
+    "shots_on_death"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Bursts into shots when killed; kill it far away."
+  },
+  "30.0": {
+   "name": "Boil",
+   "type": 30,
+   "variant": 0,
+   "enum": "ENTITY_BOIL",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "shoots_burst"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Grows then fires; kill it while small."
+  },
+  "30.1": {
+   "name": "Gut",
+   "type": 30,
+   "variant": 1,
+   "enum": "ENTITY_BOIL",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "shoots_burst"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Like Boil; kill early."
+  },
+  "88.0": {
+   "name": "Walking Boil",
+   "type": 88,
+   "variant": 0,
+   "enum": "ENTITY_WALKINGBOIL",
+   "kind": "enemy",
+   "floors": [
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_burst"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Kill early."
+  },
+  "88.1": {
+   "name": "Walking Gut",
+   "type": 88,
+   "variant": 1,
+   "enum": "ENTITY_WALKINGBOIL",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_burst"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Kill early."
+  },
+  "227.0": {
+   "name": "Bony",
+   "type": 227,
+   "variant": 0,
+   "enum": "ENTITY_BONY",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves",
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "lobbed",
+    "contact"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Throws bones; keep moving sideways."
+  },
+  "277.0": {
+   "name": "Black Bony",
+   "type": 277,
+   "variant": 0,
+   "enum": "ENTITY_BLACK_BONY",
+   "kind": "enemy",
+   "floors": [
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "lobbed",
+    "explodes_on_death"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Explodes on death; kill at range."
+  },
+  "24.0": {
+   "name": "Globin",
+   "type": 24,
+   "variant": 0,
+   "enum": "ENTITY_GLOBIN",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "reforms"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Turns into a puddle that revives: keep shooting the puddle.",
+   "bot_hits_logged": 22
+  },
+  "24.1": {
+   "name": "Gazing Globin",
+   "type": 24,
+   "variant": 1,
+   "enum": "ENTITY_GLOBIN",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "reforms"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Same as Globin."
+  },
+  "27.0": {
+   "name": "Host",
+   "type": 27,
+   "variant": 0,
+   "enum": "ENTITY_HOST",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "shoots_spread"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Only hittable when its skull lifts: bait it to open from off its line, shoot when open.",
+   "numbers": {
+    "shots": 3
+   }
+  },
+  "27.1": {
+   "name": "Red Host",
+   "type": 27,
+   "variant": 1,
+   "enum": "ENTITY_HOST",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "shoots_burst"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 4,
+   "kill_priority": 2,
+   "how": "Bigger shotgun: bait from far away.",
+   "unsure": "shot count"
+  },
+  "27.3": {
+   "name": "Hard Host",
+   "type": 27,
+   "variant": 3,
+   "enum": "ENTITY_HOST",
+   "kind": "enemy",
+   "floors": [
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "shoots_spread"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Host variant; bait from range.",
+   "unsure": "variant id"
+  },
+  "204.0": {
+   "name": "Mobile Host",
+   "type": 204,
+   "variant": 0,
+   "enum": "ENTITY_MOBILE_HOST",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "shoots_spread"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Host that walks; bait it from range."
+  },
+  "247.0": {
+   "name": "Flesh Mobile Host",
+   "type": 247,
+   "variant": 0,
+   "enum": "ENTITY_FLESH_MOBILE_HOST",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "shoots_spread"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Walking host; keep at range."
+  },
+  "41.0": {
+   "name": "Knight",
+   "type": 41,
+   "variant": 0,
+   "enum": "ENTITY_KNIGHT",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases",
+    "charges_on_line"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "shielded_front"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Only hittable from behind: get beside or behind it."
+  },
+  "21.0": {
+   "name": "Maggot",
+   "type": 21,
+   "variant": 0,
+   "enum": "ENTITY_MAGGOT",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 1,
+   "kill_priority": 1,
+   "how": "Slow; shoot it.",
+   "bot_hits_logged": 1
+  },
+  "31.0": {
+   "name": "Spitty",
+   "type": 31,
+   "variant": 0,
+   "enum": "ENTITY_SPITTY",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_single"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Shoots when you line up: stay off its lines."
+  },
+  "243.0": {
+   "name": "Conjoined Spitty",
+   "type": 243,
+   "variant": 0,
+   "enum": "ENTITY_CONJOINED_SPITTY",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_spread"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Two-way shooter; stay off its lines."
+  },
+  "26.0": {
+   "name": "Maw",
+   "type": 26,
+   "variant": 0,
+   "enum": "ENTITY_MAW",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "chases"
+   ],
+   "attacks": [
+    "shoots_single"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Floats at you and shoots; sidestep."
+  },
+  "26.1": {
+   "name": "Red Maw",
+   "type": 26,
+   "variant": 1,
+   "enum": "ENTITY_MAW",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "chases"
+   ],
+   "attacks": [
+    "shoots_single",
+    "shots_on_death"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Bursts on death; kill at range."
+  },
+  "26.2": {
+   "name": "Psychic Maw",
+   "type": 26,
+   "variant": 2,
+   "enum": "ENTITY_MAW",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "chases"
+   ],
+   "attacks": [
+    "homing_shots"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Homing shots; keep moving, shoot it early."
+  },
+  "35.0": {
+   "name": "Mr. Maw",
+   "type": 35,
+   "variant": 0,
+   "enum": "ENTITY_MRMAW",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases",
+    "tethered"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_single"
+   ],
+   "defense": [
+    "linked"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Head on a neck; kill the head."
+  },
+  "34.0": {
+   "name": "Leaper",
+   "type": 34,
+   "variant": 0,
+   "enum": "ENTITY_LEAPER",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "jumps"
+   ],
+   "attacks": [
+    "contact",
+    "stomp"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Jumps on your spot: move when it leaves the ground."
+  },
+  "87.0": {
+   "name": "Gurgle",
+   "type": 87,
+   "variant": 0,
+   "enum": "ENTITY_GURGLE",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves",
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "leaves_creep"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Leaves creep; kite in loops not crossing the trail."
+  },
+  "237.0": {
+   "name": "Gurgling",
+   "type": 237,
+   "variant": 0,
+   "enum": "ENTITY_GURGLING",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases",
+    "dashes_at_isaac"
+   ],
+   "attacks": [
+    "contact",
+    "leaves_creep"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Dashes and leaves creep; sidestep."
+  },
+  "234.0": {
+   "name": "One Tooth",
+   "type": 234,
+   "variant": 0,
+   "enum": "ENTITY_ONE_TOOTH",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Fast bat; shoot it away."
+  },
+  "258.0": {
+   "name": "Fat Bat",
+   "type": 258,
+   "variant": 0,
+   "enum": "ENTITY_FAT_BAT",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "chases"
+   ],
+   "attacks": [
+    "contact",
+    "shots_on_death"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Bursts into shots; kill it at range."
+  },
+  "238.0": {
+   "name": "Splasher",
+   "type": 238,
+   "variant": 0,
+   "enum": "ENTITY_SPLASHER",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves",
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "lobbed"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Lobs shots; watch shadows."
+  },
+  "239.0": {
+   "name": "Grub",
+   "type": 239,
+   "variant": 0,
+   "enum": "ENTITY_GRUB",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "burrows",
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Keep moving while it's under."
+  },
+  "86.0": {
+   "name": "Keeper",
+   "type": 86,
+   "variant": 0,
+   "enum": "ENTITY_KEEPER",
+   "kind": "enemy",
+   "floors": [
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "hops",
+    "jumps"
+   ],
+   "attacks": [
+    "shoots_spread"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Hops and fires; dodge sideways."
+  },
+  "90.0": {
+   "name": "Hanger",
+   "type": 90,
+   "variant": 0,
+   "enum": "ENTITY_HANGER",
+   "kind": "enemy",
+   "floors": [
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "chases"
+   ],
+   "attacks": [
+    "shoots_single"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Shoots; sidestep."
+  },
+  "89.0": {
+   "name": "Buttlicker",
+   "type": 89,
+   "variant": 0,
+   "enum": "ENTITY_BUTTLICKER",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "wanders",
+    "erratic"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Erratic; shoot it from range."
+  },
+  "209.0": {
+   "name": "Fat Sack",
+   "type": 209,
+   "variant": 0,
+   "enum": "ENTITY_FAT_SACK",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "spawns_enemies"
+   ],
+   "defense": [
+    "heavy"
+   ],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Spawns; kill early."
+  },
+  "211.0": {
+   "name": "Half Sack",
+   "type": 211,
+   "variant": 0,
+   "enum": "ENTITY_HALF_SACK",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 3,
+   "how": "Spawns; kill early."
+  },
+  "229.0": {
+   "name": "Tumor",
+   "type": 229,
+   "variant": 0,
+   "enum": "ENTITY_TUMOR",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "wanders"
+   ],
+   "attacks": [
+    "shoots_ring"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Fires spreads; stay off its lines."
+  },
+  "42.0": {
+   "name": "Stone Grimace",
+   "type": 42,
+   "variant": 0,
+   "enum": "ENTITY_STONEHEAD",
+   "kind": "hazard",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves",
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "shoots_single"
+   ],
+   "defense": [
+    "invulnerable"
+   ],
+   "danger": 3,
+   "kill_priority": 0,
+   "how": "Can't be killed; shoots along its line: never stand in front of it."
+  },
+  "202.0": {
+   "name": "Constant Stone Shooter",
+   "type": 202,
+   "variant": 0,
+   "enum": "ENTITY_CONSTANT_STONE_SHOOTER",
+   "kind": "hazard",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves",
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "shoots_single"
+   ],
+   "defense": [
+    "invulnerable"
+   ],
+   "danger": 3,
+   "kill_priority": 0,
+   "how": "Never stand on its firing line."
+  },
+  "235.0": {
+   "name": "Gaping Maw",
+   "type": 235,
+   "variant": 0,
+   "enum": "ENTITY_GAPING_MAW",
+   "kind": "hazard",
+   "floors": [
+    "Caves",
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "spawns_enemies"
+   ],
+   "defense": [
+    "invulnerable"
+   ],
+   "danger": 2,
+   "kill_priority": 0,
+   "how": "Pulls/spawns; keep away.",
+   "unsure": "behaviour"
+  },
+  "295.0": {
+   "name": "Corn Mine",
+   "type": 295,
+   "variant": 0,
+   "enum": "ENTITY_CORN_MINE",
+   "kind": "hazard",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "explodes_on_contact"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 0,
+   "how": "Mine: don't step near.",
+   "unsure": "behaviour"
+  },
+  "300.0": {
+   "name": "Mushroom",
+   "type": 300,
+   "variant": 0,
+   "enum": "ENTITY_MUSHROOM",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "stationary",
+    "teleports"
+   ],
+   "attacks": [
+    "shoots_ring"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Pops up and sprays; keep moving."
+  },
+  "303.0": {
+   "name": "Blister",
+   "type": 303,
+   "variant": 0,
+   "enum": "ENTITY_BLISTER",
+   "kind": "enemy",
+   "floors": [
+    "Catacombs",
+    "Mines"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "hops",
+    "jumps"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_ring"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Hops at you; dodge landing."
+  },
+  "304.0": {
+   "name": "The Thing",
+   "type": 304,
+   "variant": 0,
+   "enum": "ENTITY_THE_THING",
+   "kind": "enemy",
+   "floors": [
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "wall_crawler"
+   ],
+   "attacks": [
+    "laser"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Wall crawler with a beam: stay off its line.",
+   "unsure": "beam vs shots"
+  },
+  "827.0": {
+   "name": "Faceless",
+   "type": 827,
+   "variant": 0,
+   "enum": "ENTITY_FACELESS",
+   "kind": "enemy",
+   "floors": [
+    "Caves",
+    "Mines"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Unsure; kite.",
+   "unsure": "behaviour"
+  },
+  "819.0": {
+   "name": "Fly Bomb",
+   "type": 819,
+   "variant": 0,
+   "enum": "ENTITY_FLY_BOMB",
+   "kind": "enemy",
+   "floors": [
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "chases"
+   ],
+   "attacks": [
+    "explodes_on_contact"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Shoot it before it reaches you."
+  },
+  "820.0": {
+   "name": "Danny",
+   "type": 820,
+   "variant": 0,
+   "enum": "ENTITY_DANNY",
+   "kind": "enemy",
+   "floors": [
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "shoots_spread"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Unsure; keep at range.",
+   "unsure": "behaviour"
+  },
+  "821.0": {
+   "name": "Blaster",
+   "type": 821,
+   "variant": 0,
+   "enum": "ENTITY_BLASTER",
+   "kind": "enemy",
+   "floors": [
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "explodes_on_death"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Unsure; kill at range.",
+   "unsure": "behaviour"
+  },
+  "822.0": {
+   "name": "Bouncer",
+   "type": 822,
+   "variant": 0,
+   "enum": "ENTITY_BOUNCER",
+   "kind": "enemy",
+   "floors": [
+    "Mines"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "bounces"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Bounces off walls; predict the bounce."
+  },
+  "823.0": {
+   "name": "Quakey",
+   "type": 823,
+   "variant": 0,
+   "enum": "ENTITY_QUAKEY",
+   "kind": "enemy",
+   "floors": [
+    "Mines"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "jumps"
+   ],
+   "attacks": [
+    "stomp",
+    "slam"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Jump-slams; move when it lifts."
+  },
+  "824.0": {
+   "name": "Gyro",
+   "type": 824,
+   "variant": 0,
+   "enum": "ENTITY_GYRO",
+   "kind": "enemy",
+   "floors": [
+    "Mines"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "erratic"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_ring"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Spins and sprays; keep range.",
+   "unsure": "behaviour"
+  },
+  "825.0": {
+   "name": "Fire Worm",
+   "type": 825,
+   "variant": 0,
+   "enum": "ENTITY_FIRE_WORM",
+   "kind": "enemy",
+   "floors": [
+    "Mines"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "burrows"
+   ],
+   "attacks": [
+    "fire"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Keep moving when underground."
+  },
+  "826.0": {
+   "name": "Hardy",
+   "type": 826,
+   "variant": 0,
+   "enum": "ENTITY_HARDY",
+   "kind": "enemy",
+   "floors": [
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "heavy"
+   ],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Unsure; kite.",
+   "unsure": "behaviour"
+  },
+  "829.0": {
+   "name": "Mole",
+   "type": 829,
+   "variant": 0,
+   "enum": "ENTITY_MOLE",
+   "kind": "enemy",
+   "floors": [
+    "Mines"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "burrows"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Keep moving while it's under."
+  },
+  "818.0": {
+   "name": "Rock Spider",
+   "type": 818,
+   "variant": 0,
+   "enum": "ENTITY_ROCK_SPIDER",
+   "kind": "enemy",
+   "floors": [
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "bursts"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Hides as a rock, then bursts; shoot from range."
+  },
+  "818.1": {
+   "name": "Coal Spider",
+   "type": 818,
+   "variant": 1,
+   "enum": "ENTITY_ROCK_SPIDER",
+   "kind": "enemy",
+   "floors": [
+    "Burning Basement",
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "1-2",
+    "3-4"
+   ],
+   "movement": [
+    "bursts"
+   ],
+   "attacks": [
+    "contact",
+    "fire"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Spider with fire; shoot from range.",
+   "unsure": "variant id"
+  },
+  "830.0": {
+   "name": "Big Bony",
+   "type": 830,
+   "variant": 0,
+   "enum": "ENTITY_BIG_BONY",
+   "kind": "enemy",
+   "floors": [
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "lobbed"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 2,
+   "how": "Throws big bones; keep moving."
+  },
+  "212.0": {
+   "name": "Death's Head",
+   "type": 212,
+   "variant": 0,
+   "enum": "ENTITY_DEATHS_HEAD",
+   "kind": "enemy",
+   "floors": [
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "bounces"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "invulnerable"
+   ],
+   "danger": 3,
+   "kill_priority": 0,
+   "how": "Can't die; bounces, avoid its path."
+  },
+  "880.0": {
+   "name": "Flesh Maiden",
+   "type": 880,
+   "variant": 0,
+   "enum": "ENTITY_FLESH_MAIDEN",
+   "kind": "enemy",
+   "floors": [
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Unsure; kite.",
+   "unsure": "behaviour"
+  },
+  "828.0": {
+   "name": "Necro",
+   "type": 828,
+   "variant": 0,
+   "enum": "ENTITY_NECRO",
+   "kind": "enemy",
+   "floors": [
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Raises Bonies; kill it first."
+  },
+  "889.0": {
+   "name": "Clickety Clack",
+   "type": 889,
+   "variant": 0,
+   "enum": "ENTITY_CLICKETY_CLACK",
+   "kind": "enemy",
+   "floors": [
+    "Ashpit",
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "reforms"
+   ],
+   "danger": 2,
+   "kill_priority": 2,
+   "how": "Collapses and gets up; keep shooting."
+  },
+  "28.0": {
+   "name": "Chub",
+   "type": 28,
+   "variant": 0,
+   "enum": "ENTITY_CHUB",
+   "kind": "boss",
+   "floors": [
+    "Caves",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "charges_on_line"
+   ],
+   "attacks": [
+    "contact",
+    "spawns_enemies"
+   ],
+   "defense": [
+    "linked"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Charges on lines; stay off its row/column."
+  },
+  "28.2": {
+   "name": "Carrion Queen",
+   "type": 28,
+   "variant": 2,
+   "enum": "ENTITY_CHUB",
+   "kind": "boss",
+   "floors": [
+    "Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "charges_on_line"
+   ],
+   "attacks": [
+    "contact",
+    "leaves_creep"
+   ],
+   "defense": [
+    "linked"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Charges on lines; stay off them."
+  },
+  "36.0": {
+   "name": "Gurdy",
+   "type": 36,
+   "variant": 0,
+   "enum": "ENTITY_GURDY",
+   "kind": "boss",
+   "floors": [
+    "Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "shoots_spread",
+    "spawns_enemies"
+   ],
+   "defense": [
+    "heavy"
+   ],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Shoot from range, kill spawns, dodge spreads."
+  },
+  "262.0": {
+   "name": "Mega Maw",
+   "type": 262,
+   "variant": 0,
+   "enum": "ENTITY_MEGA_MAW",
+   "kind": "boss",
+   "floors": [
+    "Caves",
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "shoots_ring",
+    "spawns_enemies",
+    "fire"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Rotating shots; keep moving."
+  },
+  "264.0": {
+   "name": "Mega Fatty",
+   "type": 264,
+   "variant": 0,
+   "enum": "ENTITY_MEGA_FATTY",
+   "kind": "boss",
+   "floors": [
+    "Caves",
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases",
+    "hops"
+   ],
+   "attacks": [
+    "shoots_burst",
+    "stomp"
+   ],
+   "defense": [
+    "heavy"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Big jumps and vomit; move on lift-off."
+  },
+  "68.0": {
+   "name": "Peep",
+   "type": 68,
+   "variant": 0,
+   "enum": "ENTITY_PEEP",
+   "kind": "boss",
+   "floors": [
+    "Caves",
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "shoots_burst",
+    "leaves_creep"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Dodge bursts, avoid creep."
+  },
+  "68.1": {
+   "name": "The Bloat",
+   "type": 68,
+   "variant": 1,
+   "enum": "ENTITY_PEEP",
+   "kind": "boss",
+   "floors": [
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "laser",
+    "leaves_creep"
+   ],
+   "defense": [],
+   "danger": 5,
+   "kill_priority": 3,
+   "how": "Brimstone lines: stay off them."
+  },
+  "64.0": {
+   "name": "Pestilence",
+   "type": 64,
+   "variant": 0,
+   "enum": "ENTITY_PESTILENCE",
+   "kind": "boss",
+   "floors": [
+    "Caves",
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "lobbed",
+    "leaves_creep",
+    "spawns_enemies"
+   ],
+   "defense": [
+    "phases"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Avoid creep, kill spawns."
+  },
+  "269.0": {
+   "name": "Polycephalus",
+   "type": 269,
+   "variant": 0,
+   "enum": "ENTITY_POLYCEPHALUS",
+   "kind": "boss",
+   "floors": [
+    "Caves",
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "burrows"
+   ],
+   "attacks": [
+    "shoots_ring"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Burrows; keep moving and dodge rings."
+  },
+  "19.1": {
+   "name": "The Hollow",
+   "type": 19,
+   "variant": 1,
+   "enum": "ENTITY_LARRYJR",
+   "kind": "boss",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "linked",
+    "splits"
+   ],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Worm; stay out of its path."
+  },
+  "67.1": {
+   "name": "The Husk",
+   "type": 67,
+   "variant": 1,
+   "enum": "ENTITY_DUKE",
+   "kind": "boss",
+   "floors": [
+    "Caves",
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "flies",
+    "wanders"
+   ],
+   "attacks": [
+    "spawns_enemies",
+    "shoots_spread"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Kill flies, dodge shots."
+  },
+  "100.1": {
+   "name": "The Wretched",
+   "type": 100,
+   "variant": 1,
+   "enum": "ENTITY_WIDOW",
+   "kind": "boss",
+   "floors": [
+    "Caves",
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "jumps",
+    "wanders"
+   ],
+   "attacks": [
+    "stomp",
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Like Widow; move on jump."
+  },
+  "401.0": {
+   "name": "The Stain",
+   "type": 401,
+   "variant": 0,
+   "enum": "ENTITY_STAIN",
+   "kind": "boss",
+   "floors": [
+    "Caves",
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "burrows"
+   ],
+   "attacks": [
+    "contact",
+    "shoots_ring"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Underground often; keep moving."
+  },
+  "402.0": {
+   "name": "Brownie",
+   "type": 402,
+   "variant": 0,
+   "enum": "ENTITY_BROWNIE",
+   "kind": "boss",
+   "floors": [
+    "Caves",
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "hops",
+    "jumps"
+   ],
+   "attacks": [
+    "stomp",
+    "leaves_creep"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Move on lift-off."
+  },
+  "403.0": {
+   "name": "The Forsaken",
+   "type": 403,
+   "variant": 0,
+   "enum": "ENTITY_FORSAKEN",
+   "kind": "boss",
+   "floors": [
+    "Catacombs"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "teleports",
+    "wanders"
+   ],
+   "attacks": [
+    "laser",
+    "shoots_ring"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Stay off beam lines."
+  },
+  "62.1": {
+   "name": "Scolex",
+   "type": 62,
+   "variant": 1,
+   "enum": "ENTITY_PIN",
+   "kind": "boss",
+   "floors": [
+    "unsure"
+   ],
+   "stages": [],
+   "movement": [
+    "burrows"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Keep moving, hit the tail.",
+   "unsure": "floors"
+  },
+  "71.0": {
+   "name": "Fistula",
+   "type": 71,
+   "variant": 0,
+   "enum": "ENTITY_FISTULA_BIG",
+   "kind": "boss",
+   "floors": [
+    "Caves",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "bounces"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "splits"
+   ],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Splits many times; keep range."
+  },
+  "19.2": {
+   "name": "Tuff Twins",
+   "type": 19,
+   "variant": 2,
+   "enum": "ENTITY_LARRYJR",
+   "kind": "boss",
+   "floors": [
+    "Mines"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "linked"
+   ],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Worms; stay out of their path."
+  },
+  "19.3": {
+   "name": "The Shell",
+   "type": 19,
+   "variant": 3,
+   "enum": "ENTITY_LARRYJR",
+   "kind": "boss",
+   "floors": [
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "wanders"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [
+    "linked"
+   ],
+   "danger": 3,
+   "kill_priority": 3,
+   "how": "Worm; stay out of path."
+  },
+  "907.0": {
+   "name": "Great Gideon",
+   "type": 907,
+   "variant": 0,
+   "enum": "ENTITY_GIDEON",
+   "kind": "boss",
+   "floors": [
+    "Mines",
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "stationary"
+   ],
+   "attacks": [
+    "spawns_enemies",
+    "laser"
+   ],
+   "defense": [
+    "invulnerable"
+   ],
+   "danger": 4,
+   "kill_priority": 0,
+   "how": "Can't be killed: survive the timer."
+  },
+  "906.0": {
+   "name": "Hornfel",
+   "type": 906,
+   "variant": 0,
+   "enum": "ENTITY_HORNFEL",
+   "kind": "boss",
+   "floors": [
+    "Mines"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "wanders",
+    "erratic"
+   ],
+   "attacks": [
+    "explodes_on_contact"
+   ],
+   "defense": [
+    "flees_when_hurt"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Runs on rails; avoid its mines."
+  },
+  "900.0": {
+   "name": "Reap Creep",
+   "type": 900,
+   "variant": 0,
+   "enum": "ENTITY_REAP_CREEP",
+   "kind": "boss",
+   "floors": [
+    "Mines"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "wall_crawler"
+   ],
+   "attacks": [
+    "shoots_ring",
+    "laser",
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Stay off its column."
+  },
+  "269.1": {
+   "name": "The Pile",
+   "type": 269,
+   "variant": 1,
+   "enum": "ENTITY_POLYCEPHALUS",
+   "kind": "boss",
+   "floors": [
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "burrows"
+   ],
+   "attacks": [
+    "shoots_ring"
+   ],
+   "defense": [
+    "invulnerable_until"
+   ],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Keep moving when it's under."
+  },
+  "915.0": {
+   "name": "Singe",
+   "type": 915,
+   "variant": 0,
+   "enum": "ENTITY_SINGE",
+   "kind": "boss",
+   "floors": [
+    "Ashpit"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "fire",
+    "explodes_on_contact"
+   ],
+   "defense": [],
+   "danger": 4,
+   "kill_priority": 3,
+   "how": "Avoid fires and bombs."
+  },
+  "46.1": {
+   "name": "Super Sloth",
+   "type": 46,
+   "variant": 1,
+   "enum": "ENTITY_SLOTH",
+   "kind": "miniboss",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "shoots_spread",
+    "spawns_enemies"
+   ],
+   "defense": [],
+   "danger": 5,
+   "kill_priority": 3,
+   "how": "More shots than Sloth; same rules.",
+   "unsure": "floors"
+  },
+  "47.1": {
+   "name": "Super Lust",
+   "type": 47,
+   "variant": 1,
+   "enum": "ENTITY_LUST",
+   "kind": "miniboss",
+   "floors": [
+    "Caves",
+    "Catacombs",
+    "Flooded Caves"
+   ],
+   "stages": [
+    "3-4"
+   ],
+   "movement": [
+    "chases"
+   ],
+   "attacks": [
+    "contact"
+   ],
+   "defense": [],
+   "danger": 5,
+   "kill_priority": 3,
+   "how": "Faster Lust.",
+   "unsure": "floors"
+  }
+ }
+}

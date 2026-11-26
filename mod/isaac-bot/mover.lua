@@ -1,4 +1,4 @@
--- Isaac Bot movement core v2 (2026-11-25). The author: "There has to be a better way... this still comes down to
+-- Isaac Bot movement core v2 (2026-11-25). the author: "There has to be a better way... this still comes down to
 -- fixing every little bug." The old core scored 33 moves 0.4 s ahead with ~40 hand-tuned weights (corners,
 -- crowds, edges, runway, kiting, per-enemy fixes) that fought each other. This one has ONE movement goal:
 --
@@ -132,11 +132,31 @@ local function cost_at(ctx, p, si, t)
   local at = ctx.byT[t]
   for _, z in ipairs(at.z) do
     local margin = (p - z.c):Length() - z.r - pr
-    if margin < 0 then c = c + S.m_hit * wt
+    if margin < 0 then
+      -- graded: full cost near the enemy, fading to m_edge_hit at the circle's edge (a 95% circle's edge is a small
+      -- chance). With 3-4 flies the whole room sat inside flat full-cost circles, every option looked equally bad
+      -- and it drifted into corners (2026-11-25). Small circles (sure things) stay full cost.
+      local depth = math.min(1, -margin / math.max(1, z.r + pr))
+      local f = (z.r > S.m_grade_r) and (S.m_edge_hit + (1 - S.m_edge_hit) * depth) or 1
+      c = c + S.m_hit * wt * f
     elseif margin < S.m_soft then c = c + (S.m_soft - margin) * S.m_soft_w * wt end
   end
   for _, sp in ipairs(at.s) do
     if (sp.c - p):Length() < pr + sp.r then c = c + S.m_hit * wt end
+  end
+  -- an aimed shot coming (learned tells: Dingle's "Dance" before "Spit"): the line from the shooter through where
+  -- Isaac is now gets costly from just before it fires, so it steps sideways off that line in time
+  for _, a in ipairs(w.aimed or {}) do
+    if t >= a.eta - 4 then
+      local dir = a.at - a.from
+      local len = dir:Length()
+      if len > 1 then
+        local rel = p - a.from
+        local along = rel:Dot(dir) / len
+        local perp = math.abs(rel.X * dir.Y - rel.Y * dir.X) / len
+        if along > 0 and perp < S.aim_line_w then c = c + S.m_hit * 0.8 * wt * (1 - perp / S.aim_line_w) end
+      end
+    end
   end
   -- floor hazards (spikes, creep, fires, leftovers) and TNT "caution": asked once per 10 px patch per update
   -- (each is a call into the game; ~1,500 of them per update were most of the big-room lag)
@@ -159,7 +179,8 @@ local function cost_at(ctx, p, si, t)
   for _, ln in ipairs(ctx.lines) do
     local rel = p - ln.pos
     if (math.abs(rel.X) < ln.half or math.abs(rel.Y) < ln.half) and rel:Length() < 420 then
-      if ln.eta and t >= ln.eta - 6 then c = c + S.m_hit * 0.8 * wt
+      if ln.charge then c = c + S.m_charge_line * wt
+      elseif ln.eta and t >= ln.eta - 6 then c = c + S.m_hit * 0.8 * wt
       else c = c + S.m_line * wt end
     end
   end
@@ -321,7 +342,13 @@ local function total(ctx, plan)
               local vb = b.c - plan.p
               local lb = vb:Length()
               if lb < S.pincer_r and lb > 1 and va:Dot(vb) / (la * lb) < -0.5 then
-                c = c + S.m_pincer * (1 - (la + lb) / (2 * S.pincer_r))
+                -- fades with the distance from the line between them, so stepping off that line pays (offline test
+                -- K3: with a flat cost every nearby spot paid about the same and it never stepped out)
+                local ab = b.c - a.c
+                local len = ab:Length()
+                local perp = len > 1 and math.abs((plan.p - a.c).X * ab.Y - (plan.p - a.c).Y * ab.X) / len or 0
+                local off = math.max(0, 1 - perp / S.pincer_w)
+                c = c + S.m_pincer * (1 - (la + lb) / (2 * S.pincer_r)) * off
               end
             end
           end
@@ -397,7 +424,7 @@ function Mover.choose(ctx)
           local c, r = Mover.predict(e, t, d, ctx.bounce)
           -- mid-"that" animation (one that has hurt us before, like a charge): give it more room
           if w.hurtful and w.hurtful[GetPtrHash(e)] then r = r * S.m_hurtful end
-          -- The author's rule: flies get knocked back by tears. A light enemy in our line of fire won't reach us, so it
+          -- the author's rule: flies get knocked back by tears. A light enemy in our line of fire won't reach us, so it
           -- stays about where it is (the v2 core lost this: it fled homing flies into corners, 2026-11-25)
           if w.pushed and w.pushed[GetPtrHash(e)] then
             c = e.Position
@@ -441,6 +468,15 @@ function Mover.choose(ctx)
     if e.Position then
       local h = GetPtrHash(e)
       ctx.lines[#ctx.lines + 1] = { pos = e.Position, half = (e.Size or 13) + 14, eta = winding[h] }
+    end
+  end
+  -- enemies the playbook says charge when Isaac lines up (Chargers): their row and column are costly while alive
+  if ctx.playbookOf then
+    for _, e in ipairs(w.enemies) do
+      local pb = ctx.playbookOf(e)
+      if pb and (pb.tags.charges_on_line or pb.tags.dashes_at_isaac) and e.Position then
+        ctx.lines[#ctx.lines + 1] = { pos = e.Position, half = (e.Size or 13) + 16, charge = true }
+      end
     end
   end
   for _, wu in ipairs(w.windups or {}) do -- a wind-up from something not (yet) known as a shooter counts too
