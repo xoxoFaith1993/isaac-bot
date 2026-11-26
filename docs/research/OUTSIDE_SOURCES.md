@@ -558,3 +558,13 @@ All match. ChatGPT's blind read (round 5) is next.
 - **From here on:** blind second readings move into the Ghidra session itself (two blind reader agents, one on a
   different model, then reconciled in the C), so they no longer go through the author. Outside readers like GPT stay
   an optional spot check.
+**Ghidra core rules (`RE_CORE.md`, commit `cfc741b`), checked against the recordings here:**
+- **Confirmed:**
+  - the spread tail (velocity × 1.2 + 0.4 × the shooter's velocity, modes 2/4/5) explains the recorded 12.0/10.8
+    and about 12 shot speeds;
+  - the Haunt's damage wipe in State 4/16 matches the zero HP loss in State 4.
+- **Contradicted:** Isaac's top speed.
+  - `RE_CORE.md` derives about 2.07 px/update at speed 1.0.
+  - The recordings give a median of 6.7 and a p90 of 11 px/update (6,281 samples).
+  - The bot's own movement learning measured about 7.7.
+  - A scaling term is missing. Sent back to the Ghidra session.
