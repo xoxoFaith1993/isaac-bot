@@ -388,3 +388,69 @@ Gemini, Sloth, Pin and Monstro aren't covered yet.
 **Sources:** [Isaac.LuaDecomps](https://github.com/Guantol-Lemat/Isaac.LuaDecomps) (Unlicense; `Haunt.lua`,
 `AiUtils.lua`); [StrategyWiki bosses](https://strategywiki.org/wiki/The_Binding_of_Isaac:_Repentance/Bosses)
 (snippet only).
+---
+
+## 2026-11-26: ChatGPT round 3, a blind read of the decompiled enemy AI (Gurdy, Widow, Haunt, Gaper)
+
+**What it is:**
+- ChatGPT (working in its own read-only clone of Isaac.LuaDecomps at commit `30b09e2`, the same commit the GitHub
+  API shows) read the files without seeing our notes.
+- It gave line numbers for each claim and flagged code that looks mistranslated.
+- We then did the second read of the same files: every line reference below was checked by hand.
+
+**Verdict:** a good, honest reading.
+- **Gurdy:** every number checked is right. It missed two useful facts (below).
+- **Widow:** right about what's in the files. It missed that the raw state numbers are standard (6 = `STATE_JUMP`,
+  4 = `STATE_MOVE`).
+- **The Haunt:** its reading and ours agree on every number. Each side caught a slip the other missed. This round
+  shows two independent readers working.
+
+**Gurdy** (`Isaac/Content/Actor/Boss/Gurdy.lua`, 332 lines; a floor 1-2 boss):
+
+| What | Checked | Bot meaning |
+|---|---|---|
+| **It never moves.** Each update its speed is set to pull it back to its starting spot (spawn + 25 px down) | lines 76-77, 305 | a fixed target: plan the firing spot once |
+| **At the start of the fight it teleports Isaac** to y = 400 below it (1x1 rooms, room spawn) | lines 52-74 (missed by GPT) | the bot's opening position is known |
+| `I1` = the chosen attack (1 = flies, 2 = shot down, 3 = Pooter, 4/5 = shot left/right, 6 = Boils); `V1.X` = a "hit the player" flag that picks the Idle2 animation | lines 26-47, 107-113, 155-159, 317-320 | read `I1` to know the attack |
+| It attacks when its idle animation ends. It **spawns** (Pooter, 2 Attack Flies or Boils) on a 1-in-3 chance, **or whenever Isaac stands at y ≤ 200, or there are more than 7 enemies, or it's the green champion**. Nothing spawns at 14+ enemies | lines 122-137 | **don't stand high in the room**: that forces adds |
+| Otherwise it **shoots**: a 5-shot spread **down** (speed 10) if Isaac is below it, **sideways** (left or right) if he's off to the side or above it | lines 138-147, 197-206, 221-239 | the spread isn't aimed: be off its line, not just moving |
+| Its adds are pushed away from it when within 80 px | lines 83-102 (missed by GPT) | adds spread out from it |
+| Slips (GPT): line 76 adds a number to a vector; line 68 uses cos twice (co-op teleport only); the sideways spread's spray is lopsided (-0.5 to +2.5) | confirmed | check against a recording |
+
+**Widow** (`_Legacy/Actor/Boss/Widow/Common.lua` + `Sprite.lua`; a Cellar boss, floors 1-2; only the jump is
+covered):
+- The jump sets state 6 (`STATE_JUMP`) and stores a leap velocity in `V1`: a 7 px/update push toward the target point,
+  added every update.
+- Between the "Jump" and "Land" sprite events it **can't touch anything**, so there's no contact damage mid-air.
+- The animation ending sets state 4 (`STATE_MOVE`).
+- The file is unfinished: its module exports nothing, and the jump's trigger and its landing aren't in it (GPT spotted
+  this).
+- **Bot meaning:** Widow's mid-air flight is harmless. The danger is where it lands, toward the target point it
+  stored in `V1` at take-off.
+
+**The Haunt, two blind readings compared:** all numbers match (60-update gap, 1 in 60, 40 px side-dash band, 10-15
+dash, 63 px Lil' Haunt range, 5-update lead, orbit 50 px). On slips:
+- **GPT caught two that we missed:**
+  - the Pink champion's angle multiplies the whole `V2` vector instead of `V2.X` (line 197);
+  - the Lil' Haunt's parent subtype is overwritten by its own (line 439; GPT cited 442-443, a small line slip).
+- **We caught one GPT missed:** the Lil' Haunt detach check `controllerIdx ~= 1` (line 488) would make every Lil'
+  Haunt detach at once. That contradicts the real fight, where they orbit and detach one by one, so it's surely a
+  slip for -1.
+- **Gaper** (optional): a plain pathfinding chaser, speed 0.6 (0.72 or 0.55 for some variants), no attack. Nothing
+  for the bot.
+
+**Usable once one recording confirms it** (knowledge edits for the main session):
+- **Gurdy** (it has no entry in `boss_tactics.json` yet): stay below y = 200 so it doesn't keep spawning adds; when it's shooting, stand off its down or side
+  spread lines; it's a fixed target.
+- **Widow:** no contact danger between its Jump and Land events; watch the landing point.
+
+**Worth learning from:** two independent readings plus a hand check are worth it. Each reader missed things the
+other caught.
+
+**Apply later:** the Ghidra pilot (its own session, 2026-11-26) is trying to decompile Dingle and the others from the
+game itself. When it has output, the same blind second read applies.
+
+**Sources:** [Gurdy.lua](https://github.com/Guantol-Lemat/Isaac.LuaDecomps/blob/main/Isaac/Content/Actor/Boss/Gurdy.lua),
+[Widow/Common.lua](https://github.com/Guantol-Lemat/Isaac.LuaDecomps/blob/main/_Legacy/Actor/Boss/Widow/Common.lua),
+[Haunt.lua](https://github.com/Guantol-Lemat/Isaac.LuaDecomps/blob/main/_Legacy/Actor/Boss/Haunt.lua),
+[Gaper.lua](https://github.com/Guantol-Lemat/Isaac.LuaDecomps/blob/main/Isaac/Content/Actor/Enemy/Gaper.lua).
