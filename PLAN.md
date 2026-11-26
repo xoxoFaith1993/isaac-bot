@@ -623,7 +623,10 @@ priority of the core fundamentals." Core = no damage on floors 1-2, natural move
   their line at 210-250 px is safe; the planner skips moving dashers, so it never plans one.
 - **Curse rooms: open the red chest** (the author, 2026-11-26: "skipped the red chest, which is typically a reason
   why you go into the curse room to begin with"). The entry/exit spike hit is the price; the chest is the reward, so
-  once inside, opening it is part of the deal (Risk.allows already decides whether to go in at all).
+  once inside, opening it is part of the deal (Risk.allows already decides whether to go in at all). Seen again
+  2026-11-26 14:25 ("When entering cursed rooms, he still doesn't grab the chest"). Cause: `PICKUP_REDCHEST` is in
+  `R.pickups.never` (rules.lua) for every room. Fix: allow it inside curse rooms only, with its own small value, and
+  dodge what comes out (troll bombs, spiders).
 - **Delirium as a reflex stress test** (the author, 2026-11-25: the hardest boss, "the unfair": it shifts into almost
   every boss, not quite as the real ones, with projectiles everywhere). Not a cheat sheet for single bosses and not
   core (floor 11+), but a good later benchmark drill for pure dodging: a `bench_suite_delirium` once floors 1-2 pass
