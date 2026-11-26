@@ -7,6 +7,9 @@ straight from the game's compiled code, the way the community decompiled the Hau
 Haunt and Dingle into readable C with named fields. The Haunt matched the community's hand translation on every
 number but one, and on that one the machine code proved the hand translation wrong. Dingle's full behaviour is below.
 
+**Recording check (2026-11-26):** Dingle, the Haunt and the Lil' Haunts were checked against real recorded fights.
+Most of it is confirmed; two numbers are off (shot speed, Lil' Haunt lead). See "Recording check" at the end.
+
 **Rules we kept:**
 - Only a **copy** of `isaac-ng.exe` was opened. Nothing in the game folder was touched.
 - The decompiled C, the Ghidra project and REPENTOGON's files stay outside the repo (a local work folder, plus
@@ -209,3 +212,35 @@ shot range: no shots from more than 200 px.
   (Unlicense), for the calibration.
 - `knowledge/bestiary_game.json` (animation lengths and event frames) and `knowledge/boss_tactics.json` (champion
   descriptions).
+
+## Recording check (2026-11-26)
+
+Checked against real recorded fights by the outside-sources session.
+- **The recording:** 4 Haunt rooms and Dingle fights, from the recorder's `rec`/`rectra`/`recsho`/`recnpc` lines in
+  `runs/live.log`. Samples are taken every 2 updates.
+- **The script:** a local cross-check script (not committed).
+- **Shot timing:** the recorder logs a shot on its first update, so shot timings read about 2 updates late. Spawns are
+  logged on the update they happen.
+
+| Claim | Recording | Verdict |
+|---|---|---|
+| Dingle states: Spit 8, Whistle 9, Dance 10, BeforeSlide 11, Slide 4, Tired 16 | the same in every sample | **confirmed** |
+| Dance → Spit, Whistle → Spit, BeforeSlide → Slide → Tired → Idle | 9/9, 7/7, 5/5 | **confirmed** |
+| No attack while Idle `StateFrame` ≤ 30 | the last Idle sample before 21 attacks: 30 to 105 (min 30, so the attack fired at 31-32) | **confirmed** |
+| 3 dashes (`I1` 0 → 2) | max `I1` 2 in 5 of 5 sequences | **confirmed** |
+| 12-15 update pause between dashes (`StateFrame` countdown) | State-4 `StateFrame` peaks at 14-15 | **confirmed** |
+| Tired 61-90 updates, usually about 65-70 | 62, 68, 68, 76 | **confirmed** |
+| Dash aimed at Isaac's position, no lead; `V1` unused; `TargetPosition` not used for the dash | main session: aimed at Isaac's position at the end of BeforeSlide (cos 0.97-0.99, 5/5), not at `TargetPosition` (1/5), `V1` zero | **confirmed** |
+| Spit: a triple aimed at Isaac's position, sides at ±16° | 16/16 bursts of 3; gaps 15.6-16.5°; centre within 3° of Isaac | **confirmed** |
+| Spit speeds 10 (centre) and 9 (sides) | **12.0 and 10.8**: the 0.9 ratio holds, but there's an extra ×1.2 (the "spread multiplier" is 1.2, not 1) | **speeds contradicted** (use 12/10.8) |
+| Spit fires at Spit frame 3 | shots logged at frame 5 (the logging lag) | consistent |
+| Whistle summons Dips (217.0) | 11 Dips | **confirmed** |
+| Haunt: no attack while IDLE `StateFrame` ≤ 60 | the last Idle sample before 22 attacks: 69 to 383 | **confirmed** |
+| Haunt pinned to the top wall outside State 4 | y 168-173 in States 3, 8, 9 and 16 | **confirmed** |
+| Haunt can't be damaged in State 4 (skin) and 16 (Peel); *not in `ai_haunt`* | **no HP loss in 1,124 State-4 samples** while the Lil' Haunts lost HP 56 times in the same fights; the one drop next to State 16 landed on the first State-3 update | **confirmed by the recording** (the code that does it is elsewhere) |
+| Haunt spit: 5-spread straight down | 11/11 bursts of 5, centred straight down; it doesn't inherit the Haunt's slide | **confirmed**; speed about 12 (the same ×1.2 as Dingle) |
+| Side dash only within 40 px vertically | 2 dashes, at 40 and 2 px | consistent (too few to call) |
+| Lil' Haunts can't be damaged while orbiting (State 3) | 0 HP drops orbiting vs 56 chasing | **confirmed** |
+| Lil' Haunt shoots within **200 px** (not the community's 63) | Shoot started at 2-208 px; **17 of 30 beyond 63 px**, 27 of 30 under 200 (2 outliers near 495 px, probably a mismatched sample) | **confirmed** (63 px contradicted) |
+| Lil' Haunt shot speed 10 | 10.0 | **confirmed** |
+| Lil' Haunt shot leads Isaac by 5 updates | the angle error vs his position (median ~4°) is about the same or smaller than vs position + 5 × velocity | **not confirmed**: plain position fits as well or better |

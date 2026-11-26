@@ -2,6 +2,9 @@
 
 Method, build and rules: see `RE_PILOT.md` (same build, same pipeline). This file has one section per enemy.
 
+**Recording check (2026-11-26):** Sloth, Charger and the Gurgling charge trigger were checked against real recorded
+fights. See "Recording check" at the end of this file for what's confirmed, contradicted or not covered.
+
 **How to read these tables:**
 - Every claim is a **hypothesis** until the recorder (`record|1`) confirms it. Each section ends with what to record.
 - The AI runs **30 updates per second** (30 updates = 1 s).
@@ -491,3 +494,29 @@ Suggested knowledge edits (for the main session, once a recording confirms them)
   - Charger → avoid its tile row and column within 200 px, including the 16-update lead;
   - Trite → sidestep, idle window `StateFrame < 15`.
 - Bestiary: add the event names the code uses (`Slide` for Dingle, `Dive`/`Popup` for Pin).
+
+---
+
+## Recording check (2026-11-26)
+
+Checked against real recorded fights by the outside-sources session.
+- **The recording:** Sloth and its Chargers, Gurglings (237.1) and their Attack Flies, from `runs/live.log`. Samples
+  are taken every 2 updates.
+- **The script:** a local cross-check script (not committed).
+- **Shot timing:** shots are logged on their first update, about 2 updates late. Spawns are logged on the update they
+  happen.
+
+| Claim | Recording | Verdict |
+|---|---|---|
+| Sloth: summon (State 8) acts at `StateFrame` 5 | 8/8 spawns at (State 8, `StateFrame` 5) | **confirmed** |
+| Sloth: shoot (State 9) acts at `StateFrame` 5 | 20/20 shots logged at (State 9, `StateFrame` 7) = 5 + the logging lag | **confirmed** |
+| Sloth: back to MOVE at `StateFrame` 30 | the last attack sample is 29-30, in 28 of 28 attacks | **confirmed** |
+| Sloth spawns a Charger 30 px to its side, already charging (State 8, `V1` = ±1, 0) | 8/8 at ±30 px level with Sloth, State 8 on the next sample, moving sideways at 1.0-1.8 px/update | **confirmed** |
+| Summons only with ≤ 3 enemies | 1-4 enemies counted in the room, Sloth included; ≤ 3 if Sloth isn't counted | consistent |
+| The lob: big, slow, high (scale 1.6, flag 2) | scale 1.6, flags 2, height -45, fall -21.9, accel 1.02, speed 4.15 | **confirmed** |
+| The lob is aimed at Isaac's position | **the angle error is spread over 3-177° (20 shots)**, so it isn't aimed at him on the throw update | **contradicted**; `FireBossProjectiles` scatters (see "How to read these tables") |
+| Charger trigger: Isaac (+ up to 16 updates of his velocity) in its 40 px tile row or column, within 200 px | **24/24** natural charges fit in the 8 updates before the charge (the 4 misses are the Chargers Sloth spawns already charging); by chance about 40% would. Line-of-sight not tested | **confirmed** |
+| `V1` = the charge step, 1.3 | `V1` length 1.3 in every Charger sample | **confirmed** |
+| The same trigger runs Gurglings (type 237) | 18/18 Gurgling charges fit (by chance about 35%) | **confirmed** |
+| Gurglings leave red creep while charging | main session: CREEP_RED, 16-25 per charge direction | measured (not in these tables) |
+| Gemini, the Blighted Ovum, Monstro, Pin, Trite, Attack Fly | not recorded yet (Attack Flies only appeared as Gurgling spawns) | **not covered** |
