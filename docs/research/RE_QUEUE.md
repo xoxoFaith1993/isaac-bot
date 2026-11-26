@@ -110,3 +110,4 @@ the author can move an item up.
   the 4 axes at BigJumpDown frame 24 (the landing +); 5 Mulliboom 16.2 hits did 1 at 27-50 px (its blast, radius 60);
   3 Mr. Maw head 35.1 contact hits did 1. The rest isn't in the logs yet. F2 is running; G1-G4 after it.
 - 2026-11-26: F2 done (f755a66): charge weapons, tear period fireDelay+1, flight = grid class 0-3, piercing/spectral. Not checked against recordings. G1a is in its second read.
+- 2026-11-26: G1a done (294a96c; RE_ENEMIES.md Batch G1a). Not checked against recordings. G1b-G4 handover in runs/research/re/HANDOVER.md; the Ghidra session proposed a fresh Sonnet session (waits on the author).
