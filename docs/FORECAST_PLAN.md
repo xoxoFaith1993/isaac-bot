@@ -114,7 +114,7 @@ The second reader is then spent only where something has already gone wrong.
 - **Cheaper models for readers** where the code is simple; the strongest model only for writing up and settling
   disagreements.
 
-## What carries over from tonight's work (the separate copy at F:\Tools\isaac-bot-dev)
+## What carries over from tonight's work (the separate dev copy)
 
 - The **line trap** (no sidestep in a known attack's line, checked along the whole plan): test 70 passes. It becomes a
   goal check in step 3.

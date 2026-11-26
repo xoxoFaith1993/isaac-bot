@@ -22,7 +22,12 @@ GENERIC = [
     (r"\b192\.168\.\d+\.\d+\b|\b10\.\d+\.\d+\.\d+\b", "a private IP address"),
     (r"steam\\?/?userdata[\\/]\d{5,}", "a Steam user id"),
     (r"[\w.+-]+@(?!users\.noreply\.github\.com|example\.com|anthropic\.com)[\w-]+\.[\w.]+", "an e-mail address"),
-    (r"G:\\My Drive|One" r"Drive\\", "a cloud-drive folder"),  # split so this line doesn't match itself
+    (r"G:" r"\\My Drive|One" r"Drive\\", "a cloud-drive folder"),  # split so this line doesn't match itself
+    # any other drive-letter folder (2026-11-26: a doc named the author's local dev-copy folder - nothing personal, but
+    # meaningless to readers). The standard install folders (Windows, Program Files) are fine.
+    # (not after a backslash or a letter: "\d\d:\d\d" in a regex isn't a drive; "path\to" placeholders are fine)
+    (r"(?<![\\\w])[A-Za-z]:\\\\?(?!Windows\\|Program Files|path\\\\?to\\)[A-Za-z0-9_][^\s\"'`|<>)]*",
+     "a local folder path"),
 ]
 
 SKIP_SUFFIX = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".mp4", ".zip", ".dll", ".exe"}
