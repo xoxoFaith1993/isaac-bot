@@ -127,6 +127,8 @@ Reflex.S = {
   -- middle). Its few numbers: tiles of room that count as a sure way out, the damage goal's worth (in tiles of room),
   -- how much better a new home must be, the walk's cost per tile.
   position = 0,
+  card_attacks = 0,     -- 1: card attacks (laser_axis so far) become attack lines in the mover (A/B; 2026-11-26)
+  m_card_line = 400,    -- ...and standing in such a line costs this (lining up is the laser's trigger: near a hit)
   pos_every = 15, pos_reach = 90, pos_margin = 6, pos_espeed = 1.0,
   pos_cap = 41, pos_depth = 4, pos_sure = 28, pos_min = 10, pos_lane = 8, pos_keep = 3, pos_travel = 0.25,
   forecast_kinds = "dart,wall_slide,charge_line,bounce", -- kinds the card check showed better or equal (hop: Monstro worse)
@@ -731,6 +733,10 @@ local function planFire(player, room, w, targets, prefDist)
           for _, e in ipairs(w.enemies) do
             local clear = clearanceFor(e, relax)
             if (e.Position - c.pos):Length() < e.Size + clear then safe = false; break end
+          end
+          -- not in a card's laser line (card attacks, 2026-11-26: the Blighted Ovum baby's row)
+          if safe and (S.card_attacks or 0) ~= 0 and Mover.inCardLine(w.enemies, c.pos.X, c.pos.Y, player.Size) then
+            safe = false
           end
           if safe then
             local score = steps * 40 + c.lane * 80 + math.abs(c.dist - prefDist) * 0.3

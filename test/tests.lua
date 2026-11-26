@@ -2032,6 +2032,35 @@ run("never bombs where the blast could kill it", function()
             tostring(lowWhy), tostring(pocketOK), tostring(pocketWhy)))
 end)
 
+-- 81. Card attacks (the author, 2026-11-26: the Blighted Ovum fight "was abysmal", 2 of 5 hits from the baby's laser).
+-- The baby's card says its laser fires along its ROW when Isaac lines up within 20 px (horizontal only). Isaac starts in
+-- that row, inside the laser's 300 px reach, with its target in the same row: with the card's attack read, it leaves
+-- the reach (the row beyond 300 px is fine: the card says the laser doesn't fire from there).
+local function ovumRow(on)
+  local S = Reflex.S
+  local old = S.card_attacks
+  S.card_attacks = on
+  Mock.room(nil, { clear = false, player = Mock.tile(9, 4) })
+  local baby = Mock.enemy(79, 12, Mock.tile(2, 4), { hp = 999, vulnerable = false })
+  local gaper = Mock.enemy(EntityType.ENTITY_GAPER, 1, Mock.tile(12, 4), { chase = 0, hp = 999 }) -- in the row too
+  local p = Isaac.GetPlayer()
+  local n = 0
+  for _ = 1, 60 do
+    local move = Reflex.update(p)
+    Mock.step(move)
+    baby.Position, gaper.Position = Mock.tile(2, 4), Mock.tile(12, 4)
+    if math.abs(p.Position.Y - baby.Position.Y) < 30 and math.abs(p.Position.X - baby.Position.X) < 300 then n = n + 1 end
+  end
+  S.card_attacks = old
+  return n, Reflex.mover.cardLines
+end
+run("card attacks: stays out of the Ovum baby's laser row", function()
+  local off = ovumRow(0)
+  local on, nLines = ovumRow(1)
+  check("card attacks: stays out of the Ovum baby's laser row", on <= 15 and on < off,
+        fmt("updates in the laser's reach (of 60): card attacks off %d, on %d (card lines %s)", off, on, tostring(nLines)))
+end)
+
 ------------------------------------------------------------------------ forecast plan step 3: the positioning brain
 -- (position.lua over roommap.lua; docs/FORECAST_PLAN.md step 3). Each test is one of the author's live notes
 -- (docs/LIVE_NOTES.md). The brain is behind S.position (A/B), so each test switches it on itself.

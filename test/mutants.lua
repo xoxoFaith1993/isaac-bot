@@ -272,6 +272,10 @@ return {
     patches = { { file = "nav", find = "  return false, \"no way out of the blast from there\"",
                   replace = "  return true" } } },
 
+  { test = "card attacks: stays out of the Ovum baby's laser row", why = "card laser lines ignored (mover cost and firing spots)",
+    patches = { { file = "mover", find = "reach = a.range, card = true, cost = S.m_card_line }", replace = "reach = a.range, card = true, cost = 0 }" },
+                { file = "reflex", find = "if safe and (S.card_attacks or 0) ~= 0 and Mover.inCardLine(", replace = "if false and Mover.inCardLine(" } } },
+
   { test = "doesn't swap its card for a pill", why = "pocket slot check for pills/cards",
     patches = { { file = "nav", find = "(p:GetPill(0) == 0 and p:GetCard(0) == 0) and V.pill_card or 0",
                   replace = "V.pill_card" } } },

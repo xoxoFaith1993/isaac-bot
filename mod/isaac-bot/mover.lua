@@ -334,7 +334,9 @@ local function cost_at(ctx, p, si, t, parts, lock)
     local hit = (ln.only == "row" and inRow) or (ln.only == "col" and inCol) or (not ln.only and (inRow or inCol))
     local reach = ln.reach or 420
     if hit and rx * rx + ry * ry < reach * reach then
-      if ln.charge then
+      if ln.cost then
+        c = c + ln.cost * wt -- (a card attack: lining up is what makes it fire)
+      elseif ln.charge then
         if ln.active ~= false then c = c + S.m_charge_line * wt end -- (tell-gated dashers: only while telling)
       elseif ln.gated then
         if ln.active then c = c + S.m_hit * 0.8 * wt end -- known wind-up playing: get out of the line now
@@ -945,6 +947,55 @@ function Mover.choose(ctx)
         local activeT = (not gatedT) or (ctx.telling and ctx.telling(e)) or false
         ctx.lines[#ctx.lines + 1] = { pos = e.Position, half = (e.Size or 13) + 18, charge = true, only = only,
                                       active = activeT, threat = gatedT or nil }
+      end
+    end
+  end
+  -- Is (x, y) inside a card's line attack (laser_axis)? For the firing-spot planner (reflex.lua planFire), which picks
+-- where to stand before the mover runs: a spot in the laser row held Isaac there ("stand and shoot"), whatever the
+-- mover's line cost said (offline test 81).
+function Mover.inCardLine(enemies, x, y, pr)
+  for _, e in ipairs(enemies) do
+    local card = e.Position and Forecast.cardFor(e.Type .. "." .. e.Variant)
+    for _, a in ipairs(card and card.attacks or {}) do
+      if a.kind == "laser_axis" then
+        local half = (a.trigger_band or 20) + (pr or 10)
+        local rx, ry = x - e.Position.X, y - e.Position.Y
+        local inRow, inCol = math.abs(ry) < half, math.abs(rx) < half
+        local hit = (a.horizontal_only and inRow) or (a.vertical_only and inCol)
+                    or (not a.horizontal_only and not a.vertical_only and (inRow or inCol))
+        local reach = a.range or 420
+        if hit and rx * rx + ry * ry < reach * reach then return true end
+      end
+    end
+  end
+  return false
+end
+
+-- Card attacks (2026-11-26, the author: the Blighted Ovum fight "was abysmal": 2 of its 5 hits were the baby's laser,
+  -- which its card already describes - decoded, 2 readers - but the reflexes only read learned lines). A card's
+  -- laser_axis attack fires when Isaac lines up with it, so its row (or row/column) costs like a charger's line, and
+  -- while its tell animation plays, like a hit. Switch: S.card_attacks (A/B).
+  Mover.cardLines = 0
+  if (S.card_attacks or 0) ~= 0 then
+    for _, e in ipairs(w.enemies) do
+      local card = e.Position and Forecast.cardFor(e.Type .. "." .. e.Variant)
+      for _, a in ipairs(card and card.attacks or {}) do
+        if a.kind == "laser_axis" then
+          local only = a.horizontal_only and "row" or (a.vertical_only and "col") or nil
+          local half = (a.trigger_band or 20) + (ctx.pr or 10)
+          ctx.lines[#ctx.lines + 1] = { pos = e.Position, half = half, charge = true, active = true, only = only,
+                                        threat = true, reach = a.range, card = true, cost = S.m_card_line }
+          Mover.cardLines = Mover.cardLines + 1
+          local telling = false
+          if a.tell and a.tell.anim then
+            local okS, anim = pcall(function() return e:GetSprite():GetAnimation() end)
+            telling = okS and anim == a.tell.anim
+          end
+          if telling then
+            ctx.lines[#ctx.lines + 1] = { pos = e.Position, half = half, gated = true, active = true, only = only,
+                                          threat = true, reach = a.range, card = true }
+          end
+        end
       end
     end
   end
