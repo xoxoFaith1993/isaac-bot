@@ -1,0 +1,6499 @@
+{
+ "version": 1,
+ "source_note": "Facts from docs/research/RE_*.md, transcribed 2026-11-26. Game facts as numbers; no game code.",
+ "cards": {
+  "79.0": {
+   "name": "Gemini",
+   "move": {
+    "kind": "path_chase",
+    "speed_factor": 1.16,
+    "friction": 0.8,
+    "phases": [
+     {
+      "state": 4,
+      "kind": "path_chase",
+      "updates": null
+     },
+     {
+      "state": 8,
+      "kind": "path_chase",
+      "updates": 100
+     },
+     {
+      "state": 3,
+      "kind": "pinned",
+      "speed": 0,
+      "updates": 100
+     }
+    ],
+    "notes": "Speed factor 1.16 (rage up to about 1.96 x 0.83) feeds the path chase; a steady px/update is not given in the notes.",
+    "unknown": [
+     "speed"
+    ]
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Body State 4 paths toward Isaac's position with speed factor 1.4 x 0.83 = about 1.16; friction x0.8 every update (champions under variant 10 get an extra x0.92).",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "In State 4 each update has a 1-in-60 chance to rage (State 8).",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Rage (State 8) chases faster: speed factor grows each update as (s + 0.04) x 0.98 toward about 1.96, times 0.83; lasts 100 updates (3.3 s).",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "After rage Gemini and Steven go to State 3 (tired): stand still (speed 0) for 100 updates (3.3 s), a guaranteed opening.",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking in the body function.",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "Init spawns its baby (variant + 10) 8 px above itself.",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Tether: no pull on the baby until it is more than 76 px away, then (distance - 76) x 0.01; the pull acts on the baby's velocity.",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "Gemini 79.0 (not subtype 1) also spawns 18 umbilical cord pieces (79.20) at init.",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "79.1": {
+   "name": "Steven",
+   "move": {
+    "kind": "path_chase",
+    "speed_factor": 1.16,
+    "friction": 0.8,
+    "phases": [
+     {
+      "state": 4,
+      "kind": "path_chase",
+      "updates": null
+     },
+     {
+      "state": 8,
+      "kind": "path_chase",
+      "updates": 100
+     },
+     {
+      "state": 3,
+      "kind": "pinned",
+      "speed": 0,
+      "updates": 100
+     }
+    ],
+    "notes": "Same state cycle as Gemini. Speed factor 1.16, steady px/update not given.",
+    "unknown": [
+     "speed"
+    ]
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 8,
+     "speed": 8,
+     "fixed": true,
+     "state": "death"
+    },
+    {
+     "kind": "ring",
+     "count": 8,
+     "speed": 4,
+     "fixed": true,
+     "state": "death"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Body State 4 paths toward Isaac's position with speed factor 1.4 x 0.83 = about 1.16; friction x0.8 every update (champions under variant 10 get an extra x0.92).",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "In State 4 each update has a 1-in-60 chance to rage (State 8).",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Rage (State 8) chases faster: speed factor grows each update as (s + 0.04) x 0.98 toward about 1.96, times 0.83; lasts 100 updates (3.3 s).",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "After rage Gemini and Steven go to State 3 (tired): stand still (speed 0) for 100 updates (3.3 s), a guaranteed opening.",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking in the body function.",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "Init spawns its baby (variant + 10) 8 px above itself.",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Tether: a strong spring keeps the baby about 26 px away (force (distance - 26) x 0.1).",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "On death fires two fixed 8-way rings: speed 8 and speed 4.",
+     "src": "RE_ENEMIES Gemini dispatcher type 79",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Steven's baby breaks free and chases hard once Steven's health is 60 or less.",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "79.2": {
+   "name": "The Blighted Ovum",
+   "move": {
+    "kind": "path_chase",
+    "speed_factor": 1.33,
+    "friction": 0.8,
+    "phases": [
+     {
+      "state": 4,
+      "kind": "path_chase",
+      "updates": null
+     },
+     {
+      "state": 8,
+      "kind": "path_chase",
+      "updates": 100
+     }
+    ],
+    "notes": "Speed factor 1.6 x 0.83 = about 1.33; rage speed factor up to about 1.96 + 0.2. No tired phase: rage returns straight to State 4. Steady px/update not given.",
+    "unknown": [
+     "speed"
+    ]
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": {
+     "variant": "red",
+     "effect": "1000.22",
+     "every": 7,
+     "notes": "probably red creep"
+    },
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Body State 4 paths toward Isaac's position with speed factor 1.6 x 0.83 = about 1.33; friction x0.8.",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Rage chance is 1 in 60 per update, then 1 in 4 more, so about 1 in 240; rage lasts 100 updates (3.3 s).",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "No tired phase: rage goes straight back to State 4.",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "Every 7 updates it drops effect 1000.22 (probably red creep, which hurts) where it stands.",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Tether: no pull on the baby until it is more than 76 px away, then (distance - 76) x 0.01.",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking in the body function.",
+     "src": "RE_ENEMIES Gemini 0x474f90",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "79.10": {
+   "name": "Gemini's baby",
+   "move": {
+    "kind": "tethered",
+    "radius": 76,
+    "speed": 1.25,
+    "friction": 0.8,
+    "notes": "Attached baby drifts toward Isaac at 0.25 per update (over friction 0.8: steady 1.25 derived), held by the body's tether (no pull inside 76 px). Detached it chases hard: 0.5 per update with velocity x1.18 each update."
+   },
+   "attacks": [
+    {
+     "kind": "aimed",
+     "speed": 7,
+     "speed_alt": 10,
+     "count": 1,
+     "range": 300,
+     "needs_line": true,
+     "cooldown": 35,
+     "tell": {
+      "anim": "Attack01",
+      "frame": 17
+     },
+     "state": 8,
+     "notes": "speed 10 in one game mode (1 or 3), 7 otherwise"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Attached: drifts toward Isaac at 0.25 per update, held by the body's tether.",
+     "src": "RE_ENEMIES Gemini 0x475bb0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Detached (no body): chases Isaac at 0.5 per update with velocity x1.18 each update, clamped inside the room; no shooting, contact only.",
+     "src": "RE_ENEMIES Gemini 0x475bb0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Shoots only when cooldown is under 1 and Isaac is within 300 px with a clear line, tested every 7 updates.",
+     "src": "RE_ENEMIES Gemini 0x475bb0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Shot fires at the Shoot event of Attack01 (frame 17 of 35, about 0.57 s wind-up): one shot aimed at Isaac's position, no lead.",
+     "src": "RE_ENEMIES Gemini 0x475bb0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Shot speed 10 in one game mode, 7 otherwise (a game-wide mode value of 1 or 3; not decoded).",
+     "src": "RE_ENEMIES Gemini 0x475bb0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Shot cooldown is 35 updates.",
+     "src": "RE_ENEMIES Gemini 0x475bb0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "79.11": {
+   "name": "Steven's baby",
+   "move": {
+    "kind": "tethered",
+    "radius": 26,
+    "speed": 1.25,
+    "friction": 0.8,
+    "notes": "Attached baby drifts toward Isaac at 0.25 per update (over friction 0.8: steady 1.25 derived), held by Steven's 26 px spring. Detached (Steven health 60 or less) it chases hard: 0.5 per update with velocity x1.18."
+   },
+   "attacks": [
+    {
+     "kind": "aimed",
+     "speed": 7,
+     "speed_alt": 10,
+     "count": 1,
+     "range": 300,
+     "needs_line": true,
+     "cooldown": 35,
+     "tell": {
+      "anim": "Attack01",
+      "frame": 17
+     },
+     "state": 8
+    },
+    {
+     "kind": "ring",
+     "count": 8,
+     "speed": 10,
+     "fixed": true,
+     "state": "death"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Attached: drifts toward Isaac at 0.25 per update, held by Steven's strong 26 px spring.",
+     "src": "RE_ENEMIES Gemini 0x475bb0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Breaks free and chases Isaac hard (0.5 per update, velocity x1.18 each update) when Steven's health is 60 or less; no shooting then.",
+     "src": "RE_ENEMIES Gemini 0x475bb0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Attached shot: Isaac within 300 px with clear line, every 7 updates, cooldown 35; one shot aimed at Isaac's position at Attack01 frame 17 of 35; speed 10 in one game mode, 7 otherwise; projectile variant 12.",
+     "src": "RE_ENEMIES Gemini 0x475bb0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "On death fires one fixed 8-way ring at speed 10.",
+     "src": "RE_ENEMIES Gemini dispatcher type 79",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "79.12": {
+   "name": "The Blighted Ovum's baby",
+   "move": {
+    "kind": "chase",
+    "speed": 3.25,
+    "friction": 0.8,
+    "phases": [
+     {
+      "state": 4,
+      "kind": "chase",
+      "speed": 3.25,
+      "updates": 160
+     },
+     {
+      "state": 4,
+      "kind": "axis_walk",
+      "speed": 1.0,
+      "updates": null
+     }
+    ],
+    "notes": "First 160 updates it drifts toward Isaac at 0.65 (y at 0.9 of that) when he is within 300 px (steady 3.25 derived with friction 0.8); after that it slides vertically toward Isaac's row at up to 0.2 per update (steady 1.0 derived)."
+   },
+   "attacks": [
+    {
+     "kind": "laser_axis",
+     "trigger_band": 20,
+     "range": 300,
+     "warning": 15,
+     "horizontal_only": true,
+     "tell": {
+      "anim": "Attack01",
+      "frame": 15
+     },
+     "when": "StateFrame over 40, Isaac within 20 px of its row, within 300 px; vertical column matches never fire"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": true,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "body",
+     "text": "Invulnerable: set at init and never cleared; stops being a boss and unlinks from the body; dies when the body dies. Never aim at it (never_aim).",
+     "src": "RE_ENEMIES Gemini 0x475bb0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "First 160 updates of State 4: drifts toward Isaac at 0.65 (y at 0.9 of that) when he is within 300 px.",
+     "src": "RE_ENEMIES Gemini 0x475bb0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "After that it slides vertically toward Isaac's row at up to 0.2 per update.",
+     "src": "RE_ENEMIES Gemini 0x475bb0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Laser trigger: StateFrame over 40, Isaac within 20 px of its row or column, within 300 px, baby on screen.",
+     "src": "RE_ENEMIES Gemini 0x475bb0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "It only fires if the cardinal direction toward Isaac is horizontal (180 or 0 degrees); a column match gives no laser.",
+     "src": "RE_ENEMIES Gemini 0x475bb0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "A warning line shows at the attack start; the laser fires at the Shoot event of Attack01 (frame 15 of 55, 0.5 s).",
+     "src": "RE_ENEMIES Gemini 0x475bb0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "79.20": {
+   "name": "Umbilical cord piece",
+   "move": {
+    "kind": "pinned",
+    "notes": "Gemini has 18 of them; the notes say only that the dispatcher sets flags on them.",
+    "unknown": [
+     "behaviour"
+    ]
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "body",
+     "text": "Cord pieces (79.20) only get flags set in the dispatcher; Gemini spawns 18 of them at init.",
+     "src": "RE_ENEMIES Gemini dispatcher type 79",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "46.0": {
+   "name": "Sloth",
+   "move": {
+    "kind": "axis_walk",
+    "speed": 4.0,
+    "friction": 0.75,
+    "notes": "Walks with helper 0x7ed880 at speed 1.0 with friction x0.75 (steady 4.0 derived). The notes are uncertain whether it heads for Isaac."
+   },
+   "attacks": [
+    {
+     "kind": "spawn",
+     "what": "23.0",
+     "state": 8,
+     "chance": "1/50 per update to attack, then 50% summon",
+     "tell": {
+      "anim": "Attack",
+      "frame": 5
+     },
+     "when": "only with 3 or fewer enemies in the room; charger spawns 30 px to the side, already charging"
+    },
+    {
+     "kind": "lob",
+     "count": 1,
+     "state": 9,
+     "tell": {
+      "anim": "Attack",
+      "frame": 5
+     },
+     "fall": {
+      "height": -45,
+      "fall_speed": -21.9,
+      "accel": 1.02,
+      "scale": 1.6,
+      "speed": 4.15,
+      "flag": "EXPLODE"
+     },
+     "notes": "Not aimed at Isaac on the throw update (recording contradicted aiming); probably bursts on landing.",
+     "unknown": [
+      "blast"
+     ]
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "collision_class_after_summon": 2
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "State 4 walks with a path helper (speed 1.0, friction x0.75); the notes are uncertain whether it heads for Isaac.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Each update in State 4 has a 1-in-50 chance to attack (never while confused; while feared only 1 in 10 of those); about 1.7 s between attacks on average.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Attacks (State 8 summon, State 9 shoot) act at StateFrame 5 and return to State 4 when StateFrame passes 29.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "recording"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking in this function.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Attack choice: 50% summon if the room count is 3 or less (otherwise shoot), 50% shoot.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Summon: a Charger (23.0) spawns 30 px to the side it faces, already charging (State 8, V1 = +/-1, 0), launching sideways immediately.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "Summon only happens while the room has 3 or fewer enemies.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "Shoot: 1 lob via FireBossProjectiles at Isaac's position, then made big, slow and high: velocity x0.55, height x0.7 - 13, fall -0.3, scale 1.6, flag bit 2 (EXPLODE).",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "Recorded lob values: scale 1.6, flags 2, height -45, fall -21.9, accel 1.02, speed 4.15.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "The lob is NOT aimed at Isaac on the throw update: recorded angle error spread 3-177 degrees over 20 shots. The code can only scatter a boss shot by 30 degrees, so the recorded scatter is probably the EXPLODE burst on landing.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "contradicted"
+    },
+    {
+     "cat": "body",
+     "text": "Entity collision class set to 2 after the summon and never set back; class 2 still touches Isaac and his tears.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "46.1": {
+   "name": "Super Sloth",
+   "move": {
+    "kind": "axis_walk",
+    "speed": 4.0,
+    "friction": 0.75,
+    "notes": "Walks with helper 0x7ed880 at speed 1.0 with friction x0.75 (steady 4.0 derived). The notes are uncertain whether it heads for Isaac."
+   },
+   "attacks": [
+    {
+     "kind": "spawn",
+     "what": "85.0",
+     "count": "1 or 2",
+     "state": 8,
+     "tell": {
+      "anim": "Attack",
+      "frame": 5
+     },
+     "when": "thrown near the midpoint between it and Isaac; only with 3 or fewer enemies"
+    },
+    {
+     "kind": "lob",
+     "count": 2,
+     "state": 9,
+     "tell": {
+      "anim": "Attack",
+      "frame": 5
+     },
+     "fall": {
+      "scale": 1.6,
+      "flag": "EXPLODE"
+     },
+     "unknown": [
+      "blast"
+     ]
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "State 4 walks with a path helper (speed 1.0, friction x0.75); the notes are uncertain whether it heads for Isaac.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Each update in State 4 has a 1-in-50 chance to attack (never while confused; while feared only 1 in 10 of those); about 1.7 s between attacks on average.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Attacks (State 8 summon, State 9 shoot) act at StateFrame 5 and return to State 4 when StateFrame passes 29.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "recording"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking in this function.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Attack choice as Sloth: 50% summon if the room count is 3 or less (otherwise shoot), 50% shoot.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Summon: throws 1 or 2 spiders (50/50) at free spots near the midpoint between it and Isaac.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Shoot: 2 lobs, same big slow high shape as Sloth (velocity x0.55, scale 1.6, flag bit 2 EXPLODE), launched at Isaac's position.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "46.2": {
+   "name": "Ultra Pride",
+   "move": {
+    "kind": "axis_walk",
+    "speed": 4.0,
+    "friction": 0.75,
+    "notes": "Walks with helper 0x7ed880 at speed 1.0 with friction x0.75 (steady 4.0 derived). The notes are uncertain whether it heads for Isaac."
+   },
+   "attacks": [
+    {
+     "kind": "burst",
+     "count": 3,
+     "speed_min": 3.5,
+     "speed_max": 10.5,
+     "cone": 60,
+     "lobbed": true,
+     "state": 8,
+     "tell": {
+      "anim": "Attack",
+      "frame": 5
+     },
+     "notes": "trajectory 10, scale 1.2; speed range from the shared boss-shot rule"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": {
+     "variant": "green",
+     "effect": "1000.23",
+     "step_px": 25,
+     "range_px": 225,
+     "state": 9,
+     "when": "frames 6-14 of State 9, only with Isaac within 60 px of its row"
+    },
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "State 4 walks with a path helper (speed 1.0, friction x0.75); the notes are uncertain whether it heads for Isaac.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Each update in State 4 has a 1-in-50 chance to attack (never while confused; while feared only 1 in 10 of those); about 1.7 s between attacks on average.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Attacks (State 8 summon, State 9 shoot) act at StateFrame 5 and return to State 4 when StateFrame passes 29.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "recording"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking in this function.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Shoots only when Isaac is within 60 px of its row (abs dy 60 or less); otherwise it summons.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Summon: FireBossProjectiles, 3 shots toward Isaac's position, trajectory 10, scale 1.2.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Shoot (State 9, frames 6-14): a line of creep (effect 1000.23) along its row toward Isaac, 25 px further each update, out to about 225 px, plus splash effects.",
+     "src": "RE_ENEMIES Sloth 0x4780e0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "20.0": {
+   "name": "Monstro",
+   "move": {
+    "kind": "hop",
+    "air": 16,
+    "phases": [
+     {
+      "state": 4,
+      "kind": "hop",
+      "air": 16,
+      "updates": 45
+     },
+     {
+      "state": 7,
+      "kind": "hop",
+      "air": 37,
+      "updates": 64
+     }
+    ],
+    "notes": "Hop: Walk animation 45 frames, Jump event 6, Land event 22, so 16 updates airborne; push 1.2 per update over friction x0.9. Big jump: airborne from JumpUp frame 10 (of 15) to JumpDown frame 32, about 37 updates (derived from the frame numbers); homing pull 0.006 x offset + 0.3 x direction. Landing cell = Isaac's position at the first update of the state, snapped to its 40 px cell, stored in TargetPosition.",
+    "friction": 0.9
+   },
+   "attacks": [
+    {
+     "kind": "burst",
+     "count": 13,
+     "speed_min": 3.5,
+     "speed_max": 10.5,
+     "cone": 60,
+     "lobbed": true,
+     "state": 8,
+     "tell": {
+      "anim": "Taunt",
+      "frame": 21
+     },
+     "when": "toward Isaac's position at frame 21"
+    },
+    {
+     "kind": "burst",
+     "count": 18,
+     "speed_min": 7,
+     "speed_max": 7,
+     "cone": 360,
+     "lobbed": true,
+     "state": 7,
+     "tell": {
+      "anim": "JumpDown",
+      "frame": 34
+     },
+     "notes": "zero target vector; probably an all-round random burst (unconfirmed)"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "contact_while_airborne": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "State 3 IDLE lasts 1 update and picks rand % 3: 0 hop, 1 spit, 2 big jump; subtype 2 never big-jumps (1/3 hop, 2/3 spit).",
+     "src": "RE_ENEMIES Monstro 0x470020",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Hop and big jump target Isaac's position at the first update of the state (no lead), snapped to its 40 px grid cell, stored in TargetPosition.",
+     "src": "RE_ENEMIES Monstro 0x470020",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Hop pushes 1.2 per update (over friction) toward the target until the Land event (frames 0-21); big jump has a strong homing pull until Land (JumpDown frames 0-31); friction x0.9 every update.",
+     "src": "RE_ENEMIES Monstro 0x470020",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "After a hop, 50% hops again, else State 3; State 3 is never a resting window.",
+     "src": "RE_ENEMIES Monstro 0x470020",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Airborne: entity collision class 0 (touches nothing, tears pass through) and grid class 3 (flies over rocks): hop Walk frames 6-21, big jump from JumpUp frame 10 to JumpDown frame 31; contact returns on landing (class 4).",
+     "src": "RE_ENEMIES Monstro 0x470020",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Spit (State 8, Taunt frame 21): 13 shots toward Isaac's position at that update (no lead).",
+     "src": "RE_ENEMIES Monstro 0x470020",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Big-jump landing (JumpDown frame 34): 18 shots with a zero target vector, probably an all-round random burst (unconfirmed).",
+     "src": "RE_ENEMIES Monstro 0x470020",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Hops fire nothing.",
+     "src": "RE_ENEMIES Monstro 0x470020",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Subtype 1 (unless spawned by another Monstro) splits into two Monstros 48 px apart (+/-24 px) at init; no damage blocking.",
+     "src": "RE_ENEMIES Monstro 0x470020",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "StateFrame is not used; read the animation frame.",
+     "src": "RE_ENEMIES Monstro 0x470020",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "18.0": {
+   "name": "Attack Fly",
+   "move": {
+    "kind": "chase",
+    "flying": true,
+    "notes": "Steers at Isaac's position, refreshed every 3rd update (no lead), vertical offset halved; no pull inside 25 px; otherwise adds (L - 25) x 0.08 per update, capped at 1.2. No speed cap in the function: top speed comes from engine damping (to be measured).",
+    "unknown": [
+     "speed"
+    ]
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "State goes 0 to 3 and never changes; grid class 3, so it flies over rocks and pits.",
+     "src": "RE_ENEMIES Attack Fly 0x50d3c0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "TargetPosition = Isaac's position, refreshed every 3rd update, no lead.",
+     "src": "RE_ENEMIES Attack Fly 0x50d3c0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Each update: offset to target with the vertical part halved; no pull while length L is 25 or less; otherwise adds (L - 25) x 0.08 per update, capped at 1.2.",
+     "src": "RE_ENEMIES Attack Fly 0x50d3c0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "No speed cap in this function; top speed comes from the engine's damping (measure it).",
+     "src": "RE_ENEMIES Attack Fly 0x50d3c0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Wobble: a small random drift (V1, at most about 0.4, every 3rd update) plus a weak pull toward a fixed screen box (x 80-540, y 230-420).",
+     "src": "RE_ENEMIES Attack Fly 0x50d3c0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Flies with a parent orbit it about 65 px out and barely chase; when feared it flees.",
+     "src": "RE_ENEMIES Attack Fly 0x50d3c0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking; contact damage only.",
+     "src": "RE_ENEMIES Attack Fly 0x50d3c0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "29.1": {
+   "name": "Trite",
+   "move": {
+    "kind": "hop",
+    "air": 14,
+    "idle": 15,
+    "notes": "Jump event at frame 4, Land at frame 18, so 14 updates airborne. Waits exactly 15 updates idle (State 3) between hops. Landing cell = Isaac's position plus 0-60% of the gap, snapped to a 40 px cell, fixed from take-off."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "contact_while_airborne": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Hops toward a landing cell fixed at take-off (stored in TargetPosition); spring 0.05 x offset per update, only 10% of that before the Jump event (frames 0-3).",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Hop animation 26 frames (Jump event at 4, Land at 18); leaves State 4 within 10 px of the cell, or 1-in-10 per update once slow or StateFrame over 30.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Each update rolls r = 50*rand + 70*rand; threshold T = 1.3 r + 130 px (130-286 px). Isaac closer than T: aims at Isaac's position plus r/200 of the gap, landing past him by 0-60% of the gap; no velocity lead.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Isaac farther than T: hops 95-215 px in a random-looking direction.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "The landing does nothing but play a sound: no shots, no creep.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Entity class 4 before the Jump event, class 2 from the Jump event (grid class 3: clears rocks and pits); class 2 still touches Isaac and his tears, so it can hurt during the whole hop and while idle.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Idle waits exactly 15 updates (State 3), no randomness; minimum cycle about 41 updates (1.4 s).",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "29.0": {
+   "name": "Hopper",
+   "move": {
+    "kind": "hop",
+    "air": 14,
+    "idle": 0,
+    "notes": "Same AI function as the Trite; only the idle wait differs (0 updates). Other numbers are the Trite's."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "contact_while_airborne": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Hops toward a landing cell fixed at take-off (stored in TargetPosition); spring 0.05 x offset per update, only 10% of that before the Jump event (frames 0-3).",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Hop animation 26 frames (Jump event at 4, Land at 18); leaves State 4 within 10 px of the cell, or 1-in-10 per update once slow or StateFrame over 30.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Each update rolls r = 50*rand + 70*rand; threshold T = 1.3 r + 130 px (130-286 px). Isaac closer than T: aims at Isaac's position plus r/200 of the gap, landing past him by 0-60% of the gap; no velocity lead.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Isaac farther than T: hops 95-215 px in a random-looking direction.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "The landing does nothing but play a sound: no shots, no creep.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Entity class 4 before the Jump event, class 2 from the Jump event (grid class 3: clears rocks and pits); class 2 still touches Isaac and his tears, so it can hurt during the whole hop and while idle.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Idle waits 0 updates (State 3) before hopping.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "29.2": {
+   "name": "Eggy",
+   "move": {
+    "kind": "hop",
+    "air": 14,
+    "idle": 8,
+    "notes": "Same AI function as the Trite; only the idle wait differs (8 updates). Other numbers are the Trite's."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "contact_while_airborne": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Hops toward a landing cell fixed at take-off (stored in TargetPosition); spring 0.05 x offset per update, only 10% of that before the Jump event (frames 0-3).",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Hop animation 26 frames (Jump event at 4, Land at 18); leaves State 4 within 10 px of the cell, or 1-in-10 per update once slow or StateFrame over 30.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Each update rolls r = 50*rand + 70*rand; threshold T = 1.3 r + 130 px (130-286 px). Isaac closer than T: aims at Isaac's position plus r/200 of the gap, landing past him by 0-60% of the gap; no velocity lead.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Isaac farther than T: hops 95-215 px in a random-looking direction.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "The landing does nothing but play a sound: no shots, no creep.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Entity class 4 before the Jump event, class 2 from the Jump event (grid class 3: clears rocks and pits); class 2 still touches Isaac and his tears, so it can hurt during the whole hop and while idle.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Idle waits 8 updates (State 3) before hopping.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "29.3": {
+   "name": "Tainted Hopper",
+   "move": {
+    "kind": "hop",
+    "air": 14,
+    "idle": 26,
+    "notes": "Same AI function as the Trite; only the idle wait differs (26 updates). Other numbers are the Trite's."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "contact_while_airborne": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Hops toward a landing cell fixed at take-off (stored in TargetPosition); spring 0.05 x offset per update, only 10% of that before the Jump event (frames 0-3).",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Hop animation 26 frames (Jump event at 4, Land at 18); leaves State 4 within 10 px of the cell, or 1-in-10 per update once slow or StateFrame over 30.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Each update rolls r = 50*rand + 70*rand; threshold T = 1.3 r + 130 px (130-286 px). Isaac closer than T: aims at Isaac's position plus r/200 of the gap, landing past him by 0-60% of the gap; no velocity lead.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Isaac farther than T: hops 95-215 px in a random-looking direction.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "The landing does nothing but play a sound: no shots, no creep.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Entity class 4 before the Jump event, class 2 from the Jump event (grid class 3: clears rocks and pits); class 2 still touches Isaac and his tears, so it can hurt during the whole hop and while idle.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Idle waits 26 updates (State 3) before hopping.",
+     "src": "RE_ENEMIES Trite 0x52cd30",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "23.0": {
+   "name": "Charger",
+   "move": {
+    "kind": "charge_line",
+    "speed": 6.5,
+    "band": 20,
+    "range": 200,
+    "lead": 16,
+    "idle_speed": 0.6,
+    "friction": 0.8,
+    "notes": "V1 = 1.3 along an axis, friction x0.8 (steady 6.5, unverified: assumes base friction 1). Trigger checked 1 update in 4; lane pulled onto its tile line while charging."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Charge trigger is checked only 1 update in 4 (IsFrame 4).",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Reference is the centre of its 40 px grid cell; the aim point is Isaac's position + his velocity x random(0-1) x 16, a lead of up to 16 updates.",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Charges when the aim point is within 20 px of the cell centre in x or y, under 200 px away, with a clear line, and it is not confused or feared; no random roll, no cooldown, no wind-up.",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Charge direction = the nearest of the 4 axes toward the aim point, never re-aimed; ends on a grid or wall hit, 6 updates stuck, confusion, fear or slow, then straight back to State 4 with no pause.",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Wander (State 4) uses a random axis walk at 0.6; charge steps friction x0.8 and adds V1 each update.",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "V1 is 1.3 along the charge axis; steady speed about 1.3 / (1 - 0.8) = 6.5 px/update (unverified).",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking; subtype 1 only adds a push apart from nearby NPCs.",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "23.1": {
+   "name": "Drowned",
+   "move": {
+    "kind": "charge_line",
+    "speed": 5.85,
+    "band": 20,
+    "range": 200,
+    "lead": 16,
+    "idle_speed": 0.54,
+    "friction": 0.8,
+    "notes": "Wander 0.54, charge push 1.17 (x0.9); steady 5.85 derived."
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 4,
+     "speed": 8,
+     "speed_alt": 10,
+     "fixed": true,
+     "state": "death",
+     "notes": "mode 7, probably diagonals"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Charge trigger is checked only 1 update in 4 (IsFrame 4).",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Reference is the centre of its 40 px grid cell; the aim point is Isaac's position + his velocity x random(0-1) x 16, a lead of up to 16 updates.",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Charges when the aim point is within 20 px of the cell centre in x or y, under 200 px away, with a clear line, and it is not confused or feared; no random roll, no cooldown, no wind-up.",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Charge direction = the nearest of the 4 axes toward the aim point, never re-aimed; ends on a grid or wall hit, 6 updates stuck, confusion, fear or slow, then straight back to State 4 with no pause.",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Slower than the Charger: wander 0.54, charge push 1.17 (x0.9).",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "On death fires fire mode 7 (probably 4 diagonal shots) at speed 8 (10 in the 0x6dfc20 game mode).",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "23.2": {
+   "name": "Dank Charger",
+   "move": {
+    "kind": "charge_line",
+    "band": 20,
+    "range": 200,
+    "lead": 16,
+    "notes": "Alert wind-up, then a charge at 18.2 that bounces off walls, slows, and leaves black creep (1000.26), then Recover (State 16).",
+    "unknown": [
+     "speed",
+     "idle_speed"
+    ]
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": {
+     "variant": "black",
+     "effect": "1000.26"
+    },
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Charge trigger is checked only 1 update in 4 (IsFrame 4).",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Reference is the centre of its 40 px grid cell; the aim point is Isaac's position + his velocity x random(0-1) x 16, a lead of up to 16 updates.",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Charges when the aim point is within 20 px of the cell centre in x or y, under 200 px away, with a clear line, and it is not confused or feared; no random roll, no cooldown, no wind-up.",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Charge direction = the nearest of the 4 axes toward the aim point, never re-aimed; ends on a grid or wall hit, 6 updates stuck, confusion, fear or slow, then straight back to State 4 with no pause.",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Alert wind-up, then a charge (value 18.2) that bounces off walls and slows, then Recover (State 16).",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "Leaves black creep (effect 1000.26) while charging.",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "23.3": {
+   "name": "Carrion Princess",
+   "move": {
+    "kind": "charge_line",
+    "speed": 6.5,
+    "band": 20,
+    "lead": 16,
+    "diagonal": true,
+    "friction": 0.8,
+    "notes": "The same trigger test rotated 45 degrees so it charges diagonally, with no 200 px cap. Charge push 1.3, friction x0.8 (steady 6.5 derived).",
+    "unknown": [
+     "range",
+     "idle_speed"
+    ]
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Charge trigger is checked only 1 update in 4 (IsFrame 4).",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Reference is the centre of its 40 px grid cell; the aim point is Isaac's position + his velocity x random(0-1) x 16, a lead of up to 16 updates.",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Charges when the aim point is within 20 px of the cell centre in x or y, under 200 px away, with a clear line, and it is not confused or feared; no random roll, no cooldown, no wind-up.",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Charge direction = the nearest of the 4 axes toward the aim point, never re-aimed; ends on a grid or wall hit, 6 updates stuck, confusion, fear or slow, then straight back to State 4 with no pause.",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Same test rotated 45 degrees, so it charges diagonally, with no 200 px cap.",
+     "src": "RE_ENEMIES Charger 0x534300",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "237.0": {
+   "name": "Gurgling",
+   "move": {
+    "kind": "charge_line",
+    "speed": 13,
+    "band": 20,
+    "range": 200,
+    "lead": 16,
+    "idle_speed": 0.6,
+    "friction": 0.9,
+    "notes": "V1 = 1.3, friction x0.9 then V1 added again: steady about 12-13 px/update."
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 6,
+     "speed": 7.5,
+     "fixed": false,
+     "state": 3,
+     "when": "after a charge ends; mode 9 with a random start angle"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": {
+     "variant": "red",
+     "effect": "1000.22",
+     "while": "speed > 3",
+     "scale": 1.23
+    },
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Idle: random axis-aligned walk at 0.6.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Same charge trigger as the Charger; 18/18 recorded Gurgling charges fit it.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "No lane centring for 237 (other chargers snap to the tile centre); tear knockback sideways is never corrected, so it keeps charging in a shifted lane.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "A charge ends on a wall or rock hit, a 6-update stall, or confusion/fear, then State 3.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "While speed is above 3 px/update it spawns red creep (effect 1000.22) at sprite scale 1.23, at most once per update; Turdling uses 1000.94.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Charge V1 = 1.3 x axis direction; each update friction x0.9 then V1 added again; steady speed about 12-13 px/update.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "When a charge ends it fires a ring (mode 9, vector 7.5, 6): 6 shots at 7.5.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "237.1": {
+   "name": "Gurgling (boss)",
+   "move": {
+    "kind": "charge_line",
+    "speed": 19.5,
+    "band": 20,
+    "range": 200,
+    "lead": 16,
+    "idle_speed": 0.6,
+    "friction": 0.9,
+    "notes": "Boss subtype 1 charge V1 = 1.95 (steady 19.5 derived with friction x0.9)."
+   },
+   "attacks": [
+    {
+     "kind": "spawn",
+     "what": "18.0",
+     "state": 3,
+     "when": "sometimes after a charge ends"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": {
+     "variant": "red",
+     "effect": "1000.22",
+     "while": "speed > 3",
+     "scale": 1.23
+    },
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Idle: random axis-aligned walk at 0.6.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Same charge trigger as the Charger; 18/18 recorded Gurgling charges fit it.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "No lane centring for 237 (other chargers snap to the tile centre); tear knockback sideways is never corrected, so it keeps charging in a shifted lane.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "A charge ends on a wall or rock hit, a 6-update stall, or confusion/fear, then State 3.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "While speed is above 3 px/update it spawns red creep (effect 1000.22) at sprite scale 1.23, at most once per update; Turdling uses 1000.94.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Boss subtype 1 charge V1 = 1.95 (the normal Gurgling is 1.3).",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "After a charge the boss sometimes spawns flies; Attack Flies appeared as its spawns in recordings.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "237.2": {
+   "name": "Turdling",
+   "move": {
+    "kind": "charge_line",
+    "speed": 13,
+    "band": 20,
+    "range": 200,
+    "lead": 16,
+    "idle_speed": 0.6,
+    "friction": 0.9,
+    "notes": "Shares the Gurgling charge code; speed taken as the Gurgling's (notes do not give a separate Turdling speed)."
+   },
+   "attacks": [
+    {
+     "kind": "spawn",
+     "what": "217.2",
+     "count": 4,
+     "state": 3,
+     "when": "after a charge ends"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": {
+     "variant": "other",
+     "effect": "1000.94",
+     "while": "speed > 3",
+     "scale": 1.23
+    },
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Idle: random axis-aligned walk at 0.6.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Same charge trigger as the Charger; 18/18 recorded Gurgling charges fit it.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "No lane centring for 237 (other chargers snap to the tile centre); tear knockback sideways is never corrected, so it keeps charging in a shifted lane.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "A charge ends on a wall or rock hit, a 6-update stall, or confusion/fear, then State 3.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "While speed is above 3 px/update it spawns red creep (effect 1000.22) at sprite scale 1.23, at most once per update; Turdling uses 1000.94.",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "When a charge ends it spawns 4 Dips (217.2).",
+     "src": "RE_ENEMIES E1 0x534300",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "62.0": {
+   "name": "Pin",
+   "move": {
+    "kind": "burrow",
+    "speed": 8,
+    "phases": [
+     {
+      "state": 4,
+      "kind": "burrow",
+      "speed": 8,
+      "updates": null
+     },
+     {
+      "state": 8,
+      "kind": "pinned",
+      "updates": 105
+     }
+    ],
+    "notes": "Leap flies straight at 8 px/update toward TargetPosition (Isaac's position when the last phase ended); underground it keeps about 250 px from Isaac and only resurfaces when Isaac is over 100 px away."
+   },
+   "attacks": [
+    {
+     "kind": "lob",
+     "count": 1,
+     "state": 8,
+     "tell": {
+      "anim": "Attack1",
+      "frame": 46
+     },
+     "fall": {
+      "height": -40,
+      "scale": 1.6,
+      "flag": "EXPLODE"
+     },
+     "notes": "aimed at Isaac's position, speed cut to 0.55; landing spot unclear",
+     "unknown": [
+      "blast"
+     ]
+    },
+    {
+     "kind": "ring",
+     "count": 6,
+     "speed": 8,
+     "fixed": false,
+     "when": "Pin subtype 1 only",
+     "state": 8,
+     "tell": {
+      "anim": "Attack1",
+      "frame": 46
+     }
+    },
+    {
+     "kind": "ring",
+     "count": 4,
+     "speed": 5,
+     "fixed": true,
+     "state": "leap",
+     "cooldown": 30,
+     "chance": "50% per update when high in the arc",
+     "notes": "from body segment 4; diagonals 45/135/225/315"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "untargetable_underground": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "State 3 decide (1 update): after a leap 50% attack, otherwise leap again; after an attack always leap.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "State 4 leap: starts at PositionOffset.Y 6 and flies in a straight line toward TargetPosition on a height arc; solid (class 4) while PositionOffset.Y is under 16, class 0 and invisible underground.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Underground it keeps about 250 px from Isaac (accel (L - 250) x 0.003) and drifts toward the room centre.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "It resurfaces when V1.Y - L/20 exceeds 15 and L is over 100 px; TargetPosition = Isaac's position at that moment.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Leaps aim at Isaac's position when the previous phase ended (stored in TargetPosition), no lead, never re-aimed.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Attack1 (State 8): pops up where it is, solid from the first update and still; shot at StateFrame 46 (1.5 s); at StateFrame 105 TargetPosition = Isaac's position and back to State 3.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Body segment 4, while the head is in State 4 and high in the arc (PositionOffset.Y under -20), cooldown 30 and a 50% roll each update: fire mode 7, 4 diagonal shots at speed 5 (45, 135, 225, 315 degrees); about one burst per leap.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Leap speed 8 px/update; the chain is 5 body segments plus a hole marker.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Attack1 shot (subtype 0): FireBossProjectiles at Isaac's position, trajectory 10, then a big high lob: velocity x0.55, height -40, scale 1.6, flag bit 2.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Pin subtype 1 fires fire mode 9, a 6-shot ring at speed 8, not aimed; its body segment also fires a mode-9 ring at speed 8.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "isInvicible is never touched; protected only by collision class 0 (underground, or hidden after an attack).",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "62.1": {
+   "name": "Scolex",
+   "move": {
+    "kind": "burrow",
+    "speed": 8,
+    "phases": [
+     {
+      "state": 4,
+      "kind": "burrow",
+      "speed": 8,
+      "updates": null
+     },
+     {
+      "state": 8,
+      "kind": "pinned",
+      "updates": 105
+     }
+    ],
+    "notes": "Same state table as Pin; the leap speed 8 comes from the shared table (only Frail differs). 8 body segments plus the hole."
+   },
+   "attacks": [
+    {
+     "kind": "lob",
+     "count": 3,
+     "state": 8,
+     "tell": {
+      "anim": "Attack1",
+      "frame": 46
+     },
+     "fall": {
+      "height": -40,
+      "scale": 1.6,
+      "flag": "EXPLODE"
+     },
+     "unknown": [
+      "blast"
+     ]
+    },
+    {
+     "kind": "burst",
+     "count": 15,
+     "lobbed": true,
+     "state": 9,
+     "tell": {
+      "anim": "Attack2",
+      "frame": 20
+     },
+     "unknown": [
+      "speed_min",
+      "speed_max",
+      "cone"
+     ]
+    },
+    {
+     "kind": "ring",
+     "count": 4,
+     "speed": 5,
+     "fixed": true,
+     "state": "leap",
+     "cooldown": 30,
+     "chance": "50% per update when high in the arc",
+     "notes": "from body segment 4; diagonals 45/135/225/315"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "damage_only_at": "tail end; head only in Attack1"
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "State 3 decide (1 update): after a leap 50% attack, otherwise leap again; after an attack always leap.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "State 4 leap: starts at PositionOffset.Y 6 and flies in a straight line toward TargetPosition on a height arc; solid (class 4) while PositionOffset.Y is under 16, class 0 and invisible underground.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Underground it keeps about 250 px from Isaac (accel (L - 250) x 0.003) and drifts toward the room centre.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "It resurfaces when V1.Y - L/20 exceeds 15 and L is over 100 px; TargetPosition = Isaac's position at that moment.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Leaps aim at Isaac's position when the previous phase ended (stored in TargetPosition), no lead, never re-aimed.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Attack1 (State 8): pops up where it is, solid from the first update and still; shot at StateFrame 46 (1.5 s); at StateFrame 105 TargetPosition = Isaac's position and back to State 3.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Body segment 4, while the head is in State 4 and high in the arc (PositionOffset.Y under -20), cooldown 30 and a 50% roll each update: fire mode 7, 4 diagonal shots at speed 5 (45, 135, 225, 315 degrees); about one burst per leap.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Attack1 lob fires on 3 updates (46-48), same big high lob shape as Pin.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Attack2 (State 9): 15 lobbed shots at Isaac's position, volley at StateFrame 20.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Outside State 8, damage to any segment more than 2 links from the hole is set to 0; only the tail end takes damage, and the head only during Attack1.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "62.2": {
+   "name": "The Frail",
+   "move": {
+    "kind": "burrow",
+    "speed": 10,
+    "alt_speed": 6,
+    "phases": [
+     {
+      "state": 4,
+      "kind": "burrow",
+      "speed": 10,
+      "updates": null
+     },
+     {
+      "state": 8,
+      "kind": "pinned",
+      "updates": 105
+     }
+    ],
+    "notes": "Leap speed 10 or 6 (the notes do not say when each applies). 5 body segments plus the hole. Revives once as phase 2."
+   },
+   "attacks": [
+    {
+     "kind": "lob",
+     "count": 1,
+     "state": 8,
+     "tell": {
+      "anim": "Attack1",
+      "frame": 46
+     },
+     "fall": {
+      "height": -40,
+      "scale": 1.6,
+      "flag": "EXPLODE"
+     },
+     "unknown": [
+      "blast"
+     ]
+    },
+    {
+     "kind": "burst",
+     "count": 12,
+     "cone": 360,
+     "lobbed": false,
+     "state": 9,
+     "tell": {
+      "anim": "Attack2",
+      "frame": 47
+     },
+     "unknown": [
+      "speed_min",
+      "speed_max"
+     ]
+    },
+    {
+     "kind": "laser_aimed",
+     "count": 1,
+     "state": 8,
+     "when": "phase 2: one beam steered toward Isaac for about 60 updates",
+     "unknown": [
+      "warning"
+     ]
+    },
+    {
+     "kind": "laser_aimed",
+     "count": 2,
+     "warning": 10,
+     "state": 10,
+     "when": "phase 2: two fixed beams aimed at Isaac"
+    },
+    {
+     "kind": "ring",
+     "count": 4,
+     "speed": 5,
+     "fixed": true,
+     "state": "leap",
+     "cooldown": 30,
+     "chance": "50% per update when high in the arc",
+     "notes": "from body segment 4; diagonals 45/135/225/315"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "State 3 decide (1 update): after a leap 50% attack, otherwise leap again; after an attack always leap.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "State 4 leap: starts at PositionOffset.Y 6 and flies in a straight line toward TargetPosition on a height arc; solid (class 4) while PositionOffset.Y is under 16, class 0 and invisible underground.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Underground it keeps about 250 px from Isaac (accel (L - 250) x 0.003) and drifts toward the room centre.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "It resurfaces when V1.Y - L/20 exceeds 15 and L is over 100 px; TargetPosition = Isaac's position at that moment.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Leaps aim at Isaac's position when the previous phase ended (stored in TargetPosition), no lead, never re-aimed.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Attack1 (State 8): pops up where it is, solid from the first update and still; shot at StateFrame 46 (1.5 s); at StateFrame 105 TargetPosition = Isaac's position and back to State 3.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Body segment 4, while the head is in State 4 and high in the arc (PositionOffset.Y under -20), cooldown 30 and a 50% roll each update: fire mode 7, 4 diagonal shots at speed 5 (45, 135, 225, 315 degrees); about one burst per leap.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Leaps at 10 or 6 px/update (the notes do not say which applies when).",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Phase 1 Attack1: the same big high lob as Pin.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Attack2 (State 9): 12 shots with a zero target, probably scattered around itself; volley at StateFrame 47.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Phase-2 lasers: State 8 one beam steered toward Isaac for about 60 updates; State 10 two fixed beams aimed at Isaac, each after a 10-update warning line.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Revives once as phase 2.",
+     "src": "RE_ENEMIES Pin 0x47ac40",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "27.0": {
+   "name": "Host",
+   "move": {
+    "kind": "pinned",
+    "notes": "The Host does not move."
+   },
+   "attacks": [
+    {
+     "kind": "spread",
+     "count": 3,
+     "angle": 16,
+     "speed": 9.0,
+     "speed_sides": 8.1,
+     "range": 240,
+     "needs_line": true,
+     "cooldown": 50,
+     "tell": {
+      "anim": "Shoot",
+      "frame": 24
+     },
+     "state": 8,
+     "notes": "closed 50-56 updates minimum between attacks; aimed at Isaac's position, no lead"
+    }
+   ],
+   "body": {
+    "no_damage_states": [
+     3
+    ],
+    "damageable_frames": {
+     "state": 8,
+     "from": 9,
+     "to": 55
+    },
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Opens only when no hit delay is left, checked 1 update in 7, cooldown under 1 (set to 7 at each attack, counts down on the 1-in-7 checks: about 50-56 updates closed minimum), Isaac within 240 px, and a clear line (champion colour 8 skips the line check).",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "The Shoot animation is 61 frames (Open event 9, Shoot event 24, Close event 55); damageable from Open (frame 9) to Close (frame 55), about 46 updates (1.5 s), then back to State 3.",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Aim: Isaac's current position, no lead; base speed 7.0, VelocityMulti 1.07, times the x1.2 spread tail: real speed about 9.0, matching the recorded 8-9.",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "recording"
+    },
+    {
+     "cat": "body",
+     "text": "While closed (and in the attack before Open or after Close) every queued damage record is zeroed (records with flag 0x8000 keep theirs); no collision-class change, tears are used up.",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Each hit that lands on a closed Host adds round(damage)/2 to its open delay (capped at 10, each unit 7 updates, so up to 70 updates); hits under 1.5 damage add nothing.",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Flag 0x10 (probably NO_TARGET) is set while closed, so homing tears ignore it.",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Host fires fire mode 2: a triple at 0 and +/-16 degrees; centre about 9.0, sides about 8.1.",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "recording"
+    }
+   ]
+  },
+  "27.1": {
+   "name": "Red Host",
+   "move": {
+    "kind": "pinned",
+    "notes": "The Red Host does not move."
+   },
+   "attacks": [
+    {
+     "kind": "spread",
+     "count": 5,
+     "angle": 12,
+     "speed": 9.0,
+     "range": 240,
+     "needs_line": true,
+     "cooldown": 50,
+     "tell": {
+      "anim": "Shoot",
+      "frame": 24
+     },
+     "state": 8
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Opens only when no hit delay is left, checked 1 update in 7, cooldown under 1 (set to 7 at each attack, counts down on the 1-in-7 checks: about 50-56 updates closed minimum), Isaac within 240 px, and a clear line (champion colour 8 skips the line check).",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "The Shoot animation is 61 frames (Open event 9, Shoot event 24, Close event 55); damageable from Open (frame 9) to Close (frame 55), about 46 updates (1.5 s), then back to State 3.",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Aim: Isaac's current position, no lead; base speed 7.0, VelocityMulti 1.07, times the x1.2 spread tail: real speed about 9.0, matching the recorded 8-9.",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "recording"
+    },
+    {
+     "cat": "body",
+     "text": "Never armored: always damageable, never wipes damage, not slowed by hits.",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Red Host fires fire mode 5: five shots at 0, +/-12, +/-24 degrees, all about 9.0.",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "recording"
+    }
+   ]
+  },
+  "27.3": {
+   "name": "Hard Host",
+   "move": {
+    "kind": "pinned",
+    "notes": "Does not move."
+   },
+   "attacks": [
+    {
+     "kind": "slam",
+     "radius": 120,
+     "tell": {
+      "anim": "Shoot",
+      "frame": 54
+     },
+     "state": 8,
+     "notes": "pushes players within 120 px; no projectiles"
+    }
+   ],
+   "body": {
+    "no_damage_states": [
+     3
+    ],
+    "damageable_frames": {
+     "state": 8,
+     "from": 9,
+     "to": 55
+    },
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Opens only when no hit delay is left, checked 1 update in 7, cooldown under 1 (set to 7 at each attack, counts down on the 1-in-7 checks: about 50-56 updates closed minimum), Isaac within 240 px, and a clear line (champion colour 8 skips the line check).",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "The Shoot animation is 61 frames (Open event 9, Shoot event 24, Close event 55); damageable from Open (frame 9) to Close (frame 55), about 46 updates (1.5 s), then back to State 3.",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "While closed (and in the attack before Open or after Close) every queued damage record is zeroed (records with flag 0x8000 keep theirs); no collision-class change, tears are used up.",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Each hit that lands on a closed Host adds round(damage)/2 to its open delay (capped at 10, each unit 7 updates, so up to 70 updates); hits under 1.5 damage add nothing.",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Flag 0x10 (probably NO_TARGET) is set while closed, so homing tears ignore it.",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "No Shoot event, so no projectiles; its Shoot animation is 71 frames. On its Close event (frame 54) it slams: an effect aimed at Isaac, debris, and a push on players within 120 px.",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "The open line check uses mode 0 for the Hard Host.",
+     "src": "RE_ENEMIES Host 0x5179b0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "10.0": {
+   "name": "Frowning Gaper",
+   "move": {
+    "kind": "path_chase",
+    "speed": 4.0,
+    "phases": [
+     {
+      "state": null,
+      "kind": "path_chase",
+      "speed": 4.0,
+      "updates": null
+     },
+     {
+      "state": "angry",
+      "kind": "path_chase",
+      "speed": 4.8,
+      "updates": null
+     }
+    ],
+    "notes": "Speed factor 0.6, rising to 0.72 once its face overlay has played; top speed about 4.0 (4.8 angry) from 6.7 x factor."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Always chases: PathChase toward Isaac's position every update (straight within 70 px with a clear line, otherwise grid path); never stops; feared it flees with friction x0.8.",
+     "src": "RE_ENEMIES Gaper 0x50f730",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Speed factor 0.6, rising to 0.72 once its face overlay has played.",
+     "src": "RE_ENEMIES Gaper 0x50f730",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Derived top speed about 4.0 px/update, 4.8 when angry (6.7 x factor).",
+     "src": "RE_ENEMIES Gaper 0x50f730",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "No attacks for variant 10.x.",
+     "src": "RE_ENEMIES Gaper 0x50f730",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking.",
+     "src": "RE_ENEMIES Gaper 0x50f730",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "10.1": {
+   "name": "Gaper",
+   "move": {
+    "kind": "path_chase",
+    "speed": 3.3,
+    "notes": "Speed factor 0.498; derived top speed about 3.3."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Always chases Isaac's position by PathChase every update; speed factor 0.498, derived top speed about 3.3 px/update.",
+     "src": "RE_ENEMIES Gaper 0x50f730",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "No attacks.",
+     "src": "RE_ENEMIES Gaper 0x50f730",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking.",
+     "src": "RE_ENEMIES Gaper 0x50f730",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "10.2": {
+   "name": "Flaming Gaper",
+   "move": {
+    "kind": "path_chase",
+    "speed": 3.7,
+    "notes": "Speed factor 0.548; derived top speed about 3.7."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Always chases Isaac's position by PathChase every update; speed factor 0.548, derived top speed about 3.7 px/update.",
+     "src": "RE_ENEMIES Gaper 0x50f730",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "No attacks.",
+     "src": "RE_ENEMIES Gaper 0x50f730",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking.",
+     "src": "RE_ENEMIES Gaper 0x50f730",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "85.0": {
+   "name": "Spider",
+   "move": {
+    "kind": "dart",
+    "speed": 15,
+    "lead": 10,
+    "friction": 0.6,
+    "idle": 15,
+    "notes": "Dart accel 6.0, friction x0.6, steady about 15 (it stops within 14 px of a target 70-200 px away). Dart point = Isaac's position + 10 x velocity when he is within a random 100-200 px with a clear line; otherwise a random spot 70-110 px away. | 2026-11-26 card check: kind changed lead_chase -> dart (no re-aim mid-dart; the dart point is in TargetPosition while darting, zero while idle, seen in recordings). dart_speed/dart_friction are fitted, not read."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Waits until StateFrame is over 13, about 15 updates after each dart ends.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Dart at Isaac: if he is within a random 100-200 px (re-rolled each pick) with a clear line, the dart point is Isaac's position + 10 x his velocity (a 10-update lead); otherwise a random free spot 70-110 px away.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "The dart accelerates at 6.0 per update toward the point over friction x0.6 (up to about 15 px/update); it ends within 14 px of the point, or when slow (under 3) with its timer run out; no re-aim mid-dart.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "While darting, TargetPosition holds the dart point (e.g. 397,360); it is zero while idle. Recorded peak dart speed about 8.6 px/update on a short dart.",
+     "src": "recorder 2026-11-26",
+     "checked": "recording"
+    }
+   ]
+  },
+  "94.0": {
+   "name": "Big Spider",
+   "move": {
+    "kind": "dart",
+    "speed": 15,
+    "lead": 10,
+    "friction": 0.6,
+    "idle": 15,
+    "notes": "Dart accel 6.0, friction x0.6, steady about 15 (it stops within 14 px of a target 70-200 px away). Dart point = Isaac's position + 10 x velocity when he is within a random 100-200 px with a clear line; otherwise a random spot 70-110 px away. | 2026-11-26 card check: kind changed lead_chase -> dart (no re-aim mid-dart; the dart point is in TargetPosition while darting, zero while idle, seen in recordings). dart_speed/dart_friction are fitted, not read."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Waits until StateFrame is over 13, about 15 updates after each dart ends.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Dart at Isaac: if he is within a random 100-200 px (re-rolled each pick) with a clear line, the dart point is Isaac's position + 10 x his velocity (a 10-update lead); otherwise a random free spot 70-110 px away.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "The dart accelerates at 6.0 per update toward the point over friction x0.6 (up to about 15 px/update); it ends within 14 px of the point, or when slow (under 3) with its timer run out; no re-aim mid-dart.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Same movement as the Spider; splits into 85.0 spiders on death.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "While darting, TargetPosition holds the dart point (e.g. 397,360); it is zero while idle. Recorded peak dart speed about 8.6 px/update on a short dart.",
+     "src": "recorder 2026-11-26",
+     "checked": "recording"
+    }
+   ]
+  },
+  "215.0": {
+   "name": "Level 2 Spider",
+   "move": {
+    "kind": "lead_chase",
+    "speed": 15,
+    "lead": 10,
+    "friction": 0.6,
+    "idle": 15,
+    "notes": "Dart accel 6.0, friction x0.6, steady about 15 (it stops within 14 px of a target 70-200 px away). Dart point = Isaac's position + 10 x velocity when he is within a random 100-200 px with a clear line; otherwise a random spot 70-110 px away."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Waits until StateFrame is over 13, about 15 updates after each dart ends.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Dart at Isaac: if he is within a random 100-200 px (re-rolled each pick) with a clear line, the dart point is Isaac's position + 10 x his velocity (a 10-update lead); otherwise a random free spot 70-110 px away.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "The dart accelerates at 6.0 per update toward the point over friction x0.6 (up to about 15 px/update); it ends within 14 px of the point, or when slow (under 3) with its timer run out; no re-aim mid-dart.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Jumper: 1 in 3 picks becomes a jump (State 6) to the point instead of a dart.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "250.0": {
+   "name": "Ticking Spider",
+   "move": {
+    "kind": "lead_chase",
+    "speed": 15,
+    "lead": 10,
+    "friction": 0.6,
+    "idle": 15,
+    "notes": "Dart accel 6.0, friction x0.6, steady about 15 (it stops within 14 px of a target 70-200 px away). Dart point = Isaac's position + 10 x velocity when he is within a random 100-200 px with a clear line; otherwise a random spot 70-110 px away."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Waits until StateFrame is over 13, about 15 updates after each dart ends.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Dart at Isaac: if he is within a random 100-200 px (re-rolled each pick) with a clear line, the dart point is Isaac's position + 10 x his velocity (a 10-update lead); otherwise a random free spot 70-110 px away.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "The dart accelerates at 6.0 per update toward the point over friction x0.6 (up to about 15 px/update); it ends within 14 px of the point, or when slow (under 3) with its timer run out; no re-aim mid-dart.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Jumper: 1 in 3 picks becomes a jump (State 6) to the point instead of a dart.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "869.0": {
+   "name": "Migraine",
+   "move": {
+    "kind": "lead_chase",
+    "speed": 11.25,
+    "lead": 10,
+    "friction": 0.6,
+    "idle": 15,
+    "notes": "Dart accel 4.5 (type 869), friction x0.6: steady 11.25 derived. Otherwise as the Spider."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Waits until StateFrame is over 13, about 15 updates after each dart ends.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Dart accel is 4.5 instead of 6.0 (type 869); a jumper: 1 in 3 picks becomes a jump (State 6).",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Dart at Isaac: if he is within a random 100-200 px (re-rolled each pick) with a clear line, the dart point is Isaac's position + 10 x his velocity (a 10-update lead); otherwise a random free spot 70-110 px away.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "The dart accelerates at 6.0 per update toward the point over friction x0.6 (up to about 15 px/update); it ends within 14 px of the point, or when slow (under 3) with its timer run out; no re-aim mid-dart.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking.",
+     "src": "RE_ENEMIES Spider 0x530540",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "256.0": {
+   "name": "Dart Fly",
+   "move": {
+    "kind": "chase",
+    "speed": 8,
+    "friction": 0.95,
+    "flying": true,
+    "notes": "accel = 0.0225 x (13.5 x direction to Isaac's current position + a figure-8 wobble of strength 10), wobble phase +0.188 rad per update (33-update y cycle, 67-update x cycle); speed cap 8, friction x0.95."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Steering every update: accel 0.0225 x (13.5 x direction to Isaac's current position + wobble of strength 10); speed cap 8 px/update, friction x0.95.",
+     "src": "RE_ENEMIES C 0x5468e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "No lead, no line of sight, no pauses, no attack; its turn is slow, so a sharp sidestep beats it.",
+     "src": "RE_ENEMIES C 0x5468e0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "222.0": {
+   "name": "Ring Fly",
+   "move": {
+    "kind": "orbit",
+    "radius_min": 40,
+    "radius_max": 70,
+    "speed": 2,
+    "spin_deg": 5.4,
+    "flying": true,
+    "notes": "The group circles one centre (first Ring Fly leads) that moves toward Isaac at 2 px/update (no lead); radius breathes 40-70 px at 0.5 px/update; ring spins 5.4 degrees per update; flies reach their slot at 6 px/update; ignores rocks."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "A group circles one moving centre; the first Ring Fly is the leader. The centre moves toward Isaac at 2 px/update, no lead.",
+     "src": "RE_ENEMIES C 0x542340",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "The radius breathes 40-70 px at 0.5 px/update (about a 4 s cycle); the ring spins 5.4 degrees per update; flies fly to their slot at 6 px/update.",
+     "src": "RE_ENEMIES C 0x542340",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Ignores rocks (grid class 0).",
+     "src": "RE_ENEMIES C 0x542340",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "281.0": {
+   "name": "Swarm",
+   "move": {
+    "kind": "chase",
+    "speed": 5,
+    "flying": true,
+    "notes": "The centre moves toward Isaac at 5 px/update (no lead); each fly springs to it (0.03 x offset) with a random buzz up to 0.8, orbiting 5 degrees per update, friction x0.8; flies repel within about 50 px."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "The leader spawns 4 followers (5 in total) within 10 px; the centre moves toward Isaac at 5 px/update, no lead.",
+     "src": "RE_ENEMIES C 0x547600",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Each fly springs to the centre (0.03 x offset) with a random buzz up to 0.8, orbiting at 5 degrees per update, friction x0.8; they repel within about 50 px; a follower takes over when the leader dies.",
+     "src": "RE_ENEMIES C 0x547600",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "220.0": {
+   "name": "Squirt",
+   "move": {
+    "kind": "pinned",
+    "notes": "Idle until its slide dash (see attacks).",
+    "unknown": [
+     "idle_speed"
+    ]
+   },
+   "attacks": [
+    {
+     "kind": "charge",
+     "speed": 20,
+     "trigger": "1-in-5 roll every 5th update in idle, toward Isaac's position at the Slide event",
+     "tell": {
+      "anim": "Attack",
+      "event": "Slide"
+     },
+     "notes": "dash adds 20 / friction at the Slide event; unknown wind-up length",
+     "unknown": [
+      "wind_up"
+     ]
+    },
+    {
+     "kind": "spawn",
+     "what": "217.0",
+     "count": 2,
+     "state": "death"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Idle (State 3): a 1-in-5 roll on every 5th update starts the attack, about 25 updates (0.8 s) between attacks on average; no distance or line check.",
+     "src": "RE_ENEMIES C 0x53bae0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Wind-up (State 8): at the animation's Slide event it adds 20 / friction toward Isaac's current position (no lead), about 20 px/update at the start.",
+     "src": "RE_ENEMIES C 0x53bae0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "The slide lasts at least 10 updates with a small forward push, then it brakes; back to idle when speed is under 1.",
+     "src": "RE_ENEMIES C 0x53bae0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "On death spawns 2 Dips (217.0).",
+     "src": "RE_ENEMIES C 0x53bae0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "220.1": {
+   "name": "Squirt (variant 1)",
+   "move": {
+    "kind": "pinned",
+    "notes": "Idle until its slide dash (see attacks).",
+    "unknown": [
+     "idle_speed"
+    ]
+   },
+   "attacks": [
+    {
+     "kind": "charge",
+     "speed": 20,
+     "trigger": "1-in-5 roll every 5th update in idle, toward Isaac's position at the Slide event",
+     "tell": {
+      "anim": "Attack",
+      "event": "Slide"
+     }
+    },
+    {
+     "kind": "spawn",
+     "what": "15.1",
+     "count": 2,
+     "state": "death"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": {
+     "variant": "black",
+     "effect": "1000.26",
+     "every": 3,
+     "while": "sliding"
+    },
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Idle (State 3): a 1-in-5 roll on every 5th update starts the attack, about 25 updates (0.8 s) between attacks on average; no distance or line check.",
+     "src": "RE_ENEMIES C 0x53bae0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Wind-up (State 8): at the animation's Slide event it adds 20 / friction toward Isaac's current position (no lead), about 20 px/update at the start.",
+     "src": "RE_ENEMIES C 0x53bae0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "The slide lasts at least 10 updates with a small forward push, then it brakes; back to idle when speed is under 1.",
+     "src": "RE_ENEMIES C 0x53bae0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "Variant 1 leaves creep (1000.26) every 3rd update while sliding.",
+     "src": "RE_ENEMIES C 0x53bae0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "On death spawns 2 Clots (15.1).",
+     "src": "RE_ENEMIES C 0x53bae0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "871.0": {
+   "name": "Splurt",
+   "move": {
+    "kind": "pinned",
+    "notes": "Same AI function as the Squirt (type 871); idle until its slide dash.",
+    "unknown": [
+     "idle_speed"
+    ]
+   },
+   "attacks": [
+    {
+     "kind": "charge",
+     "speed": 20,
+     "trigger": "1-in-5 roll every 5th update in idle, toward Isaac's position at the Slide event"
+    },
+    {
+     "kind": "spawn",
+     "what": "870.0",
+     "count": 2,
+     "state": "death"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Idle (State 3): a 1-in-5 roll on every 5th update starts the attack, about 25 updates (0.8 s) between attacks on average; no distance or line check.",
+     "src": "RE_ENEMIES C 0x53bae0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Wind-up (State 8): at the animation's Slide event it adds 20 / friction toward Isaac's current position (no lead), about 20 px/update at the start.",
+     "src": "RE_ENEMIES C 0x53bae0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "The slide lasts at least 10 updates with a small forward push, then it brakes; back to idle when speed is under 1.",
+     "src": "RE_ENEMIES C 0x53bae0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "On death spawns 2 of type 870 (Drip).",
+     "src": "RE_ENEMIES C 0x53bae0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "24.0": {
+   "name": "Globin",
+   "move": {
+    "kind": "path_chase",
+    "speed": 5.0,
+    "notes": "Speed factor 0.75; derived top speed about 5.0.",
+    "phases": [
+     {
+      "state": 4,
+      "kind": "path_chase",
+      "speed": 5.0
+     },
+     {
+      "state": 3,
+      "kind": "pinned",
+      "speed": 0
+     }
+    ]
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Chases Isaac's current position with PathChase, no lead.",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Killed while walking (State 4): death is cancelled, health set to 10, ReGen plays, State 3 (a pile); when ReGen ends it walks again. Killed as a pile (State 3) it dies for good; the pile is fully damageable.",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Speed factor 0.75, derived top speed about 5.0 px/update.",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "recording"
+    }
+   ]
+  },
+  "24.1": {
+   "name": "Gazing Globin",
+   "move": {
+    "kind": "path_chase",
+    "speed": 7.3,
+    "notes": "Speed factor 1.1; derived top speed about 7.3. Its pile slides away from Isaac at 0.5 per update while he is within 200 px.",
+    "phases": [
+     {
+      "state": 4,
+      "kind": "path_chase",
+      "speed": 7.3
+     },
+     {
+      "state": 3,
+      "kind": "wander",
+      "speed": 0.5
+     }
+    ]
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Chases Isaac's current position with PathChase, no lead.",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Killed while walking (State 4): death is cancelled, health set to 10, ReGen plays, State 3 (a pile); when ReGen ends it walks again. Killed as a pile (State 3) it dies for good; the pile is fully damageable.",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Speed factor 1.1, derived top speed about 7.3 px/update.",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Its pile (State 3) slides away from Isaac at 0.5 per update while he is within 200 px.",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "24.2": {
+   "name": "Dank Globin",
+   "move": {
+    "kind": "path_chase",
+    "speed": 5.0,
+    "notes": "Speed factor 0.75 as the Globin; derived top speed about 5.0.",
+    "phases": [
+     {
+      "state": 4,
+      "kind": "path_chase",
+      "speed": 5.0
+     },
+     {
+      "state": 3,
+      "kind": "pinned",
+      "speed": 0
+     }
+    ]
+   },
+   "attacks": [
+    {
+     "kind": "spawn",
+     "what": "85.0",
+     "when": "each revive while the room has under 7 enemies"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": {
+     "variant": "black",
+     "effect": "1000.26",
+     "when": "every fall"
+    },
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Chases Isaac's current position with PathChase, no lead.",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Killed while walking (State 4): death is cancelled, health set to 10, ReGen plays, State 3 (a pile); when ReGen ends it walks again. Killed as a pile (State 3) it dies for good; the pile is fully damageable.",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "Drops black creep (1000.26) on every fall.",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Spawns a Spider (85.0) on each revive while the room has under 7 enemies.",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "24.3": {
+   "name": "Cursed Globin",
+   "move": {
+    "kind": "path_chase",
+    "speed": 5.0,
+    "notes": "Speed factor 0.75 as the Globin; derived top speed about 5.0.",
+    "phases": [
+     {
+      "state": 4,
+      "kind": "path_chase",
+      "speed": 5.0
+     },
+     {
+      "state": 3,
+      "kind": "pinned",
+      "speed": 0
+     }
+    ]
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Chases Isaac's current position with PathChase, no lead.",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Killed while walking (State 4): death is cancelled, health set to 10, ReGen plays, State 3 (a pile); when ReGen ends it walks again. Killed as a pile (State 3) it dies for good; the pile is fully damageable.",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "May split on death; the chance falls with each generation (subtype). The halves are briefly invulnerable (isInvicible, I1 countdown).",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "278.0": {
+   "name": "Black Globin",
+   "move": {
+    "kind": "path_chase",
+    "notes": "Speed factor 0.6; the notes do not give a derived px/update.",
+    "unknown": [
+     "speed"
+    ]
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Chases Isaac's current position with PathChase, no lead.",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Killed while walking (State 4): death is cancelled, health set to 10, ReGen plays, State 3 (a pile); when ReGen ends it walks again. Killed as a pile (State 3) it dies for good; the pile is fully damageable.",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Throws a spider at the point 75% of the way to Isaac every 5 HP lost.",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Dies into a head (279) and a body (280).",
+     "src": "RE_ENEMIES C 0x514cd0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "100.0": {
+   "name": "Widow",
+   "move": {
+    "kind": "hop",
+    "speed": 7,
+    "friction": 0.8,
+    "notes": "Jump launches with velocity 7 toward Isaac's position at take-off; airborne is class 0. Jumps on a 1-in-3 roll when Isaac is more than 100 px away.",
+    "unknown": [
+     "air"
+    ]
+   },
+   "attacks": [
+    {
+     "kind": "spawn",
+     "what": "30.2",
+     "state": 8,
+     "when": "fewer than 3 sacks exist; 30 px below herself"
+    },
+    {
+     "kind": "spawn",
+     "what": "85.0",
+     "count": "1 or 2",
+     "state": 9
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "contact_while_airborne": false
+   },
+   "terrain": {
+    "creep": {
+     "variant": "slow",
+     "effect": "1000.25",
+     "shape": "ring spreading outward 3 px per step",
+     "state": 8
+    },
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "body",
+     "text": "Every update: collision class 2, grid class 5; friction x0.8.",
+     "src": "RE_ENEMIES C 0x473b20",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Idle (State 4): a 1-in-3 roll with Isaac more than 100 px away jumps; otherwise the Widow (variant 0) jumps if the room has more than 5 enemies or she just summoned (I1 1 or more); failing those she picks idle / State 8 / State 9.",
+     "src": "RE_ENEMIES C 0x473b20",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Jump (State 6): velocity 7 x direction to Isaac's current position, fixed when the jump starts (no lead).",
+     "src": "RE_ENEMIES C 0x473b20",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Airborne (between its two animation events): collision class 0, so no contact either way; the landing crushes other NPCs (100 damage), not Isaac.",
+     "src": "RE_ENEMIES C 0x473b20",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "State 8 summons a Sack (30.2; 30.0 or 94.0 Big Spider by subtype) 30 px below herself if fewer than 3 exist, then spreads a creep ring outward, 3 px per step (1000.25, slowing; 1000.26 for subtype 1).",
+     "src": "RE_ENEMIES C 0x473b20",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "State 9: throws 1-2 spiders near herself; a Widow subtype sends Attack Flies, or a 6-shot ring at speed 8 (mode 9).",
+     "src": "RE_ENEMIES C 0x473b20",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "100.1": {
+   "name": "The Wretched",
+   "move": {
+    "kind": "hop",
+    "speed": 7,
+    "friction": 0.8,
+    "notes": "Jump launches with velocity 7 toward Isaac's position at take-off; airborne is class 0. Jumps on a 1-in-3 roll when Isaac is more than 100 px away.",
+    "unknown": [
+     "air"
+    ]
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 8,
+     "speed": 10,
+     "fixed": true,
+     "state": 8
+    },
+    {
+     "kind": "spawn",
+     "what": "29.1",
+     "state": 9,
+     "when": "sometimes, sent at Isaac"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "contact_while_airborne": false
+   },
+   "terrain": {
+    "creep": {
+     "variant": "slow",
+     "effect": "1000.25",
+     "shape": "ring spreading outward 3 px per step",
+     "state": 8
+    },
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "body",
+     "text": "Every update: collision class 2, grid class 5; friction x0.8.",
+     "src": "RE_ENEMIES C 0x473b20",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Idle (State 4): a 1-in-3 roll with Isaac more than 100 px away jumps; otherwise the Widow (variant 0) jumps if the room has more than 5 enemies or she just summoned (I1 1 or more); failing those she picks idle / State 8 / State 9.",
+     "src": "RE_ENEMIES C 0x473b20",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Jump (State 6): velocity 7 x direction to Isaac's current position, fixed when the jump starts (no lead).",
+     "src": "RE_ENEMIES C 0x473b20",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Airborne (between its two animation events): collision class 0, so no contact either way; the landing crushes other NPCs (100 damage), not Isaac.",
+     "src": "RE_ENEMIES C 0x473b20",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "State 8: an 8-way fixed ring at speed 10 (fire mode 8), then a creep ring outward, 3 px per step.",
+     "src": "RE_ENEMIES C 0x473b20",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "State 9: sometimes sends a Trite at Isaac.",
+     "src": "RE_ENEMIES C 0x473b20",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "235.0": {
+   "name": "Gaping Maw",
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": true,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": {
+     "radius": 300,
+     "strength": 0.6,
+     "line_of_sight": false,
+     "strength_tears": 0.9
+    }
+   },
+   "facts": [
+    {
+     "cat": "terrain",
+     "text": "Pulls every live player, tear and enemy projectile toward it: strength = k x (300 - distance) / 300 clamped 0..k, k = 0.6 for Isaac (0.9 for tears and shots): 0.6 at contact, 0.3 at 150 px, none beyond 300 px.",
+     "src": "RE_ENEMIES E1 0x527530",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "No line-of-sight check: it pulls through rocks; added as velocity += speedMultiplier x strength x direction / friction.",
+     "src": "RE_ENEMIES E1 0x527530",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Pinned to its tile and cannot be damaged (isInvicible set at init, never cleared).",
+     "src": "RE_ENEMIES E1 0x527530",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "It never shoots (the shooting code in the function belongs to type 42).",
+     "src": "RE_ENEMIES E1 0x527530",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Always on while the room is not cleared.",
+     "src": "RE_ENEMIES E1 0x527530",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "236.0": {
+   "name": "Broken Gaping Maw",
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": true,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": {
+     "radius": 300,
+     "strength": 0.6,
+     "line_of_sight": false,
+     "strength_tears": 0.9,
+     "cycle": [
+      150,
+      90
+     ]
+    }
+   },
+   "facts": [
+    {
+     "cat": "terrain",
+     "text": "Pulls every live player, tear and enemy projectile toward it: strength = k x (300 - distance) / 300 clamped 0..k, k = 0.6 for Isaac (0.9 for tears and shots): 0.6 at contact, 0.3 at 150 px, none beyond 300 px.",
+     "src": "RE_ENEMIES E1 0x527530",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "No line-of-sight check: it pulls through rocks; added as velocity += speedMultiplier x strength x direction / friction.",
+     "src": "RE_ENEMIES E1 0x527530",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Pinned to its tile and cannot be damaged (isInvicible set at init, never cleared).",
+     "src": "RE_ENEMIES E1 0x527530",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "It never shoots (the shooting code in the function belongs to type 42).",
+     "src": "RE_ENEMIES E1 0x527530",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Cycle of StateFrame % 240: on for about 150 updates (5 s), off for 90 (3 s); pulls only while its Sucking overlay plays.",
+     "src": "RE_ENEMIES E1 0x527530",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "36.0": {
+   "name": "Gurdy",
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [
+    {
+     "kind": "spread",
+     "count": 5,
+     "angle": 12,
+     "speed": 12,
+     "needs_line": false,
+     "when": "3 fixed directions (down, left, right) chosen by Isaac's side; not aimed"
+    },
+    {
+     "kind": "spawn",
+     "what": "14.0 / 18.0 / boils",
+     "when": "rand % 3 == 0, or Isaac's y 200 or less, or more than 7 enemies; only under 14 enemies"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Never moves; at room start it places Isaac at (Gurdy's x, y = 400).",
+     "src": "RE_ENEMIES E1 0x480bf0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "After each idle animation: summon if rand % 3 == 0, or Isaac's y is 200 or less, or there are more than 7 enemies; it summons only while fewer than 14 enemies exist (a Pooter, 2 Attack Flies, or 2 Boils at fixed spots).",
+     "src": "RE_ENEMIES E1 0x480bf0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Otherwise a five-spread (mode 5), not aimed: down when Isaac is below and more vertical than horizontal, else left or right toward his side.",
+     "src": "RE_ENEMIES E1 0x480bf0",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "Spray speed about 12 px/update.",
+     "src": "RE_ENEMIES E1 0x480bf0",
+     "checked": "recording"
+    }
+   ]
+  },
+  "99.0": {
+   "name": "Gurdy Jr.",
+   "move": {
+    "kind": "pinned",
+    "notes": "Stationary except for its charge."
+   },
+   "attacks": [
+    {
+     "kind": "charge",
+     "speed": 20,
+     "trigger": "3rd return to State 3, or every idle below 100 HP; aimed at Isaac's position at the start",
+     "state": 8
+    },
+    {
+     "kind": "ring",
+     "count": 8,
+     "speed": 10,
+     "speed_alt": 12,
+     "fixed": true,
+     "state": 9
+    },
+    {
+     "kind": "spawn",
+     "what": "14.0",
+     "state": 10
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Every return to State 3 adds 1 to a counter; it charges on the 3rd return, or always once its HP is below 100; otherwise it picks at random from a 36-update pause (State 6), an 8-way ring at speed 10 (State 9; 12 in one mode), or a Pooter (State 10).",
+     "src": "RE_ENEMIES E1 0x523bd0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Charge (State 8): aimed at Isaac's current position when it starts (no lead), adding 4 per update over friction 0.8 (about 20 px/update at most, during the launch animation), then slides with almost no friction until speed under 2 or 10 slide loops.",
+     "src": "RE_ENEMIES E1 0x523bd0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "67.0": {
+   "name": "The Duke of Flies",
+   "move": {
+    "kind": "bounce",
+    "speed": 2,
+    "notes": "Speed about 2 per axis (subtypes 2.5 or 5.5); diagonal drift."
+   },
+   "attacks": [
+    {
+     "kind": "spawn",
+     "what": "18.0",
+     "count": 3,
+     "state": 13,
+     "tell": {
+      "anim": "Attack",
+      "frame": 20
+     }
+    },
+    {
+     "kind": "spawn",
+     "what": "18.0",
+     "count": 1,
+     "state": 14,
+     "tell": {
+      "anim": "Attack",
+      "frame": 18
+     },
+     "when": "fewer than 5 flies"
+    },
+    {
+     "kind": "burst",
+     "state": 8,
+     "tell": {
+      "anim": "Attack",
+      "frame": 17
+     },
+     "notes": "attached flies blasted outward at speed 18"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Does not chase Isaac: drifts diagonally and bounces off walls (sign kept until a wall), clamped 40 px inside the room.",
+     "src": "RE_ENEMIES E1 0x472210",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "States last 40 updates and it keeps moving; chosen randomly per update (1/40 release, 1/70 big spawn), gated by enemy counts.",
+     "src": "RE_ENEMIES E1 0x472210",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "State 13 (frame 20): releases 3 Attack Flies (18.0) parented to the Duke; no cap unless a game flag is set (then 6 minus existing).",
+     "src": "RE_ENEMIES E1 0x472210",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "State 14 (frame 18): one bigger fly (18 / 80 / 61 by subtype) if there are fewer than 5.",
+     "src": "RE_ENEMIES E1 0x472210",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "State 8 (frame 17): its attached flies are blasted outward at 18 and detached; attached flies orbit about 65 px out, then chase Isaac.",
+     "src": "RE_ENEMIES E1 0x472210",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Speed per axis about 2 (subtypes 2.5 or 5.5).",
+     "src": "RE_ENEMIES E1 0x472210",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "67.1": {
+   "name": "The Husk",
+   "move": {
+    "kind": "bounce",
+    "speed": 4,
+    "notes": "Speed about 4 per axis (subtypes 2.5 or 5.5)."
+   },
+   "attacks": [
+    {
+     "kind": "spawn",
+     "what": "18.0 x2 plus a spider",
+     "state": 13,
+     "tell": {
+      "anim": "Attack",
+      "frame": 20
+     }
+    },
+    {
+     "kind": "burst",
+     "count": 10,
+     "state": 14,
+     "tell": {
+      "anim": "Attack",
+      "frame": 18
+     },
+     "when": "aimed at Isaac",
+     "unknown": [
+      "speed_min",
+      "speed_max",
+      "cone"
+     ]
+    },
+    {
+     "kind": "ring",
+     "count": 8,
+     "speed": 8,
+     "fixed": false,
+     "state": 8,
+     "tell": {
+      "anim": "Attack",
+      "frame": 17
+     }
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Does not chase Isaac: drifts diagonally and bounces off walls (sign kept until a wall), clamped 40 px inside the room.",
+     "src": "RE_ENEMIES E1 0x472210",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "States last 40 updates and it keeps moving; chosen randomly per update (1/40 release, 1/70 big spawn), gated by enemy counts.",
+     "src": "RE_ENEMIES E1 0x472210",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Speed per axis about 4.",
+     "src": "RE_ENEMIES E1 0x472210",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "State 13 release: swaps the 3rd fly for a spider thrown at Isaac.",
+     "src": "RE_ENEMIES E1 0x472210",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "State 14 (frame 18): fires 10 boss shots aimed at Isaac instead of the big fly.",
+     "src": "RE_ENEMIES E1 0x472210",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "State 8 (frame 17): flies blasted outward at 18, plus a ring (mode 9, vector (8, 8)).",
+     "src": "RE_ENEMIES E1 0x472210",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "49.0": {
+   "name": "Gluttony",
+   "move": {
+    "kind": "axis_walk",
+    "speed": 3.5,
+    "friction": 0.8,
+    "notes": "Random axis walk at 0.7 with friction x0.8 (steady 3.5 derived); decides only every 3rd update; stands still during both attacks."
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 8,
+     "speed": 8,
+     "speed_alt": 12,
+     "fixed": true,
+     "state": 8,
+     "tell": {
+      "anim": "Attack",
+      "event": "Shoot"
+     },
+     "chance": "1-in-7 per decision",
+     "when": "Isaac closer than a random 70-200 px"
+    },
+    {
+     "kind": "laser_axis",
+     "trigger_band": 20,
+     "range": 400,
+     "state": 9,
+     "tell": {
+      "anim": "Attack01",
+      "event": "Shoot"
+     },
+     "unknown": [
+      "warning"
+     ]
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Walk: random axis walk at 0.7, friction x0.8; no chase.",
+     "src": "RE_ENEMIES E3 0x532ed0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "It decides only every 3rd update.",
+     "src": "RE_ENEMIES E3 0x532ed0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Fat attack (State 8): trigger is a 1-in-7 roll per decision, then Isaac closer than a random 70-200 px.",
+     "src": "RE_ENEMIES E3 0x532ed0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Fat attack fires at the Shoot event an 8-way ring (mode 8) at 8 px/update (12 when an unknown helper 0x6dfc20 returns 1 or more).",
+     "src": "RE_ENEMIES E3 0x532ed0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Laser (State 9) is used when the fat attack did not go (1/7 roll hit but Isaac too far, or a 1/10 roll) and Isaac is within 20 px of its row or column, closer than 400 px, Gluttony on screen, no status flag.",
+     "src": "RE_ENEMIES E3 0x532ed0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Laser tell is the Attack01 Up/Down/Horiz animation; the beam is fixed at the Shoot frame along the axis toward Isaac (very likely cardinal, not aimed).",
+     "src": "RE_ENEMIES E3 0x532ed0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "It stands still during both attacks until the animation ends: that is the opening.",
+     "src": "RE_ENEMIES E3 0x532ed0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "Stamps 900 into the room grid under itself (likely 'blocked' for pathing).",
+     "src": "RE_ENEMIES E3 0x532ed0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x532ed0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "49.1": {
+   "name": "Super Gluttony",
+   "move": {
+    "kind": "axis_walk",
+    "speed": 3.5,
+    "friction": 0.8,
+    "notes": "Same walk as Gluttony (0.7, friction x0.8; steady 3.5 derived); stands still during both attacks."
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 8,
+     "speed": 8,
+     "speed_alt": 12,
+     "fixed": true,
+     "state": 8,
+     "tell": {
+      "anim": "Attack",
+      "event": "Shoot"
+     }
+    },
+    {
+     "kind": "burst",
+     "count": 5,
+     "speed_min": 3.5,
+     "speed_max": 10.5,
+     "cone": 60,
+     "lobbed": false,
+     "state": 8,
+     "when": "aimed at Isaac's current position"
+    },
+    {
+     "kind": "laser_axis",
+     "trigger_band": 20,
+     "range": 400,
+     "state": 9,
+     "tell": {
+      "anim": "Attack02",
+      "event": "Shoot"
+     },
+     "beams": 2,
+     "unknown": [
+      "warning"
+     ]
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Walk as Gluttony: random axis walk at 0.7, friction x0.8.",
+     "src": "RE_ENEMIES E3 0x532ed0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Fat attack as Gluttony, and it also fires 5 boss shots at Isaac's current position (within +/-30 degrees, speed 3.5-10.5).",
+     "src": "RE_ENEMIES E3 0x532ed0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Laser uses the Attack02 animation and fires two beams, the second the mirror image (opposite side).",
+     "src": "RE_ENEMIES E3 0x532ed0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x532ed0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "47.0": {
+   "name": "Lust",
+   "move": {
+    "kind": "lead_chase",
+    "speed": 13,
+    "lead": 10,
+    "friction": 0.95,
+    "phases": [
+     {
+      "state": "line_clear",
+      "kind": "lead_chase",
+      "speed": 13,
+      "updates": null
+     },
+     {
+      "state": "line_blocked",
+      "kind": "path_chase",
+      "speed": 6.6,
+      "updates": null
+     }
+    ],
+    "notes": "Clear line: pushes 0.65 toward Isaac's position + 10 x his velocity, friction x0.95 (steady about 13). Blocked line: path chase at 0.996, about 6.6, no lead."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "No states, pure chase. Line clear: pushes 0.65 toward Isaac's position + 10 x his velocity (a 10-update lead), friction x0.95: steady about 13 px/update, the fastest sin.",
+     "src": "RE_ENEMIES E3 0x478cf0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Line blocked: path chase toward Isaac's current position at 0.996 (about 6.6 px/update), no lead.",
+     "src": "RE_ENEMIES E3 0x478cf0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "No attack; contact damage only; it never stops.",
+     "src": "RE_ENEMIES E3 0x478cf0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x478cf0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "47.1": {
+   "name": "Super Lust",
+   "move": {
+    "kind": "lead_chase",
+    "speed": 13,
+    "lead": 10,
+    "friction": 0.95,
+    "phases": [
+     {
+      "state": "line_clear",
+      "kind": "lead_chase",
+      "speed": 13,
+      "updates": null
+     },
+     {
+      "state": "line_blocked",
+      "kind": "path_chase",
+      "speed": 6.6,
+      "updates": null
+     }
+    ],
+    "notes": "As Lust."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": {
+     "variant": "red",
+     "effect": "1000.22",
+     "every": 7,
+     "notes": "not named by the readers; check in a recording"
+    },
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Same chase as Lust: lead 10 updates and about 13 px/update with a clear line, about 6.6 with a blocked line.",
+     "src": "RE_ENEMIES E3 0x478cf0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "Spawns effect 1000.22 (red creep, as the Gurgling trail) every 7th update; the readers did not name the effect, check in a recording.",
+     "src": "RE_ENEMIES E3 0x478cf0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x478cf0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "48.0": {
+   "name": "Wrath",
+   "move": {
+    "kind": "axis_walk",
+    "speed": 6.67,
+    "friction": 0.85,
+    "notes": "Random axis walk at 1.0 with friction x0.85 (steady about 6.7 derived). After a bomb it walks only within 130 px of it, otherwise stands still."
+   },
+   "attacks": [
+    {
+     "kind": "bomb",
+     "fuse": 45,
+     "thrown_speed": 10,
+     "state": 9,
+     "chance": "1/max(60, distance) per update for a plain bomb",
+     "when": "aimed throw: prediction within 20 px of its row/column, under 200 px, clear line, 50/50 with a charge",
+     "unknown": [
+      "blast"
+     ]
+    },
+    {
+     "kind": "charge",
+     "speed": 4.7,
+     "trigger": "same aimed-attack test as the thrown bomb, 50/50",
+     "friction": 0.68
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Walk: random axis walk at 1.0, friction x0.85.",
+     "src": "RE_ENEMIES E3 0x479000",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "After a bomb it walks randomly only within 130 px of its bomb, otherwise stands still; the 'Evade own bomb' line is only a debug log.",
+     "src": "RE_ENEMIES E3 0x479000",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Plain bomb: a 1 / max(60, distance) chance per update (about 1/60 with Isaac within 60 px); it plays Attack and drops a bomb in place.",
+     "src": "RE_ENEMIES E3 0x479000",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Aimed attack: Isaac predicted at his position + random 0-16 x his velocity; must be within 20 px of Wrath's row or column, closer than 200 px, clear line; then 50/50 a thrown bomb (10 px/update along that axis) or a charge.",
+     "src": "RE_ENEMIES E3 0x479000",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "The bomb spawns at the 6th update of State 9 on Wrath's tile centre; variant 0 (normal) or 4 (Super: mega troll bomb); fuse 45 updates for variant 0, 45-74 for variant 4.",
+     "src": "RE_ENEMIES E3 0x479000",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Charge: push 1.5, friction x0.68, steady speed about 4.7 px/update; pulled 10% per update toward its lane's centre; ends only on a wall or rock hit.",
+     "src": "RE_ENEMIES E3 0x479000",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Rest: 61 updates (about 2 s) after each bomb before the next attack; none after a charge.",
+     "src": "RE_ENEMIES E3 0x479000",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x479000",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "48.1": {
+   "name": "Super Wrath",
+   "move": {
+    "kind": "axis_walk",
+    "speed": 6.67,
+    "friction": 0.85,
+    "notes": "As Wrath; random axis walk at 1.0 with friction x0.85 (steady about 6.7 derived)."
+   },
+   "attacks": [
+    {
+     "kind": "bomb",
+     "fuse": 45,
+     "fuse_max": 74,
+     "thrown_speed": 10,
+     "state": 9,
+     "variant": 4,
+     "unknown": [
+      "blast"
+     ]
+    },
+    {
+     "kind": "charge",
+     "speed": 4.7,
+     "trigger": "same aimed-attack test, 50/50",
+     "friction": 0.68
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Same walk, bomb-radius rule, charge (about 4.7 px/update) and 61-update rest after a bomb as Wrath.",
+     "src": "RE_ENEMIES E3 0x479000",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Its bomb is variant 4 (mega troll bomb), fuse 45-74 updates.",
+     "src": "RE_ENEMIES E3 0x479000",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x479000",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "50.0": {
+   "name": "Greed",
+   "move": {
+    "kind": "axis_walk",
+    "speed": 4.0,
+    "friction": 0.75,
+    "notes": "Random axis walk at 1.0 with friction x0.75 (steady 4.0 derived); stands still while shooting or summoning."
+   },
+   "attacks": [
+    {
+     "kind": "spread",
+     "count": 3,
+     "angle": 16,
+     "speed": 12,
+     "needs_line": false,
+     "state": "shoot",
+     "tell": {
+      "anim": "Attack",
+      "frame": 5
+     },
+     "chance": "1/50 per update to attack, then 2/3 shoot (or when the room has 3 or more enemies)"
+    },
+    {
+     "kind": "spawn",
+     "what": "29.0",
+     "count": 2,
+     "state": "summon",
+     "tell": {
+      "anim": "Attack",
+      "frame": 5
+     },
+     "when": "room has fewer than 3 enemies"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Walk: random axis walk at 1.0, friction x0.75; stands still while shooting or summoning.",
+     "src": "RE_ENEMIES E3 0x479910",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Each update a 1-in-50 chance to attack; then a 1-in-3 roll leads to a summon if the room has fewer than 3 enemies, otherwise a shot.",
+     "src": "RE_ENEMIES E3 0x479910",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Shot: aim locked at stateFrame 1; fires at stateFrame 5 a mode-2 triple, about 12 px/update after the x1.2; ends at stateFrame over 24.",
+     "src": "RE_ENEMIES E3 0x479910",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Summon: at stateFrame 5, two Hoppers (type 29) near Greed +/-50 px; ends at stateFrame over 26 (they are NPC types, not coins).",
+     "src": "RE_ENEMIES E3 0x479910",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "A promo-only gun (flag and room check): walks at 1.5, extra 1/20 shot chance, fires at stateFrame 17 at double speed. Not normal play.",
+     "src": "RE_ENEMIES E3 0x479910",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x479910",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "50.1": {
+   "name": "Super Greed",
+   "move": {
+    "kind": "axis_walk",
+    "speed": 4.0,
+    "friction": 0.75,
+    "notes": "As Greed; random axis walk at 1.0, friction x0.75 (steady 4.0 derived)."
+   },
+   "attacks": [
+    {
+     "kind": "spread",
+     "count": 4,
+     "speed": 12,
+     "needs_line": false,
+     "state": "shoot",
+     "tell": {
+      "anim": "Attack",
+      "frame": 5
+     },
+     "unknown": [
+      "angle"
+     ]
+    },
+    {
+     "kind": "spawn",
+     "what": "86.0",
+     "count": 2,
+     "state": "summon",
+     "tell": {
+      "anim": "Attack",
+      "frame": 5
+     },
+     "when": "room has fewer than 3 enemies"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Same walk and timing as Greed.",
+     "src": "RE_ENEMIES E3 0x479910",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Shot is mode 4 (four shots) at stateFrame 5, about 12 px/update.",
+     "src": "RE_ENEMIES E3 0x479910",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Summon: two type-86 enemies near Greed +/-50 px at stateFrame 5.",
+     "src": "RE_ENEMIES E3 0x479910",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x479910",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "51.0": {
+   "name": "Envy",
+   "move": {
+    "kind": "bounce",
+    "push_k": 0.25,
+    "friction": 0.9,
+    "unknown": [
+     "speed"
+    ],
+    "notes": "Push k = 0.25 x an unseen constant; steady speed not given in the notes."
+   },
+   "attacks": [
+    {
+     "kind": "spawn",
+     "what": "51.10",
+     "count": 2,
+     "state": "death",
+     "notes": "fly apart at 4 px/update, +/-10 px along a random angle; Super 51.1 always adds a 3rd, 51.11 adds one 50% of the time, 51.21 never"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "No chase: a constant diagonal push whose signs follow its current velocity, so it drifts diagonally and bounces off walls; push size k = 0.25 times an unseen constant; friction x0.9; starts at a random angle.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "When feared it pushes away from Isaac: full at 70 px or less, none at 120 px or more.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "No attack; contact damage only.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Death split: 2 children (variant + 10) at +/-10 px along a random angle, flying apart at 4 px/update. Normal Envy goes 1 to 2 to 4 to 8.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "A wall appears at y = 320 in one room kind only (+0x1bb0 == 55).",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "51.1": {
+   "name": "Super Envy",
+   "move": {
+    "kind": "bounce",
+    "push_k": 0.25,
+    "friction": 0.9,
+    "unknown": [
+     "speed"
+    ],
+    "notes": "Push k = 0.25 x an unseen constant; steady speed not given in the notes."
+   },
+   "attacks": [
+    {
+     "kind": "spawn",
+     "what": "51.11",
+     "count": 2,
+     "state": "death",
+     "notes": "fly apart at 4 px/update, +/-10 px along a random angle; Super 51.1 always adds a 3rd, 51.11 adds one 50% of the time, 51.21 never"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "No chase: a constant diagonal push whose signs follow its current velocity, so it drifts diagonally and bounces off walls; push size k = 0.25 times an unseen constant; friction x0.9; starts at a random angle.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "When feared it pushes away from Isaac: full at 70 px or less, none at 120 px or more.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "No attack; contact damage only.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Death split: 2 children (variant + 10) at +/-10 px along a random angle, flying apart at 4 px/update. Super always adds a 3rd child (perpendicular).",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "51.10": {
+   "name": "Envy (10s)",
+   "move": {
+    "kind": "bounce",
+    "push_k": 0.35,
+    "friction": 0.9,
+    "unknown": [
+     "speed"
+    ],
+    "notes": "Push k = 0.35 x an unseen constant; steady speed not given in the notes."
+   },
+   "attacks": [
+    {
+     "kind": "spawn",
+     "what": "51.20",
+     "count": 2,
+     "state": "death",
+     "notes": "fly apart at 4 px/update, +/-10 px along a random angle; Super 51.1 always adds a 3rd, 51.11 adds one 50% of the time, 51.21 never"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "No chase: a constant diagonal push whose signs follow its current velocity, so it drifts diagonally and bounces off walls; push size k = 0.35 times an unseen constant; friction x0.9; starts at a random angle.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "When feared it pushes away from Isaac: full at 70 px or less, none at 120 px or more.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "No attack; contact damage only.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Death split: 2 children (variant + 10) at +/-10 px along a random angle, flying apart at 4 px/update.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Children's HP: the 10s HP divided by 3 of the config HP.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "51.11": {
+   "name": "Super Envy (10s)",
+   "move": {
+    "kind": "bounce",
+    "push_k": 0.35,
+    "friction": 0.9,
+    "unknown": [
+     "speed"
+    ],
+    "notes": "Push k = 0.35 x an unseen constant; steady speed not given in the notes."
+   },
+   "attacks": [
+    {
+     "kind": "spawn",
+     "what": "51.21",
+     "count": 2,
+     "state": "death",
+     "notes": "fly apart at 4 px/update, +/-10 px along a random angle; Super 51.1 always adds a 3rd, 51.11 adds one 50% of the time, 51.21 never"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "No chase: a constant diagonal push whose signs follow its current velocity, so it drifts diagonally and bounces off walls; push size k = 0.35 times an unseen constant; friction x0.9; starts at a random angle.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "When feared it pushes away from Isaac: full at 70 px or less, none at 120 px or more.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "No attack; contact damage only.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Death split: 2 children (variant + 10) at +/-10 px along a random angle, flying apart at 4 px/update. Variant 11 adds a 3rd child 50% of the time.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Children's HP: the 10s HP divided by 3 of the config HP.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "51.20": {
+   "name": "Envy (20s)",
+   "move": {
+    "kind": "bounce",
+    "push_k": 0.45,
+    "friction": 0.9,
+    "unknown": [
+     "speed"
+    ],
+    "notes": "Push k = 0.45 x an unseen constant; steady speed not given in the notes."
+   },
+   "attacks": [
+    {
+     "kind": "spawn",
+     "what": "51.30",
+     "count": 2,
+     "state": "death",
+     "notes": "fly apart at 4 px/update, +/-10 px along a random angle; Super 51.1 always adds a 3rd, 51.11 adds one 50% of the time, 51.21 never"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "No chase: a constant diagonal push whose signs follow its current velocity, so it drifts diagonally and bounces off walls; push size k = 0.45 times an unseen constant; friction x0.9; starts at a random angle.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "When feared it pushes away from Isaac: full at 70 px or less, none at 120 px or more.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "No attack; contact damage only.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Death split: 2 children (variant + 10) at +/-10 px along a random angle, flying apart at 4 px/update.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Children's HP: the 20s HP divided by 4 of the config HP.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "The 20s are the fastest Envy (k = 0.45).",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "51.21": {
+   "name": "Super Envy (20s)",
+   "move": {
+    "kind": "bounce",
+    "push_k": 0.45,
+    "friction": 0.9,
+    "unknown": [
+     "speed"
+    ],
+    "notes": "Push k = 0.45 x an unseen constant; steady speed not given in the notes."
+   },
+   "attacks": [
+    {
+     "kind": "spawn",
+     "what": "51.31",
+     "count": 2,
+     "state": "death",
+     "notes": "fly apart at 4 px/update, +/-10 px along a random angle; Super 51.1 always adds a 3rd, 51.11 adds one 50% of the time, 51.21 never"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "No chase: a constant diagonal push whose signs follow its current velocity, so it drifts diagonally and bounces off walls; push size k = 0.45 times an unseen constant; friction x0.9; starts at a random angle.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "When feared it pushes away from Isaac: full at 70 px or less, none at 120 px or more.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "No attack; contact damage only.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Death split: 2 children (variant + 10) at +/-10 px along a random angle, flying apart at 4 px/update. Variant 21 never adds a 3rd child.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Children's HP: the 20s HP divided by 4 of the config HP.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "51.30": {
+   "name": "Envy (30s)",
+   "move": {
+    "kind": "bounce",
+    "push_k": 0.35,
+    "friction": 0.9,
+    "unknown": [
+     "speed"
+    ],
+    "notes": "Push k = 0.35 x an unseen constant; steady speed not given in the notes."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "No chase: a constant diagonal push whose signs follow its current velocity, so it drifts diagonally and bounces off walls; push size k = 0.35 times an unseen constant; friction x0.9; starts at a random angle.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "When feared it pushes away from Isaac: full at 70 px or less, none at 120 px or more.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "No attack; contact damage only.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Variants 30 and above do not split.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Children's HP: the 30s HP divided by 5 of the config HP.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "51.31": {
+   "name": "Super Envy (30s)",
+   "move": {
+    "kind": "bounce",
+    "push_k": 0.35,
+    "friction": 0.9,
+    "unknown": [
+     "speed"
+    ],
+    "notes": "Push k = 0.35 x an unseen constant; steady speed not given in the notes."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "No chase: a constant diagonal push whose signs follow its current velocity, so it drifts diagonally and bounces off walls; push size k = 0.35 times an unseen constant; friction x0.9; starts at a random angle.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "When feared it pushes away from Isaac: full at 70 px or less, none at 120 px or more.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "No attack; contact damage only.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Variants 30 and above do not split.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Children's HP: the 30s HP divided by 5 of the config HP.",
+     "src": "RE_ENEMIES E3 0x47a480",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "52.0": {
+   "name": "Pride",
+   "move": {
+    "kind": "axis_walk",
+    "speed": 4.0,
+    "friction": 0.75,
+    "notes": "Random axis walk at 1.0, friction x0.75 (steady 4.0 derived); stands still for 46 updates during each attack."
+   },
+   "attacks": [
+    {
+     "kind": "laser_diag",
+     "warning": 8,
+     "state": 8,
+     "tell": {
+      "anim": "Attack",
+      "frame": 20
+     },
+     "angles": [
+      45,
+      135,
+      225,
+      315
+     ],
+     "notes": "warning sound at stateFrame 12; four diagonal beams from 10 px above Pride; straight rows and columns are safe; beam lifetime unresolved"
+    },
+    {
+     "kind": "bomb",
+     "count": 4,
+     "fuse": 45,
+     "fuse_max": 74,
+     "variant": 3,
+     "state": 9,
+     "tell": {
+      "anim": "Attack",
+      "frame": 6
+     },
+     "unknown": [
+      "blast"
+     ]
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Walk: random axis walk at 1.0, friction x0.75.",
+     "src": "RE_ENEMIES E3 0x47e160",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Each update a 1-in-50 chance to attack, then 50/50 between lasers (State 8) and bombs (State 9); each state lasts 46 updates and Pride stands still throughout.",
+     "src": "RE_ENEMIES E3 0x47e160",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Lasers: a warning sound at stateFrame 12, then at 20 four beams on the diagonals (45, 135, 225, 315 degrees) from 10 px above Pride: 8 updates of warning; rows and columns are safe.",
+     "src": "RE_ENEMIES E3 0x47e160",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x47e160",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Bombs (State 9): troll bombs (variant 3) at stateFrame 6, 11, 16, 21 (four); placed at positions from a helper (likely random), no velocity; fuse 45-74.",
+     "src": "RE_ENEMIES E3 0x47e160",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "52.1": {
+   "name": "Super Pride",
+   "move": {
+    "kind": "axis_walk",
+    "speed": 4.0,
+    "friction": 0.75,
+    "notes": "Random axis walk at 1.0, friction x0.75 (steady 4.0 derived); stands still for 46 updates during each attack."
+   },
+   "attacks": [
+    {
+     "kind": "laser_diag",
+     "warning": 8,
+     "state": 8,
+     "tell": {
+      "anim": "Attack",
+      "frame": 20
+     },
+     "angles": [
+      45,
+      135,
+      225,
+      315
+     ],
+     "notes": "warning sound at stateFrame 12; four diagonal beams from 10 px above Pride; straight rows and columns are safe; beam lifetime unresolved"
+    },
+    {
+     "kind": "ring",
+     "count": 6,
+     "speed": 8,
+     "fixed": false,
+     "state": 8,
+     "tell": {
+      "anim": "Attack",
+      "frame": 20
+     }
+    },
+    {
+     "kind": "bomb",
+     "count": 2,
+     "fuse": 45,
+     "fuse_max": 74,
+     "variant": 4,
+     "state": 9,
+     "tell": {
+      "anim": "Attack",
+      "frame": 6
+     },
+     "unknown": [
+      "blast"
+     ]
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Walk: random axis walk at 1.0, friction x0.75.",
+     "src": "RE_ENEMIES E3 0x47e160",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Each update a 1-in-50 chance to attack, then 50/50 between lasers (State 8) and bombs (State 9); each state lasts 46 updates and Pride stands still throughout.",
+     "src": "RE_ENEMIES E3 0x47e160",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Lasers: a warning sound at stateFrame 12, then at 20 four beams on the diagonals (45, 135, 225, 315 degrees) from 10 px above Pride: 8 updates of warning; rows and columns are safe.",
+     "src": "RE_ENEMIES E3 0x47e160",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No sin blocks damage or reads the damage queue; their hits land normally.",
+     "src": "RE_ENEMIES E3 0x47e160",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Super lasers add a 6-shot ring at 8 from 20 px below it; bombs are mega troll bombs (4) at stateFrame 6 and 11 (two), fuse 45-74.",
+     "src": "RE_ENEMIES E3 0x47e160",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "261.0": {
+   "name": "Dingle",
+   "move": {
+    "kind": "pinned",
+    "friction": 0.7,
+    "phases": [
+     {
+      "state": 3,
+      "kind": "pinned",
+      "speed": 0,
+      "updates": null
+     },
+     {
+      "state": 4,
+      "kind": "chase",
+      "speed": 10,
+      "updates": 22
+     },
+     {
+      "state": 16,
+      "kind": "pinned",
+      "speed": 0,
+      "updates": 75
+     }
+    ],
+    "notes": "Stands still in IDLE (friction 0.7); each dash adds 10 px/update toward Isaac's position at the Slide event (Black 15) and does not re-aim; Tired 61-90 updates standing still."
+   },
+   "attacks": [
+    {
+     "kind": "charge",
+     "speed": 10,
+     "speed_black": 15,
+     "count": 3,
+     "pause": [
+      12,
+      15
+     ],
+     "trigger": "State 3 idle over StateFrame 30, 1/3 Whistle else 1/2 BeforeSlide",
+     "tell": {
+      "anim": "Slide",
+      "event": "Slide"
+     },
+     "state": 4,
+     "notes": "aimed at Isaac's position at the Slide event, no lead; Red 4 dashes, Black 1"
+    },
+    {
+     "kind": "spread",
+     "count": 3,
+     "angle": 16,
+     "speed": 12,
+     "speed_sides": 10.8,
+     "needs_line": false,
+     "state": 8,
+     "tell": {
+      "anim": "Spit",
+      "frame": 3
+     },
+     "notes": "aimed at Isaac's position at that frame, no lead; Black champion fires an 8-way ring at 10 instead"
+    },
+    {
+     "kind": "spawn",
+     "what": "217.0",
+     "count": "1 or 2",
+     "state": 9,
+     "tell": {
+      "anim": "Whistle",
+      "frame": 17
+     }
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "IDLE (State 3): no attack while StateFrame is 30 or less (Dangle 15); after that a 1-in-20 chance per update (Dangle 1 in 10), plus a second 1-in-10 (Dangle 1 in 5) while it was just hit; when it fires: 1/3 Whistle, else 1/2 BeforeSlide, else Dance.",
+     "src": "RE_PILOT Dingle 0x4898c0",
+     "checked": "recording"
+    },
+    {
+     "cat": "timing",
+     "text": "Dash sequence: 3 dashes (Red 4, Black 1, Dangle 2), BeforeSlide wind-up (21 frames) before the first dash only, then a 12-15 update pause between dashes.",
+     "src": "RE_PILOT Dingle 0x4898c0",
+     "checked": "recording"
+    },
+    {
+     "cat": "timing",
+     "text": "Tired (State 16): stands still for 61-90 updates (2-3 s), usually ending around 65-70 (Dangle: half), no attacks.",
+     "src": "RE_PILOT Dingle 0x4898c0",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "Dash is aimed at Isaac's position at the Slide event (no lead): adds 10 px/update (Black 15), then keeps pushing 1 per update (Black 1.5) with friction x0.98; the dash does not re-aim.",
+     "src": "RE_PILOT Dingle 0x4898c0",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "First dash only: a 1-in-5 chance to drop a Poop where it stands.",
+     "src": "RE_PILOT Dingle 0x4898c0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Spit at the Shoot event (Spit frame 3): a triple aimed at Isaac's position at that frame (no lead), sides at about +/-16 degrees.",
+     "src": "RE_PILOT Dingle 0x4898c0",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "Spit speeds are 12 (centre) and 10.8 (sides), not the 10 / 9 the first reading gave: it missed the hidden x1.2 on fire mode 2.",
+     "src": "RE_PILOT Dingle 0x4898c0",
+     "checked": "contradicted"
+    },
+    {
+     "cat": "attack",
+     "text": "Whistle (State 9, Spawn event frame 17) summons 1-2 Dips (217.0), then it always spits (State 8); Dance (State 10) has no attack of its own and leads to Spit.",
+     "src": "RE_PILOT Dingle 0x4898c0",
+     "checked": "recording"
+    },
+    {
+     "cat": "body",
+     "text": "No damage blocking recorded; Normal uses projectile variant 3 (the puke shot).",
+     "src": "RE_PILOT Dingle 0x4898c0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "261.1": {
+   "name": "Dangle",
+   "move": {
+    "kind": "pinned",
+    "friction": 0.7,
+    "notes": "As Dingle but 2 dashes, shorter idle gate (15), tired about half as long; spawns entity type 295 and leaves a creep trail while sliding (which creep is not decoded).",
+    "unknown": [
+     "speed"
+    ]
+   },
+   "attacks": [
+    {
+     "kind": "charge",
+     "count": 2,
+     "trigger": "idle gate 15 updates",
+     "state": 4
+    },
+    {
+     "kind": "spread",
+     "count": 3,
+     "angle": 16,
+     "speed": 12,
+     "speed_sides": 10.8,
+     "needs_line": false,
+     "state": 8,
+     "tell": {
+      "anim": "Spit",
+      "frame": 3
+     }
+    },
+    {
+     "kind": "spawn",
+     "what": "217.2",
+     "speed": 15,
+     "state": 9,
+     "tell": {
+      "anim": "Whistle",
+      "frame": 17
+     },
+     "notes": "thrown at Isaac at speed 15"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "No attack while StateFrame is 15 or less, then 1 in 10 per update (plus 1 in 5 when just hit); 2 dashes; Tired is about half Dingle's.",
+     "src": "RE_PILOT Dingle 0x4898c0",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "Spit uses projectile variant 5; Whistle throws Dips (217.2) at Isaac at speed 15.",
+     "src": "RE_PILOT Dingle 0x4898c0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "Spawns entity type 295 and leaves a creep trail while sliding (which creep is not decoded).",
+     "src": "RE_PILOT Dingle 0x4898c0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "260.0": {
+   "name": "Haunt",
+   "move": {
+    "kind": "axis_walk",
+    "notes": "y pinned to the top wall (top + 30) except the State-4 side dash. How it moves along x outside State 4 is NOT in the notes: queued for a targeted read. 2026-11-26 card check: \"pinned\" was 7x worse than coasting (it does move along the wall).",
+    "unknown": [
+     "x movement outside State 4"
+    ],
+    "phases": [
+     {
+      "state": 4,
+      "kind": "axis_walk",
+      "speed_min": 10,
+      "speed_max": 15,
+      "updates": null
+     }
+    ]
+   },
+   "attacks": [
+    {
+     "kind": "spread",
+     "count": 5,
+     "speed": 12,
+     "needs_line": false,
+     "angle": 12,
+     "direction": 90,
+     "state": 8,
+     "notes": "straight down; speed about 12 recorded"
+    },
+    {
+     "kind": "laser_axis",
+     "direction": 90,
+     "unknown": [
+      "warning",
+      "trigger_band",
+      "range"
+     ],
+     "notes": "straight down; Pink fires diagonals at 135 and 45 degrees; Black throws spiders instead"
+    },
+    {
+     "kind": "spawn",
+     "what": "260.10",
+     "count": 3,
+     "when": "at fight start (subtype 1: 2, subtype 2: 1)"
+    }
+   ],
+   "body": {
+    "no_damage_states": [
+     4,
+     16
+    ],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Pinned to the top wall (y = top + 30) whenever State is not 4.",
+     "src": "RE_PILOT Haunt 0x4855e0",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Side dash when Isaac is within 40 px vertically: a 1-in-40 chance, 10-15 px/update.",
+     "src": "RE_PILOT Haunt 0x4855e0",
+     "checked": "recording"
+    },
+    {
+     "cat": "timing",
+     "text": "No attack while StateFrame is 60 or less, then a 1-in-60 chance; StateFrame resets to 0 after each attack.",
+     "src": "RE_PILOT Haunt 0x4855e0",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "Spit: a 5-spread straight down (fire mode 5), speed about 12 (recorded; the x1.2 tail), not inheriting the Haunt's slide.",
+     "src": "RE_PILOT Haunt 0x4855e0",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "Laser straight down (90 degrees); the Pink champion fires two diagonal lasers (135 and 45 degrees); the Black champion throws 1-2 spiders to the midpoint toward Isaac.",
+     "src": "RE_PILOT Haunt 0x4855e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Cannot be damaged in State 4 (skin) and State 16 (Peel): its AI empties the queued-damage list; no HP loss in 1,124 State-4 samples.",
+     "src": "RE_CORE Haunt immunity 0x4855e0",
+     "checked": "recording"
+    },
+    {
+     "cat": "body",
+     "text": "Starts with 3 Lil' Haunts orbiting at 50 px (subtype 1: 2, subtype 2: 1); live count re-read every 4 updates.",
+     "src": "RE_PILOT Haunt 0x4855e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "It moves left and right along the top wall outside the dash (recordings: coasting predicts it within 11 px over 16 updates; \"pinned\" was 80 px off).",
+     "src": "card check 2026-11-26",
+     "checked": "recording"
+    }
+   ]
+  },
+  "260.10": {
+   "name": "Lil' Haunt",
+   "move": {
+    "kind": "orbit",
+    "radius": 50,
+    "speed": 10,
+    "phases": [
+     {
+      "state": 3,
+      "kind": "orbit",
+      "radius": 50,
+      "updates": 90
+     }
+    ],
+    "notes": "Orbits the Haunt at 50 px (State 3) and detaches after 90 updates; detached it chases Isaac. Speed 10 is its shot speed; a chase speed is not given.",
+    "unknown": [
+     "chase_speed"
+    ]
+   },
+   "attacks": [
+    {
+     "kind": "aimed",
+     "speed": 10,
+     "count": 1,
+     "range": 200,
+     "state": 3,
+     "notes": "aimed at Isaac's position, no lead"
+    }
+   ],
+   "body": {
+    "no_damage_states": [
+     3
+    ],
+    "flying": false,
+    "collision_class": 1
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "body",
+     "text": "Cannot be damaged while orbiting (State 3): 0 HP drops orbiting vs 56 chasing in recordings; it is collision class 1 so tears cannot touch it; orbiting Lil' Haunts still hurt on contact (81 recorded hits).",
+     "src": "RE_PILOT Haunt 0x4855e0",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "Shoots within 200 px of Isaac (the community's 63 px was a slip), recorded start range 2-208 px.",
+     "src": "RE_PILOT Haunt 0x4855e0",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "Shot speed 10 (mode 0).",
+     "src": "RE_PILOT Haunt 0x4855e0",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "The shot aims at Isaac's current position: it was thought to lead by 5 updates, but recording fits plain position as well or better.",
+     "src": "RE_PILOT Haunt 0x4855e0",
+     "checked": "contradicted"
+    },
+    {
+     "cat": "timing",
+     "text": "Detaches from orbit after 90 updates (the real code compares the controller to -1).",
+     "src": "RE_PILOT Haunt 0x4855e0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "33.0": {
+   "name": "Fire Place",
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "extinguish": "tears, HP below 1.5"
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "body",
+     "text": "Does not shoot; hits cost it health (1-2, or 2-3 for hits over 10); out below 1.5.",
+     "src": "RE_CORE E2 0x6d9000",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Contact damage comes from the entity config (class 4 while burning, 0 when out); damage type fire.",
+     "src": "RE_CORE E2 0x6d9000",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Put out by tears.",
+     "src": "RE_CORE E2 0x6d9000",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "33.1": {
+   "name": "Red Fire Place",
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [
+    {
+     "kind": "aimed",
+     "speed": 5,
+     "count": 1,
+     "range": 160,
+     "needs_line": true,
+     "cooldown": 84,
+     "chance": "1/5 then 1/15 per update when ready",
+     "when": "nearest player's current position, no lead"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "extinguish": "tears, HP below 1.5"
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "Only red (33.1) and purple (33.3) fires shoot: when ready (84-update cooldown after each shot; 60-89 at spawn) each update a 1-in-5 roll, then Isaac within 160 px with a clear line, then a 1-in-15 roll: one shot at speed 5 aimed at the nearest player's current position (no lead); about every 3-5 s.",
+     "src": "RE_CORE E2 0x6d9000",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Put out by tears: hits cost health (1-2, or 2-3 for hits over 10); out below 1.5.",
+     "src": "RE_CORE E2 0x6d9000",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Contact damage comes from the entity config (class 4 while burning, 0 when out).",
+     "src": "RE_CORE E2 0x6d9000",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "33.2": {
+   "name": "Blue Fire Place",
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "extinguish": "explosions only"
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "body",
+     "text": "Does not shoot; only explosions put it out.",
+     "src": "RE_CORE E2 0x6d9000",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Contact damage comes from the entity config (class 4 while burning, 0 when out).",
+     "src": "RE_CORE E2 0x6d9000",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "33.3": {
+   "name": "Purple Fire Place",
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [
+    {
+     "kind": "aimed",
+     "speed": 5,
+     "count": 1,
+     "range": 160,
+     "needs_line": true,
+     "cooldown": 84,
+     "homing": 1.5,
+     "chance": "1/5 then 1/15 per update when ready",
+     "when": "nearest player's current position, no lead"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "extinguish": "explosions only"
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "Only red (33.1) and purple (33.3) fires shoot: when ready (84-update cooldown after each shot; 60-89 at spawn) each update a 1-in-5 roll, then Isaac within 160 px with a clear line, then a 1-in-15 roll: one shot at speed 5 aimed at the nearest player's current position (no lead); about every 3-5 s.",
+     "src": "RE_CORE E2 0x6d9000",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Purple's shot homes (flag bit 0, strength 1.5).",
+     "src": "RE_CORE E2 0x6d9000",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Only explosions put it out.",
+     "src": "RE_CORE E2 0x6d9000",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "33.4": {
+   "name": "White Fire Place",
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "extinguish": "never"
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "body",
+     "text": "Never goes out: a permanent obstacle; does not shoot.",
+     "src": "RE_CORE E2 0x6d9000",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Contact damage comes from the entity config.",
+     "src": "RE_CORE E2 0x6d9000",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "202.0": {
+   "name": "Stone Shooter",
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 1,
+     "speed": 7.5,
+     "fixed": true,
+     "notes": "single shot along a fixed facing: subtype 0 left, 1 up, 2 right, 3 down; no player check",
+     "unknown": [
+      "cooldown"
+     ]
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": true,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "No player check: fires on a timer along its fixed facing (subtype 0 left, 1 up, 2 right, 3 down); the next shot fires as soon as the animation ends.",
+     "src": "RE_CORE E2 0x50cb10",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Invulnerable; closes its eyes when the room is cleared.",
+     "src": "RE_CORE E2 0x50cb10",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Real fire rate (its animation length) is unresolved.",
+     "src": "RE_CORE E2 0x50cb10",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "One shot (mode 0) at speed 7 x 1.07 = about 7.5 at the Shoot event.",
+     "src": "RE_CORE E2 0x50cb10",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "202.10": {
+   "name": "Stone Shooter (ring)",
+   "same_as": [
+    "202.11"
+   ],
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 4,
+     "speed": 10,
+     "fixed": true,
+     "notes": "alternates a + ring (0/90/180/270) and an X ring (45/135/225/315)",
+     "unknown": [
+      "cooldown"
+     ]
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": true,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "No player check: fires on a timer along its fixed facing (subtype 0 left, 1 up, 2 right, 3 down); the next shot fires as soon as the animation ends.",
+     "src": "RE_CORE E2 0x50cb10",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Invulnerable; closes its eyes when the room is cleared.",
+     "src": "RE_CORE E2 0x50cb10",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Real fire rate (its animation length) is unresolved.",
+     "src": "RE_CORE E2 0x50cb10",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Variants 10/11 alternate a + ring and an X ring (modes 6/7) at speed 10.",
+     "src": "RE_CORE E2 0x50cb10",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "202.11": {
+   "name": "Stone Shooter (ring, variant 11)",
+   "same_as": [
+    "202.10"
+   ],
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 4,
+     "speed": 10,
+     "fixed": true,
+     "notes": "alternates a + ring and an X ring",
+     "unknown": [
+      "cooldown"
+     ]
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": true,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "No player check: fires on a timer along its fixed facing (subtype 0 left, 1 up, 2 right, 3 down); the next shot fires as soon as the animation ends.",
+     "src": "RE_CORE E2 0x50cb10",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Invulnerable; closes its eyes when the room is cleared.",
+     "src": "RE_CORE E2 0x50cb10",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Real fire rate (its animation length) is unresolved.",
+     "src": "RE_CORE E2 0x50cb10",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Variants 10/11 alternate a + ring and an X ring (modes 6/7) at speed 10.",
+     "src": "RE_CORE E2 0x50cb10",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "grid.spikes": {
+   "name": "Spikes",
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [
+    {
+     "kind": "contact",
+     "damage": 2
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "contact": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null,
+    "damage": 2
+   },
+   "facts": [
+    {
+     "cat": "terrain",
+     "text": "Plain spikes (grid type 8) are always up and hurt every update while up; damage 2 (a full heart), spaced by Isaac's i-frames.",
+     "src": "RE_CORE E2 0x725e10",
+     "checked": "recording"
+    },
+    {
+     "cat": "terrain",
+     "text": "Never path over raised spikes.",
+     "src": "RE_CORE E2 0x725e10",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "grid.spikes_retracting": {
+   "name": "Retracting spikes",
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [
+    {
+     "kind": "contact",
+     "damage": 2,
+     "cycle": [
+      60,
+      60
+     ],
+     "warning": 5
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "contact": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null,
+    "damage": 2,
+    "cycle": [
+     60,
+     60
+    ]
+   },
+   "facts": [
+    {
+     "cat": "terrain",
+     "text": "Retracting spikes (grid type 9) are 60 updates up and 60 down (2 s each), flipping on a timer; an animation at timer 5 warns about 5 updates before each flip.",
+     "src": "RE_CORE E2 0x725e10",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "While up they hurt every update for 2 damage; cross early in the down phase, not in its last 5 updates.",
+     "src": "RE_CORE E2 0x725e10",
+     "checked": "recording"
+    },
+    {
+     "cat": "terrain",
+     "text": "Sacrifice-room spikes (room type 13) add flag 0x10000000, so they do not count against the devil deal.",
+     "src": "RE_CORE E2c Entity_Player::TakeDamage",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "bomb.normal": {
+   "name": "Bomb and explosion",
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [
+    {
+     "kind": "bomb",
+     "blast": 75,
+     "fuse": 45,
+     "fuse_max": 74,
+     "damage": 2,
+     "notes": "fuse 45 normal, 45-74 for troll bombs (variants 3, 4, 8, 18)"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "Explosion radius 75 px for a normal bomb (90 if 140 < damage < 175, 105 if 175 or more; Giga 130), measured centre to centre plus the target's size; an optional line check lets cover block it.",
+     "src": "RE_CORE E2 0x705fe0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Damage to Isaac is 1 (half a heart) if the bomb damage is under 85, else 2 (a full heart); his own bombs hurt him.",
+     "src": "RE_CORE E2 0x705fe0",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "Push on Isaac is min(radius + size - distance, 15) away from the centre, capped at 10, applied even during i-frames.",
+     "src": "RE_CORE E2 0x705fe0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Normal bombs, troll bombs (variant 3) and mega-troll bombs (variant 4) have damage 100 (so Isaac takes 2; matches 19 logged hits); variant 15: 20; Giga bombs (17, 20): 300.",
+     "src": "RE_CORE E2c 0x6a8d40",
+     "checked": "recording"
+    },
+    {
+     "cat": "timing",
+     "text": "Fuse is 45 updates (1.5 s); troll-type variants 3, 4, 8 and 18 use 45-74 updates.",
+     "src": "RE_CORE E2c 0x6a8d40",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "Rays every 20 px out to the radius break the tiles in line; TNT adds 1 per hit (1-in-3 chance of +2) to a 0-4 counter, blast triggered at 4.",
+     "src": "RE_CORE E2 0x705fe0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "door.curse": {
+   "name": "Curse-room door",
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [
+    {
+     "kind": "contact",
+     "damage": 1
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "contact": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null,
+    "damage": 1
+   },
+   "facts": [
+    {
+     "cat": "terrain",
+     "text": "A spiked curse door (door flag 0x4) hurts every player whose centre is inside a box at the doorway (about 58 x 40 px, reaching about 43 px out on one side), every update: damage 1 (half a heart), countdown 30, empty source (the logged 0.0 source).",
+     "src": "RE_CORE E2c 0x7136e0",
+     "checked": "recording"
+    },
+    {
+     "cat": "terrain",
+     "text": "A flying player is exempt except inside a curse room (room type 10), where leaving hurts even while flying.",
+     "src": "RE_CORE E2c 0x7136e0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "Hits come on the way in and the way out (per-update position test); Isaac's i-frames stop repeats; they do not count against the devil deal.",
+     "src": "RE_CORE E2c 0x7136e0",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "1000.22": {
+   "name": "Red creep",
+   "same_as": [
+    "1000.23",
+    "1000.24"
+   ],
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [
+    {
+     "kind": "contact",
+     "damage": 1
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "contact": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null,
+    "damage": 1,
+    "flying_immune": true,
+    "fade": 40
+   },
+   "facts": [
+    {
+     "cat": "terrain",
+     "text": "Size is 20 x scale x sprite scale at spawn and never grows or shrinks while alive; no timeout is counted in the update block (lifetime timer location unresolved).",
+     "src": "RE_CORE Batch A 0x5f1143",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "Once dead it fades over 40 updates and does no damage while fading.",
+     "src": "RE_CORE Batch A 0x5f1143",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "terrain",
+     "text": "Hurts Isaac every update he stands on the painted puddle where its sprite alpha is over 0.5 (the painted shape, not a circle); flat damage 1.0, flags 0x10, countdown 30; spaced by Isaac's i-frames.",
+     "src": "RE_CORE Batch A 0x5f1143",
+     "checked": "recording"
+    },
+    {
+     "cat": "terrain",
+     "text": "Flying Isaac (grid class 3) is immune; the check needs ground class 5. No height test.",
+     "src": "RE_CORE Batch A 0x5f1143",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "1000.23": {
+   "name": "Green creep",
+   "same_as": [
+    "1000.22",
+    "1000.24"
+   ],
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [
+    {
+     "kind": "contact",
+     "damage": 1
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "contact": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null,
+    "damage": 1,
+    "flying_immune": true,
+    "fade": 40
+   },
+   "facts": [
+    {
+     "cat": "terrain",
+     "text": "Same damage rules as red creep (variants 22, 23, 24): flat 1.0 damage, countdown 30, painted shape only, flying immune.",
+     "src": "RE_CORE Batch A 0x5f1143",
+     "checked": "recording"
+    }
+   ]
+  },
+  "1000.24": {
+   "name": "Yellow creep",
+   "same_as": [
+    "1000.22",
+    "1000.23"
+   ],
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [
+    {
+     "kind": "contact",
+     "damage": 1
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "contact": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null,
+    "damage": 1,
+    "flying_immune": true,
+    "fade": 40
+   },
+   "facts": [
+    {
+     "cat": "terrain",
+     "text": "Same damage rules as red creep (variants 22, 23, 24): flat 1.0 damage, countdown 30, painted shape only, flying immune.",
+     "src": "RE_CORE Batch A 0x5f1143",
+     "checked": "recording"
+    }
+   ]
+  },
+  "1000.25": {
+   "name": "Slowing creep",
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "contact": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null,
+    "slow_factor": 0.75,
+    "notes": "variant 25 slows to 0.75, others 0.85"
+   },
+   "facts": [
+    {
+     "cat": "terrain",
+     "text": "Slowing creep (25, 26, 56) runs the same tests then slows the player to 0.75 x (variant 25) or 0.85 x, with no damage; variant 94 sets a player flag (probably slippery).",
+     "src": "RE_CORE Batch A 0x5f1143",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "player.isaac": {
+   "name": "Isaac (reference, not an enemy)",
+   "move": {
+    "kind": "pinned",
+    "notes": "Not an enemy. Reference facts about Isaac's own movement and hit rules, for the forecast."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false,
+    "top_speed": 8.8,
+    "iframes": [
+     60,
+     120
+    ]
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Isaac's top speed is about 8.8 px/update at speed 1.0 and about 11 at speed 2 (correction: the first reading gave 2.07, missing the hidden square root in the friction).",
+     "src": "RE_CORE Level 2 0x781fc0",
+     "checked": "contradicted"
+    },
+    {
+     "cat": "move",
+     "text": "Per movement step: input scale k = 0.75 + 0.25 x MoveSpeed; sideways velocity x0.894; accel +0.6 x k; friction x0.880 per step (x0.775 per update if the step runs twice); no hard speed cap on a normal floor.",
+     "src": "RE_CORE Level 2 0x781fc0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "After a hit Isaac is invulnerable for 60 updates (2 s) for a half-heart hit and 120 (4 s) for a full heart or more.",
+     "src": "RE_CORE Level 2 0x77ad70",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "A normal hit gives Isaac no knockback; he only feels the separation of two solid bodies.",
+     "src": "RE_CORE Batch D 0x6be8c0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "A feared NPC flees for about 1.4 s after Isaac backs off beyond 250 px (170 px behind cover); threat check every 14 updates.",
+     "src": "RE_CORE Batch D 0x7ece80",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "rule.projectiles": {
+   "name": "Shot rules (reference, not an enemy)",
+   "move": {
+    "kind": "pinned",
+    "notes": "Not an enemy. Shared shot rules."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "Fire modes: 0 single; 1 two at +/-16; 2 three (0, +/-16, sides at 0.9 speed); 3 three at 0, +/-24; 4 four (+/-8 at 1.0, +/-24 at 0.9); 5 five (0, +/-12, +/-24); 6 fixed + ring; 7 fixed X ring; 8 both (8-way); 9 ring of round(v.y) shots at speed v.x with a random start angle.",
+     "src": "RE_CORE FireProjectiles 0x6d2bb0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Modes 2, 4 and 5 fly at x1.2 speed and inherit 0.4 x the shooter's velocity (Dingle mode 2 is 12.0 and 10.8; Haunt spit about 12).",
+     "src": "RE_CORE FireProjectiles 0x6d2bb0",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "Boss burst (FireBossProjectiles) with a target: speed 3.5-10.5 within +/-30 degrees of the target line; with target (0,0): a random direction at speed exactly 7; no x1.2.",
+     "src": "RE_CORE FireBossProjectiles 0x6d46a0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "A shot hurts Isaac only if its height is at or above -50 x s (s = his sprite scale 0.5-1.0); shots higher than 50 pass over him; a shot spawned that high has collision class 0. A shot always dies on contact.",
+     "src": "RE_CORE Shots 0x662200",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Shot damage is 1 (2 if scale over 1.15) unless set; flight: falling speed = 0.9 x falling speed + 0.1 + accel; dies when height goes above -5 or it hits a rock below 50 px.",
+     "src": "RE_CORE Shots 0x659bb0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Can-shoot gate: no shot unless Isaac is within range with a clear line (Gemini's baby 300, Pooter 200, Haunt/Charger/Hopper 1000); false while confused or feared.",
+     "src": "RE_CORE can-shoot 0x6d2730",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Target position is Isaac's current position, no lead (confused: a random point up to about 240 px away re-rolled every 15 updates; feared: away from Isaac).",
+     "src": "RE_CORE target 0x6c6390",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Path chase: straight at the target within 70 px with a clear line, otherwise grid steps; far from its target the steady speed is about 6.7 x its speed factor.",
+     "src": "RE_CORE helpers 0x7ebb70 / Batch D 0x6b5720",
+     "checked": "recording"
+    },
+    {
+     "cat": "move",
+     "text": "Enemy physics: velocity x friction, then position += speedMultiplier x velocity; a push a with friction f gives a steady speed a / (1 - f).",
+     "src": "RE_CORE Batch D 0x6b5720",
+     "checked": "recording"
+    }
+   ]
+  },
+  "rule.contact": {
+   "name": "Contact rules (reference, not an enemy)",
+   "move": {
+    "kind": "pinned",
+    "notes": "Not an enemy. Shared contact-damage rules."
+   },
+   "attacks": [],
+   "body": {
+    "no_damage_states": [],
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "body",
+     "text": "Collision classes: 0 touches nothing; 1 only Isaac; 2 Isaac and his tears but not other enemies; 3 only other enemies; 4 everything. A class-2 enemy still hurts Isaac.",
+     "src": "RE_CORE CollidePair 0x6b9290",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Touching an enemy hurts Isaac for its collision damage (above 0) with countdown 30, no multiplier and no height/state/class check on that path; no knockback on Isaac.",
+     "src": "RE_CORE Batch A 0x6d4ce0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "No contact damage in ambush / boss-rush / greed wave rooms while the enemy is in State 1 or spawned under 10 updates ago; Boom Fly in State 5 explodes instead; type 881 only hurts in State 6.",
+     "src": "RE_CORE Batch A 0x6d4ce0",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "A penalty hit (sets the floor's damaged flag, lowering devil-deal chance) is any hit whose flags lack bit 0x20 or 0x10000000: spikes, bombs, contact, shots and creep count; curse-room door and sacrifice-room spikes do not.",
+     "src": "RE_CORE Batch E2c Entity_Player::TakeDamage",
+     "checked": "2 readers"
+    }
+   ]
+  }
+ }
+}
