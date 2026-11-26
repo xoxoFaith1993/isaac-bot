@@ -310,3 +310,71 @@ wind-ups.
 [Bamboo Gaming, Dingle](https://www.bamboogaming.net/the-binding-of-isaac/bosses/dingle);
 [the thesis abstract](https://hosobe.cis.k.hosei.ac.jp/lab/wp-content/uploads/2019/05/t_suga-bthesis-abstract.pdf);
 [PIFE](https://doi.org/10.1109/COG51982.2022.9893649).
+---
+
+## 2026-11-26: ChatGPT research pass, round 2, and the decompiled Haunt AI
+
+**What it is:** ChatGPT's second reply, plus our own reading of the decompiled Haunt AI file it couldn't open.
+
+**Verdict on ChatGPT's round 2:** honest, but almost nothing new.
+- Most of it repeats our own round-2 handoff back, including the champion correction and the decompilation's Haunt
+  details. Those aren't independent confirmations.
+- New and checked:
+  - **The repo numbers:** 163 commits, Unlicense. Confirmed with the GitHub API.
+  - **The shared helper file:** `AiUtils.lua` holds only function signatures with empty bodies. Confirmed by
+    reading it.
+  - **StrategyWiki:** the Monstro-shadow advice sits under Monstro's section, not Dingle's. This came from a search
+    snippet; the page itself was 403 again. Probably right, and it matches our guess.
+- **Patch notes:** it says the Repentance+ notes it opened changed none of our target enemies. Being checked by an
+  agent (result below when in).
+- **The lesson:** a search-only assistant hits the same blocked pages we do. It's more useful for a *blind second
+  reading* of a file we've both opened than for more searching.
+
+**The decompiled Haunt AI** ([`_Legacy/Actor/Boss/Haunt.lua`](https://github.com/Guantol-Lemat/Isaac.LuaDecomps/blob/main/_Legacy/Actor/Boss/Haunt.lua),
+read in full, about 600 lines). In our own words:
+
+| Part | What the code does | Bot meaning |
+|---|---|---|
+| Start | Spawns 3 Lil' Haunts (Black champion 2, Pink 1) orbiting 50 px out. `I1` = Lil' Haunts still alive (recounted every 4 updates). `TargetPosition` = its wall-slide push, starting at 0.3 px/update sideways | read `I1` for the phase |
+| Phase 1, `STATE_MOVE` (4) | wanders, can't be damaged, not a target | don't shoot it; shots are wasted |
+| Last Lil' Haunt dead | plays AngrySkin and drifts up to the top wall, then Peel (`STATE_SPECIAL`, 16, still invulnerable), then `STATE_IDLE` (3) | the phase change is readable as a state, not just an animation |
+| Phase 2, `STATE_IDLE` | pinned to the top wall (top bound + 30); slides left/right, picking up speed, and bounces at the side walls | the laser column moves (we already knew this) |
+| Side dash | only when Isaac is within **40 px vertically** of its line, with a 1-in-40 chance each update: a burst of 10-15 px/update toward him | staying more than 40 px below its line means it never dashes |
+| Attack timing | `StateFrame` counts up in IDLE; **no attack before 60 updates (2 s)**, then a 1-in-60 chance each update, half spit and half laser; every attack resets the count to 0 | **a guaranteed 2 s safe window after every attack**, readable from `StateFrame` |
+| Spit (`STATE_ATTACK`, 8) | at the "Shoot" event: a 5-shot spread fired **straight down**, speed 10. Pink: a sweeping stream aimed at Isaac every 2 updates, ±60° | normal spit isn't aimed: get out from under it |
+| Laser (`STATE_ATTACK2`, 9) | at the "Shoot" event: a thick laser **straight down**. Pink: two bouncing diagonal lasers (down-left, down-right). Black: throws 1-2 spiders toward the midpoint between it and Isaac | it keeps sliding while it lasers |
+| Lil' Haunt, orbiting (`STATE_IDLE`) | circles the Haunt at 50 px, takes no damage, touches only the player, flies over rocks | **never shoot orbiting Lil' Haunts** |
+| Lil' Haunt, chasing (`STATE_MOVE`) | the first one detaches after about 90 updates (3 s), the rest once one has died. It accelerates toward **where Isaac is heading** (his position plus his velocity scaled by the distance) | it cuts Isaac off; running straight lets it catch him |
+| Lil' Haunt shot | only after 90 updates of chasing, **only within about 63 px**, with a 1-in-50 chance each update: one shot at speed 10, aimed at Isaac's position plus 5 updates of his velocity | keeping more than 70 px away means it never shoots; up close, change direction instead of strafing straight |
+
+**Matches our data:**
+- Our Haunt hits are 81 Lil' Haunt body contacts and 50 shots from type 260.
+- Body contact by a chaser that leads its target fits the cut-off behaviour.
+- `boss_tactics.json` (from guides and logs) already had the column laser, the downward fan, the side dash near the
+  top wall, and Lil' Haunts first.
+- So the guides, our logs and the decomp agree independently. The decomp adds the numbers.
+
+**Caution:** the decomp is a hand translation with slips. One Lil' Haunt detach check compares the controller index
+with 1 where -1 looks meant. The aim line subtracts a position from an entity. So treat every number as a
+hypothesis, and confirm it with one recorded Haunt fight (`record|1`): `State` values, the `StateFrame` gap between
+attacks, `I1`, and the side-dash trigger.
+
+**Usable once one recording confirms it** (knowledge edits for the main session, in `boss_tactics.json`):
+- `260.10`: orbiting Lil' Haunts (`State` 3, animation Float) are invulnerable, so add them to `never_aim`.
+  Chasing ones (`State` 4) are the targets. Add a 70 px berth (they only shoot within about 63 px) and
+  `how: change_direction` for their led shot.
+- `260.0`: invulnerable in `State` 4 and 16 (IdleSkin, AngrySkin, Peel), so add those to `invulnerable_while`.
+  Add a safe window of `StateFrame < 60` after each attack, the time to step under it and shoot. Add the side-dash
+  rule: more than 40 px below its line.
+
+**Worth learning from:** a single decompiled enemy file settled more than two rounds of web searching. For enemies
+the decompilation covers, read the file first, then confirm with the recorder.
+
+**Apply later:** the same reading for the other floor 1-2 bosses in the decompilation (Gurdy, Widow). Dingle,
+Gemini, Sloth, Pin and Monstro aren't covered yet.
+
+**Strongly avoid:** copying the decomp's numbers into code without a recording. It has known translation slips.
+
+**Sources:** [Isaac.LuaDecomps](https://github.com/Guantol-Lemat/Isaac.LuaDecomps) (Unlicense; `Haunt.lua`,
+`AiUtils.lua`); [StrategyWiki bosses](https://strategywiki.org/wiki/The_Binding_of_Isaac:_Repentance/Bosses)
+(snippet only).
