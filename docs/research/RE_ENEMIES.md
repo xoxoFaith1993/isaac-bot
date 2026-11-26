@@ -1632,3 +1632,141 @@ reader. Clotty's fire mode was settled from the assembly.
 - Larry Jr. / Hollow shots at 7.5.
 - Needle's lunge at 8 and hittable window.
 - Death's Head invulnerability and diagonal speed 4.5.
+
+## Batch G1b (2026-11-26): the rest of the floors 3-6 commons
+
+**Readers:** three Haiku readers (one per third of the batch), Haiku second readers on the bundles with new or doubtful
+logic (marked `2 readers`), and two Sonnet readers for the Fistula family (a boss). Type 38 was first read from the
+wrong function (a lookup slip) and then read once from the right one. Speeds with "×1.2" are mode 2/4/5 shots, which
+get the fire-mode tail. Push values are per update before friction.
+
+### Dip, Corn (217), `0x53b0c0` (also handles type 870)
+- Slides: launches on a 10% roll per update while idle, 5-10 speed in a random direction (variant 1: double),
+  friction × 0.95. Type 870 aims at Isaac 1/3 of the time (5-8). `[move · G1b 0x53b0c0 · 1 reader]`
+- Variant 3 fires one shot at 10 on death, with a small lead. `[attack · G1b 0x53b0c0 · 1 reader]`
+
+### One Tooth (234), `0x53ea20`
+- Flies toward Isaac's position + 20 updates of lead, with a wobble. `[move · G1b 0x53ea20 · 1 reader]`
+- **Dash:** after 100 updates, with Isaac **80-160 px** away and close to one of 4 fixed lines (± 11.5°): 20 updates at
+  3.5 × speed. No shots. `[attack · G1b 0x53ea20 · 1 reader]`
+
+### Fat Sack (209), `0x5372e0`
+- Chases at 0.3. **Jump** on a 1/50 roll, to Isaac + 10 updates of lead; no contact while lifted.
+  `[move · G1b 0x5372e0 · 1 reader]`
+- **Landing:** a **6-shot ring at 12** (mode 9) plus 5 red creep patches within 50 px. `[attack · G1b 0x5372e0 · 1 reader]`
+
+### Brain (32), Poison Mind (301), `0x518910`
+- Brain: random axis walk 0.75; checked every 7th update, it dashes along an axis when Isaac is lined up within 200 px
+  on a clear line, until a wall. `[attack · G1b 0x518910 · 1 reader]`
+- Poison Mind: 45° diagonal wander; dashes when Isaac (led) is within 20 px of the diagonal; explodes on death
+  (radius 40). `[attack · G1b 0x518910 · 1 reader]`
+- Both leave creep (22 / 23). `[terrain · G1b 0x518910 · 1 reader]`
+
+### Blister (303), `0x5498d0`
+- Short lunges toward its child, else Isaac (target 0.2 × offset, at most 40 px). `[move · G1b 0x5498d0 · 1 reader]`
+- On a 10% roll with no child out, it launches entity 404 (variant 1) at speed 4. Dying on a free tile leaves entity
+  30 at half HP. `[attack · G1b 0x5498d0 · 1 reader]`
+
+### Gurgle, Crackle (87), `0x521360`
+- Chases at 0.6. Within **130 px**, 1/60 per update: one lobbed boss shot × 0.55. `[attack · G1b 0x521360 · 1 reader]`
+- Variant 0 can revive (15% per update) and leaves a trail. `[body · G1b 0x521360 · 1 reader]`
+
+### Mobile Host (204), Flesh Mobile Host (247), `0x538a30`
+- Walks the path at 0.5. Fires on its Shoot event: **204 a 3-spread, 247 a 5-spread**, aimed, speed 7 (× 1.2). Cooldown
+  70, then a 1/3 roll. `[attack · G1b 0x538a30 · 1 reader]`
+- The shell's damage blocking uses damage records; which states are closed is unclear. `[body · G1b 0x538a30 · 1 reader]`
+
+### Baby (38.0), Angelic Baby (38.1), 38.2, `0x5315d0`
+- Variant 3 exits at once (no AI here). Drifts toward Isaac at 0.33 only when its cooldown is up.
+  `[move · G1b 0x5315d0 · 1 reader]`
+- Shot with cooldown 35, speed 8 (maybe 10 on one branch): 38.0 single, 38.1 3-spread (× 1.2), 38.2 single with a flag.
+  Vanishes and reappears after a counter passes 40. `[attack · G1b 0x5315d0 · 1 reader]`
+
+### Mushroom (300), `0x5493e0`
+- **Never moves.** Hides 30-150 updates, then reveals and fires **4 shots at 7**, either + or × (50/50, mode 6/7), once
+  per reveal. `[attack · G1b 0x5493e0 · 2 readers]`
+
+### Walking Boil / Gut / Sack (88.0/1/2), `0x521e30`
+- Wanders; attack on a 1/50 roll (beyond 230 px only 1/4 as often). Boil 3-4 boss shots, Gut one slow exploding lob
+  (× 0.55), Sack throws a Spider (85). `[attack · G1b 0x521e30 · 1 reader]`
+
+### Dukie (288), `0x548010`
+- Flies, wandering at push 0.3. With 7 or fewer enemies, 1/10 per update once the cooldown (90-119) is up: it coughs
+  out entity 256 at 3.5 in a random direction (+ its own velocity), a second one 1/3 of the time.
+  `[attack · G1b 0x548010 · 2 readers]`
+
+### Rock Spider (818.0 / tinted / coal), `0x5002f0`
+- No shots. **Hops** on update 12, 24 or 36, aimed at Isaac ± 15° (5/6 of the time; 3/4 for variants 1, 2), else a
+  random clear direction. Speed 3.0 (variant 1: 5.1; variant 2: 4.8-5.4). `[move · G1b 0x5002f0 · 2 readers]`
+- On death: variant 0 comes back as a rock-like form on a free tile; variant 1 drops a pickup; variant 2 spawns 33.11.
+  Landing on a rock may kill it (unclear). `[body · G1b 0x5002f0 · 2 readers]`
+
+### Danny, Coal Boy (820), `0x502520`
+- Chases at 0.6. Attack on a 1/60 roll (1/15 when a counter passes 6), under 200 px (200-400 px 1/10 as often),
+  cooldown 150. Variant 1: 4 thrown rocks (speed 1-10); others: boss shots plus rocks, up to 6 in total.
+  `[attack · G1b 0x502520 · 2 readers]`
+
+### Faceless (827, and type 832), `0x5012e0`
+- Stands until hurt or a player is **within 80 px**, then chases at 0.6. `[move · G1b 0x5012e0 · 2 readers]`
+- Attack chance per update 0.08 × √counter + 0.008 (832: × 0.33; variant 1 awake: 100%): a **6-shot ring at 7**
+  (variant 1: 8). Type 832 fires 2 aimed shots at 7. `[attack · G1b 0x5012e0 · 2 readers]`
+- When dead it revives on a 50% roll per update while HP is above −25 (not variant 1). `[body · G1b 0x5012e0 · 2 readers]`
+
+### Mr. Mine (311), `0x54fa90`
+- Burrows between pits, with 8 orbiting segments (variant 10). **Lunge:** every 4th update, Isaac within **130 px** on
+  a clear line: **14 px/update**, cooldown 30. `[attack · G1b 0x54fa90 · 2 readers]`
+- Death: a 6-shot ring at 8. Not invulnerable. `[attack · G1b 0x54fa90 · 2 readers]`
+
+### Poky (44.0), Slide (44.1), `0x528380`
+- Poky: random axis walk 1.0; Slide: returns to its home spot. **Charge** when Isaac is within 20 px of its row or
+  column, under 200 px, on a clear line (checked every 3rd update); Slide × 2.72 faster; ends at a wall.
+  `[attack · G1b 0x528380 · 2 readers]`
+- Invulnerable from spawn. When the room is clear (or with trinket 151) it goes to the no-spikes state.
+  `[body · G1b 0x528380 · 2 readers]`
+
+### Mask (93) and its Heart (92), `0x006ca240` case, `0x525bc0`
+- The Mask spawns 1 or 2 linked Hearts (variant 1: two) and is **invulnerable**. `[body · G1b 0x6ca240 · 2 readers]`
+- Heart: chases (path, 1.0). Checked every 3rd update, within 100 px: 4 shots at 12 (+ or × by variant); the Mask
+  II's heart (98) fires 8-way at 12 or 4-way at 8. `[attack · G1b 0x525bc0 · 2 readers]`
+
+### Baby Long Legs (206), Crazy Long Legs (207), `0x538310`
+- Chase or flee at 0.6. About a 1/100-1/200 roll: Baby lays an egg that hatches Spiders (85); Crazy fires an 8-way or
+  × burst at 8-10. Collectible 377 blocks attacks. `[attack · G1b 0x538310 · 1 reader]`
+
+### Mom's Hand (213), Mom's Dead Hand (287), `0x53a3e0`
+- Waits 0-149 updates, then **hovers on Isaac** (until update 78), slams at update 89, and stays down 51 updates before
+  leaving. Contact only during the slam. `[attack · G1b 0x53a3e0 · 2 readers]`
+- Dead Hand: shock effects on slam, throws 2-3 spiders on death. Briefly invulnerable in state 16.
+  `[body · G1b 0x53a3e0 · 2 readers]`
+
+### Mole (829), `0x504780`
+- Underground it moves by digging (1/4 of moves at Isaac, else up to 90 px at random). While Isaac is within **90 px**
+  (200 px after update 90), a **1/10 roll per update** makes it surface. `[move · G1b 0x504780 · 2 readers]`
+- On surfacing: a **3-spread at 8** (× 1.2). Variant 1: up to 3 extra volleys and an explosion.
+  `[attack · G1b 0x504780 · 2 readers]`
+
+### Bomb Grimace (809), `0x4ff610`
+- Stationary, invulnerable. Drops a throwable bomb pickup downward at 1.25, then waits until it is gone plus 30
+  updates. `[attack · G1b 0x4ff610 · 2 readers]`
+
+### Fistula / Teratoma (71 big, 72 medium, 73 small), `0x46a570`
+- Diagonal drift: pushes each axis along its own velocity sign (71: 0.2, 72: 0.38, 73: 0.56), friction × 0.9
+  (subtype 1: 0.81), so roughly 2 / 3.8 / 5.6 px/update per axis. Flees a little when feared. **No attacks.**
+  `[move · G1b 0x46a570 · 2 readers]`
+- **Split on death:** 71 → 4 × 72 (variant 1 or subtype 1: 3), 72 → 2 × 73, thrown at 4. Children keep variant and
+  subtype. `[body · G1b 0x46a570 · 2 readers]`
+- 73 on death: variant 1 releases 2 Spiders; otherwise a Charger (subtype 1: Boom Fly) at 75% HP, on a free tile only.
+  `[attack · G1b 0x46a570 · 2 readers]`
+
+### Bot meaning (G1b)
+- **Line gates** (stay off the row or column): Brain, Poky / Slide.
+- **Fixed-angle shots:** Mushroom (4-way), Crazy Long Legs, Mask hearts: stand between the lines.
+- **Proximity triggers:** Mr. Mine (130 px), Faceless (80 px wake), Mole (90 px), Gurgle (130 px), Heart (100 px).
+- **Mom's Hand:** move away just before the slam (about update 89 of the hover).
+- **Don't shoot:** Mask, Poky, Bomb Grimace.
+
+### Record to confirm (G1b)
+- Fat Sack ring at 12; Mushroom 4-shot at 7; Mole 3-spread at 9.6 (8 × 1.2).
+- Mr. Mine lunge 14 within 130 px; Mom's Hand slam timing.
+- Mobile Host 3-spread at 8.4 / 7.6; Faceless ring at 7-8.
+- Fistula split counts and drift speeds.
