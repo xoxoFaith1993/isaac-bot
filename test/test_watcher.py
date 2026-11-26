@@ -126,6 +126,35 @@ q = root / "runs" / "watch" / "queue.jsonl"
 check("a borderline lesson gets a second trial, not the queue", ls["status"] == "trying" and ls.get("extended")
       and ls["step"] == 1 and not q.exists(), str(ls))
 
+# 10. the decompile-queue failsafe (2026-11-26): open batches + nothing new for an hour -> one queue entry; a fresh
+# change, or no open batch, -> nothing
+import os  # noqa: E402
+
+
+def re_setup(open_batch, age_s):
+    w, sent, notes, root = make()
+    d = root / "docs" / "research"
+    d.mkdir(parents=True)
+    rows = ["| Batch | Item | Status |", "|---|---|---|", "| E3 | Gluttony | [x] abc |"]
+    if open_batch:
+        rows.append("| E3b | Famine, Death | [ ] |")
+    qf = d / "RE_QUEUE.md"
+    qf.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    t = time.time() - age_s
+    os.utime(qf, (t, t))
+    w.check_re_queue(time.time())
+    q = root / "runs" / "watch" / "queue.jsonl"
+    return [json.loads(x) for x in q.read_text(encoding="utf-8").splitlines()] if q.exists() else []
+
+
+stalled = re_setup(True, 2 * 3600)
+fresh = re_setup(True, 600)
+done = re_setup(False, 2 * 3600)
+check("decompile failsafe: a stalled queue is filed, a busy or finished one isn't",
+      len(stalled) == 1 and stalled[0]["kind"] == "re" and "E3b Famine, Death" in stalled[0]["summary"]
+      and not fresh and not done,
+      f"stalled {len(stalled)} ({stalled[0]['summary'][:70] if stalled else '-'}), fresh {len(fresh)}, done {len(done)}")
+
 print("\n".join(results))
 fails = sum(r.startswith("FAIL") for r in results)
 print(f"\n{len(results) - fails} passed, {fails} failed")

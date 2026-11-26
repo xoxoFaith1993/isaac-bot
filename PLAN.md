@@ -600,6 +600,10 @@ priority of the core fundamentals." Core = no damage on floors 1-2, natural move
 - **Burrowers:** plan the firing spot on the hole where a burrowed enemy last surfaced (Round Worms; mirror chat).
 - **Play style per item:** like the invincible window, e.g. homing tears = spray freely, flight = ignore pits.
 - **Two-input active items** (Bob's Rotten Head and similar).
+- **Mom's Hand in deal rooms** (the author, 2026-11-26 14:33, the bot's first devil room: "Took damage in the devil deal
+  room because of Mom's hands... Mom's hand grabs you and pulls you out of the devil room"; hit by 213.0). Once the
+  deal decision is made (nothing worth buying), leave right away instead of lingering; and dodge the hand's shadow
+  (it marks where the hand lands). A card for 213.0 from the decompile queue gives the timing.
 - **Use the "manual" cards smartly** (the author, 2026-11-26, Depths I: "I haven't seen him use one... those cards
   really do change the game... he dropped a Joker card for a different card, and now he has a Moon card that he won't
   use"). 23 cards are `use: manual` in `knowledge/consumable_ratings.json`, so they are never used: mostly the

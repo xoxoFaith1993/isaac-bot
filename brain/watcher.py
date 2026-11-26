@@ -34,6 +34,11 @@ BOSS_DIST_STEP = 20
 TRIGGER_HITS, TRIGGER_RATE, TRIGGER_ENC = 3, 0.5, 3
 JUDGE_AFTER_ENC = 4
 QUEUE_PER_HOUR, QUEUE_SAME_KEY_S = 3, 2 * 3600
+# Decompile-queue failsafe (the author, 2026-11-26: the queue sat idle for half an hour after a batch and nobody
+# noticed - "I feel like we should have some failsafe. Like some sort of report if something happens like that").
+# A stalled session can't report itself (idle = not running), so the watcher checks from outside: open batches in
+# docs/research/RE_QUEUE.md and nothing new in the research folders for RE_STALL_S -> a queue entry.
+RE_STALL_S, RE_CHECK_EVERY_S = 3600, 300
 
 
 def hit_cause(body):
@@ -83,6 +88,7 @@ class Watcher:
         self.queue_keys = {}
         self.last_report = 0
         self.run_loops = collections.Counter()
+        self.last_re_check = 0
 
     # ------------------------------------------------------------------ files
     @staticmethod
@@ -182,6 +188,12 @@ class Watcher:
 
     def on_event(self, kind, body):
         now = time.time()
+        if now - self.last_re_check > RE_CHECK_EVERY_S:  # (before the bench check: a stall matters during benches too)
+            self.last_re_check = now
+            try:
+                self.check_re_queue(now)
+            except OSError:
+                pass
         if self._observing():
             if kind == "start":
                 self.send_lessons()  # the mod forgets them on a new run; the SAME lessons for A and B
@@ -393,6 +405,37 @@ class Watcher:
             self._save()
 
     # ------------------------------------------------------------------ Level C: the queue for code fixes
+    # ------------------------------------------------------------------ the decompile queue (failsafe)
+    def re_status(self):
+        """(open batches, the first open one, seconds since anything in the research folders changed)"""
+        qf = self.root / "docs" / "research" / "RE_QUEUE.md"
+        if not qf.exists():
+            return 0, None, 0
+        open_rows = [ln for ln in qf.read_text(encoding="utf-8", errors="replace").splitlines()
+                     if ln.startswith("|") and "[ ]" in ln]
+        first = None
+        if open_rows:
+            cells = [c.strip() for c in open_rows[0].strip("|").split("|")]
+            first = " ".join(c for c in cells[:2] if c)
+        newest = 0
+        for d in (self.root / "docs" / "research", self.root / "runs" / "research" / "re"):
+            if d.exists():
+                for fp in d.rglob("*"):
+                    try:
+                        if fp.is_file():
+                            newest = max(newest, fp.stat().st_mtime)
+                    except OSError:
+                        pass
+        return len(open_rows), first, (time.time() - newest) if newest else 0
+
+    def check_re_queue(self, now):
+        n, first, idle = self.re_status()
+        if n and idle > RE_STALL_S:
+            # (escalate's own limits apply: the same stall is filed at most once every QUEUE_SAME_KEY_S)
+            self.escalate("re", "re-stall", f"decompile queue stalled: {n} open batch(es), nothing new in the research "
+                          f"folders for {int(idle // 60)} min (next: {first}). Restart the decompile session "
+                          "(source-vetting / the Ghidra pilot) or find out why it stopped.")
+
     def escalate(self, kind, key, summary, tried=""):
         now = time.time()
         if now - self.queue_keys.get(key, 0) < QUEUE_SAME_KEY_S:
