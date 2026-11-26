@@ -63,7 +63,7 @@ the author can move an item up.
 | E3b | Pestilence, War, Conquest (+ variants) | 64.0, 65.0, 65.1 | 0 | bosses: two readers each | [x] 67d32e4 |
 | E4 | Big Spider, Fatty, Round Worm (shots), Wall Hugger, Boom Fly, Pooter, Horf, Maggot, Hopper | 94, 208, 244, 218, 25, 14, 12, 21, 29.0 | 2-13 each | in that order | [x] da2babc |
 | E4 | Fat Bat, Tumor, Mega Maw (shooters seen in the logs) | 258, 229, 262 | 2-3 shot hits | | [x] da2babc |
-| E5 | Mulligan, Hive, Clotty, Sucker, Spitty, Embryo, Leaper, Knight, Mr. Maw, Night Crawler, Para-Bite, Ragling, Kamikaze Leech, Moter, Wall Creep | | 0 logged | the author's list; floors 1-2 regulars | [ ] |
+| E5 | Mulligan, Hive, Clotty, Sucker, Spitty, Embryo, Leaper, Knight, Mr. Maw, Night Crawler, Para-Bite, Ragling, Kamikaze Leech, Moter, Wall Creep | | 0 logged | the author's list; floors 1-2 regulars | [x] 243fb5d |
 
 ## Tier 2: Isaac's own side
 | Batch | Item | Status |
@@ -106,3 +106,6 @@ the author can move an item up.
   instead: across 747 recorded hits (an HP drop of 1-10 between two samples), an enemy's velocity jumps by a median 1.1
   px/update (0.14 on normal steps). Bosses: +0.6-1.2 (Haunt, Dingle, Monstro, Duke, Gluttony); Gemini/Steven 79.x and
   Lil' Haunts +2.3-2.4; Pin and 263 ~0. Read 2 updates after the hit, so the raw kick is a little larger. E5 next.
+- 2026-11-26: E5 done (243fb5d; 2 readers for all but Embryo). Checked: all 40 recorded Leaper shots are 9.0 along
+  the 4 axes at BigJumpDown frame 24 (the landing +); 5 Mulliboom 16.2 hits did 1 at 27-50 px (its blast, radius 60);
+  3 Mr. Maw head 35.1 contact hits did 1. The rest isn't in the logs yet. F2 is running; G1-G4 after it.
