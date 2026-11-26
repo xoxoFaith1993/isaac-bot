@@ -128,6 +128,10 @@ from logs and frames, fix the category, add a test, reload safely, measure on th
 [CONTRIBUTING.md](CONTRIBUTING.md) for the rules. Run the offline tests (`test\run.ps1`) before opening a PR, and add
 a test for any bug you fix.
 
+Thinking of reading the game's code to answer a question the bot can't? Read
+[docs/REVERSE_ENGINEERING_LESSONS.md](docs/REVERSE_ENGINEERING_LESSONS.md) first: the method we ended up with and the
+mistakes we made getting there (not an endorsement, and no tools or links).
+
 **Never commit the game's files.** Unpacked game resources (sprites, `.anm2`, sounds, XML data) belong to the game's
 publisher and must stay out of this repository, and so does `knowledge\gamedata.json`.
 
