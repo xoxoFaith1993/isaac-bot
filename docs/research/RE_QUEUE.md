@@ -68,7 +68,7 @@ the author can move an item up.
 ## Tier 2: Isaac's own side
 | Batch | Item | Status |
 |---|---|---|
-| F1 | Tear physics: range, height, fall, shot speed; the knockback tears give enemies (`AddKnockback` from Tear is known) | [ ] |
+| F1 | Tear physics: range, height, fall, shot speed; the knockback tears give enemies (`AddKnockback` from Tear is known) | [x] 6adb633 |
 | F2 | Item effects coming up soon: Chocolate Milk and other charge weapons, flight (exactly what flying ignores), Cupid's Arrow / piercing | [ ] |
 
 ## Tier 3: floors 3-6 and the bosses to Delirium
@@ -101,3 +101,8 @@ the author can move an item up.
   Ghidra session for the missing multiplier. E5 and F1 are running.
 - 2026-11-26: Mega Maw settled: the ring is FireRing with VelocityMulti 1.05 (10 -> 10.5, 7 -> 7.35, variant 2 =
   the 9.2 hits); the 7.7 lobbed hit is the 15-shot burst (FireBossProjectiles, 3.5-10.5). Both now fit the recordings.
+- 2026-11-26: F1 done (6adb633; 2 readers). The tear fall rule is the same one already confirmed for enemy shots
+  (fs = 0.9 fs + 0.1 + accel, dies above -5). Tear knockback wasn't found in the code, so measured from recordings
+  instead: across 747 recorded hits (an HP drop of 1-10 between two samples), an enemy's velocity jumps by a median 1.1
+  px/update (0.14 on normal steps). Bosses: +0.6-1.2 (Haunt, Dingle, Monstro, Duke, Gluttony); Gemini/Steven 79.x and
+  Lil' Haunts +2.3-2.4; Pin and 263 ~0. Read 2 updates after the hit, so the raw kick is a little larger. E5 next.
