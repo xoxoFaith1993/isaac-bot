@@ -38,6 +38,18 @@ public class Probe extends GhidraScript {
                     sb.append(k).append(' ').append(at).append(" -> ").append(String.format("%08x", v))
                       .append(' ').append(f == null ? "" : f.getName(true)).append('\n');
                 }
+            } else if (p[0].equals("callees")) {
+                // one line per function: its address, then every function it calls directly
+                Function fn = getFunctionContaining(toAddr(Long.decode(p[1])));
+                sb.append(fn.getEntryPoint()).append(" calls");
+                for (Function k : fn.getCalledFunctions(monitor)) sb.append(' ').append(k.getEntryPoint());
+                sb.append('\n');
+            } else if (p[0].equals("bytes")) {
+                // N bytes starting at ADDR, as hex (for byte tables like the AI dispatcher's)
+                Address a = toAddr(Long.decode(p[1]));
+                int n = Integer.parseInt(p[2]);
+                for (int k = 0; k < n; k++) sb.append(String.format("%02x", getByte(a.add(k)) & 0xff)).append(k % 32 == 31 ? '\n' : ' ');
+                sb.append('\n');
             } else if (p[0].equals("dis")) {
                 // N instructions starting at ADDR
                 Instruction ins = getInstructionAt(toAddr(Long.decode(p[1])));

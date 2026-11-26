@@ -159,15 +159,17 @@ One function, `ai_sloth`, `0x4780e0`: 46.0 Sloth, 46.1 Super Sloth, 46.2 Ultra P
 **Summon (state 8, at `StateFrame` 5):**
 - **Sloth (46.0)** (lines 123-159): spawns a **Charger (23.0) 30 px to the side it faces**, already in its charging
   state (`State` 8) with `V1` = (±1, 0). **The Charger launches immediately, sideways toward Isaac's side.** It also sets
-  Sloth's own entity collision class to 2 (line 158), and nothing in this function sets it back. Whether class 2 still
-  touches Isaac is the same open question as for the Trite.
+  Sloth's own entity collision class to 2 (line 158), and nothing in this function sets it back. Class 2 still touches
+  Isaac (settled in `RE_CORE.md`).
 - **Super Sloth (46.1)** (lines 99-122): throws **1 or 2 spiders** (50/50) at free spots near the **midpoint between
   it and Isaac**.
 - **Ultra Pride (46.2)** (lines 89-98): `FireBossProjectiles`, **3 shots toward Isaac's position**, trajectory 10,
   scale 1.2.
 
 **Shoot (state 9):**
-- **Sloth and Super Sloth** (lines 259-299): at `StateFrame` 5, **1 shot (Sloth) or 2 (Super Sloth)**.
+- **Sloth and Super Sloth** (lines 259-299): at `StateFrame` 5, **1 shot (Sloth) or 2 (Super Sloth)**. The projectile
+  flag it sets (bit 2) is EXPLODE in the ProjectileFlags order, so the lob bursts on landing; the recorded "unaimed"
+  shots are probably the burst (`RE_CORE.md`).
   `FireBossProjectiles(1, Isaac's position)`, then made into a **big, slow, high lob**: velocity × 0.55, height × 0.7
   − 13, fall changed by −0.3, scale 1.6, and a projectile flag (2). Aimed at his position, no lead.
 - **Ultra Pride** (lines 165-258): at frames 6-14, a **line of creep (effect 1000.23) along its row toward Isaac**,
@@ -318,8 +320,8 @@ no creep.
 
 **Collision** (lines 903-912): before Jump, entity class 4 and grid class 5. **From the Jump event on, entity class 2**
 and grid class 3 (it clears rocks and pits). Nothing here sets class 4 again until the next hop's wind-up.
-- **Open question (record this first):** whether class 2 still touches Isaac. If it does, the Trite can hit him during
-  the whole hop and while idle. If not, only during the 4 wind-up frames.
+- **Settled (RE core pass, `RE_CORE.md`):** class 2 still touches Isaac and his tears; it only stops touching other
+  enemies. So the Trite **can hit Isaac during the whole hop and while idle**.
 
 **Fields:** `TargetPosition` = the landing cell (zero = none pending); `StateFrame` = the idle gate and hop timeout.
 `I1`, `I2`, `V1`, `V2` are not used by the Trite. **Damage blocking:** none here.

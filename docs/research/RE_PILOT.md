@@ -62,7 +62,7 @@ The decompiled `ai_haunt` (`0x4855e0`) against the community `Haunt.lua` and our
 | Lil' Haunts at start | 3 (subtype 1: 2, subtype 2: 1), orbit 50 px | same | yes |
 | `TargetPosition` = wall-slide push | 0.3 sideways | `(0.3, 0)`; flips and adds 15× on a wall bump | yes |
 | `I1` = live Lil' Haunts | recount every 4 updates | `frame & 3 == 0`, `QueryNPCsType(260, 10)` | yes |
-| Invulnerable phase | `STATE_MOVE` (4) and Peel (16) | the state path 4 → AngrySkin → 16 → 3 matches, but **no damage blocking here**: `isInvicible` is set at init and cleared at the top of every later update | **not in `ai_haunt`; unconfirmed** (the game may block damage in its damage path instead) |
+| Invulnerable phase | `STATE_MOVE` (4) and Peel (16) | `isInvicible` is only a one-update flag, but **lines 394-413 discard all queued damage** (+0x14 and the damage list) whenever State is 4 or 16 (see `RE_CORE.md`) | **yes** (corrected 2026-11-26; the earlier "not in `ai_haunt`" was wrong; the recording shows no HP loss in State 4) |
 | Pinned to the top wall | top + 30 | `Y = top + 30` whenever State ≠ 4 | yes |
 | Side dash | within 40 px vertically, 1 in 40, 10-15 px/update | `abs(dy) < 40`, `rand % 40`, `10 + rand*5` | yes |
 | Attack gap | no attack while StateFrame ≤ 60, then 1 in 60 | `StateFrame++ > 60`, `rand % 60`; reset to 0 after each attack | yes |
@@ -74,9 +74,9 @@ The decompiled `ai_haunt` (`0x4855e0`) against the community `Haunt.lua` and our
 | **Lil' Haunt shot range** | `distance < sqrt(4000)` ≈ **63 px** | `dx²+dy² < 40000.0` (`0x486c4f`, constant at `0xbcfe5c`) → **200 px** | **no: real is 200 px** |
 
 **Verdict:** the pipeline works. It reproduces a careful hand translation, and it settles the one place where the
-hand translation slipped (a dropped zero). One claim it can't settle: where the Haunt's invulnerability comes from.
-`ai_haunt` doesn't block damage, so it must happen elsewhere (for example a damage handler that checks `State`), or not
-at all. That needs a recording. (Pointed out by a blind second reading of the C, checked against the code.) **Correction for `OUTSIDE_SOURCES.md`'s Haunt table:** the Lil' Haunt
+hand translation slipped (a dropped zero). The Haunt's invulnerability was first marked unconfirmed here, because `isInvicible` alone doesn't block damage.
+The RE core pass found the real mechanism in `ai_haunt` lines 394-413: in States 4 and 16 it throws away the
+queued damage before it reaches HP (`RE_CORE.md`). The recording agrees. **Correction for `OUTSIDE_SOURCES.md`'s Haunt table:** the Lil' Haunt
 shoots within **200 px**, not 63, so the suggested "70 px berth" won't stop its shots. A berth of more than 200 px
 does, or keep `how: change_direction` for the led shot.
 
@@ -91,7 +91,7 @@ AI runs 30 updates per second, so 30 updates ≈ 1 s.
 | State | Animation | What it does | Leaves to |
 |---|---|---|---|
 | 0 (init) | — | sets `State` 3, clears `StateFrame`, `I1`, `I2` | 3 |
-| **3 IDLE** | Idle | stands still (friction 0.7). `StateFrame` counts up from 0. **No attack while `StateFrame` ≤ 30** (Dangle 15). After that, each update has a 1-in-20 chance (Dangle 1 in 10), plus a second 1-in-10 chance (Dangle 1 in 5) while an unknown field at 0x14 is above 0 (meaning not decoded). The whole check is skipped while entity flag bit 60 is set (not decoded either). When it fires: 1/3 Whistle, otherwise 1/2 BeforeSlide (not while it has flag bits `0x1000a00`, probably confusion/fear), otherwise Dance | 9, 11 or 10 |
+| **3 IDLE** | Idle | stands still (friction 0.7). `StateFrame` counts up from 0. **No attack while `StateFrame` ≤ 30** (Dangle 15). After that, each update has a 1-in-20 chance (Dangle 1 in 10), plus a second 1-in-10 chance (Dangle 1 in 5) while field 0x14 (pending damage, so "was just hit", see `RE_CORE.md`) is above 0. The whole check is skipped while entity flag bit 60 is set (not decoded either). When it fires: 1/3 Whistle, otherwise 1/2 BeforeSlide (not while it has flag bits `0x1000a00`, probably confusion/fear), otherwise Dance | 9, 11 or 10 |
 | **11** (ATTACK4) | BeforeSlide (21 f) | the dash wind-up; plays once | 4 |
 | **4 MOVE** | Slide (22 f) | one dash per Slide animation (details below). Between dashes `StateFrame` is a 12-15 update pause, then Slide plays again | 4 again, then 16 |
 | **16 SPECIAL** | Tired (24 f, loops) | stands still for **61-90 updates (2-3 s)**, no attacks. The limit is re-rolled (60-89) every update, so it usually ends early, around 65-70 updates (Dangle: half) | 3 |

@@ -5,6 +5,7 @@ decompiled C, logs) stays in the work folder, outside the repo; we commit only w
 
 Usage:
     python tools/re/run_ghidra.py --ghidra <ghidra_dir> --work <work_dir> analyse
+    python tools/re/run_ghidra.py --ghidra <ghidra_dir> --work <work_dir> apply      (re-apply names/fields)
     python tools/re/run_ghidra.py --ghidra <ghidra_dir> --work <work_dir> decompile <target> [<target> ...]
     python tools/re/run_ghidra.py --ghidra <ghidra_dir> --work <work_dir> probe <command> [<command> ...]
 
@@ -30,7 +31,7 @@ def main():
     ap.add_argument('--maxmem', default='6G')
     ap.add_argument('--cpus', default='6')
     ap.add_argument('--safety-dir')
-    ap.add_argument('mode', choices=['analyse', 'decompile', 'probe'])
+    ap.add_argument('mode', choices=['analyse', 'apply', 'decompile', 'probe'])
     ap.add_argument('targets', nargs='*')
     a = ap.parse_args()
 
@@ -52,6 +53,10 @@ def main():
                         '-analysisTimeoutPerFile', '7200',
                         '-log', str(work / 'logs' / 'analyse.log'),
                         '-scriptlog', str(work / 'logs' / 'analyse_script.log')]
+    elif a.mode == 'apply':
+        # re-apply names and fields to the existing project (after zhl_extract.py changes)
+        cmd = common + ['-process', 'isaac-ng.exe', '-noanalysis', '-postScript', 'ApplyZhl.java', str(work),
+                        '-log', str(work / 'logs' / 'apply.log'), '-scriptlog', str(work / 'logs' / 'apply_script.log')]
     else:
         script = 'DecompileFns.java' if a.mode == 'decompile' else 'Probe.java'
         cmd = common + ['-process', 'isaac-ng.exe', '-noanalysis',

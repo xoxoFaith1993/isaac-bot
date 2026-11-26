@@ -1,7 +1,7 @@
 // Decompile chosen functions of the analysed exe to C text files, for reading enemy AI.
 // Arguments: <out_dir> <target> [<target> ...]
 //   target = an address (0x4a1b20) or a name (Entity_NPC::Update)
-//   prefix "npc:" first moves the function into the Entity_NPC class as __thiscall, so its first
+//   prefix "npc:" (or "player:", "proj:", "ent:") first moves the function into that class as __thiscall, so its first
 //   argument is typed Entity_NPC* and fields read as this->state, this->i1 ...
 //   suffix "+NewName" renames it (e.g. npc:0x4a1b20+ai_haunt; "=" is split off by Windows batch files)
 // Output: one .c file per target plus <out_dir>/callees.txt (what each target calls).
@@ -26,19 +26,26 @@ public class DecompileFns extends GhidraScript {
         List<Function> todo = new ArrayList<>();
         for (int i = 1; i < args.length; i++) {
             String t = args[i];
-            boolean npc = t.startsWith("npc:");
-            if (npc) t = t.substring(4);
+            // class prefixes: npc: player: proj: ent: (types the first argument as that struct)
+            String cls = null;
+            String[][] pre = {{"npc:", "Entity_NPC"}, {"player:", "Entity_Player"}, {"proj:", "Entity_Projectile"}, {"ent:", "Entity"}};
+            for (String[] pp : pre) if (t.startsWith(pp[0])) { cls = pp[1]; t = t.substring(pp[0].length()); }
+            // "raw:" moves the function back to the global namespace (untyped this), for functions whose
+            // decompile fails with a typed this ("PTRSUB off of non structured pointer type", 2026-11-26)
+            boolean raw = t.startsWith("raw:");
+            if (raw) t = t.substring(4);
             String rename = null;
             if (t.contains("+")) { rename = t.substring(t.indexOf('+') + 1); t = t.substring(0, t.indexOf('+')); }
             Function fn = findTarget(t);
             if (fn == null) { println("not found: " + t); continue; }
-            if (npc) {
+            if (cls != null) {
                 SymbolTable st = currentProgram.getSymbolTable();
-                Namespace cls = st.getNamespace("Entity_NPC", currentProgram.getGlobalNamespace());
-                if (cls == null) cls = st.createClass(currentProgram.getGlobalNamespace(), "Entity_NPC", SourceType.USER_DEFINED);
-                fn.setParentNamespace(cls);
+                Namespace ns = st.getNamespace(cls, currentProgram.getGlobalNamespace());
+                if (ns == null) ns = st.createClass(currentProgram.getGlobalNamespace(), cls, SourceType.USER_DEFINED);
+                fn.setParentNamespace(ns);
                 fn.setCallingConvention("__thiscall");
             }
+            if (raw) fn.setParentNamespace(currentProgram.getGlobalNamespace());
             if (rename != null) fn.setName(rename, SourceType.USER_DEFINED);
             todo.add(fn);
         }

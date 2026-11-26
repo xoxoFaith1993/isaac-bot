@@ -19,7 +19,9 @@ from pathlib import Path
 SIG_RE = re.compile(r'^\s*"([0-9A-Fa-f?()]*)"\s*:')
 FIELD_RE = re.compile(r'^\s*([A-Za-z_][\w:<>, ]*?[\w>*&\s])\s*\b([A-Za-z_]\w*)\s*:\s*(0x[0-9A-Fa-f]+)\s*;')
 STRUCT_RE = re.compile(r'^\s*struct\s+([A-Za-z_]\w*)')
-NAME_RE = re.compile(r'([A-Za-z_]\w*(?:::[A-Za-z_~]\w*)+|[A-Za-z_~]\w*)\s*\(')
+MULTI_RE = re.compile(r'^\s*((?:unsigned |signed |const )*[A-Za-z_][\w:<>]*\s*\**)\s+[A-Za-z_]\w*\s*:\s*0x[0-9A-Fa-f]+\s*,')
+PAIR_RE = re.compile(r'([A-Za-z_]\w*)\s*:\s*(0x[0-9A-Fa-f]+)')
+NAME_RE =re.compile(r'([A-Za-z_]\w*(?:::[A-Za-z_~]\w*)+|[A-Za-z_~]\w*)\s*\(')
 
 
 def strip_comments(text):
@@ -59,6 +61,13 @@ def parse(path):
             if '::' not in name and struct:
                 name = struct + '::' + name
             sigs.append((sig.lower(), name, path.name))
+            continue
+        if struct and ',' in line and MULTI_RE.match(line):
+            # one type, several fields: "float A : 0x4, B : 0x8, C : 0xc;"
+            # (fixed 2026-11-26: the single-field regex kept only the last name of such a line)
+            typ = MULTI_RE.match(line).group(1)
+            for name, off in PAIR_RE.findall(line):
+                fields.append((struct, off.lower(), ' '.join(typ.split()), name))
             continue
         m = FIELD_RE.match(line)
         if m and struct:
