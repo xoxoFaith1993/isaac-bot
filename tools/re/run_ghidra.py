@@ -85,7 +85,10 @@ def main():
             with safety.HeavyJob('isaac-re ghidra ' + a.mode, status_file=str(work / 'logs' / 'status.json')) as job:
                 rc = job.run(cmd, env=env)
         else:
-            p = subprocess.Popen(cmd, env=env)
+            # below-normal CPU priority (2026-11-26): the bot's benchmark runs the game on this PC at the same
+            # time, and Ghidra must not slow it (or bias its timing). Child processes (java, decompile.exe)
+            # inherit the priority class.
+            p = subprocess.Popen(cmd, env=env, creationflags=getattr(subprocess, 'BELOW_NORMAL_PRIORITY_CLASS', 0))
             stop = threading.Event()
             t = threading.Thread(target=_watchdog, args=(p, a.ghidra, work / 'logs' / 'watchdog.log', stop), daemon=True)
             t.start()

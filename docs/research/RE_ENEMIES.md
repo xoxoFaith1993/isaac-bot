@@ -787,3 +787,116 @@ AI is switched off.
 - **Globin:** dies for good only when hit in State 3; revives with 10 HP.
 - **Widow:** collision class 0 mid-jump; jump direction = Isaac's position at take-off; jumps only on a 1/3 roll when
   Isaac is beyond 100 px.
+
+---
+
+## Batch E1 (2026-11-26): Gurgling, Gurdy, Gurdy Jr., Duke of Flies / Husk, Gaping Maws
+
+Two blind readers per bundle (E1a: Gurdy and Gurdy Jr.; E1b: Duke, Maws, Gurgling), one on Sonnet; all agree unless
+noted.
+- Gurdy Jr.'s states were read from annotated assembly, because its C stops at a jump table.
+- **Gurdy calibration: PASS.** The community `Gurdy.lua` has the same y ≤ 200 / > 7 / < 14 conditions, the y = 400
+  teleport, the ±40/−65 fly spawns at velocity −20, and the five-spread spray.
+
+### Gaping Maw (235.0) and Broken Gaping Maw (236.0), `0x527530` (shared with 42 and 203)
+- **It's pinned to its tile and can't be damaged** (`isInvicible` is set at init and never cleared here, lines
+  76-121).
+- **The suction** (lines 263-329), every update while active:
+  - it pulls **every live player, tear and enemy projectile** toward the Maw;
+  - **strength = k × (300 − distance) / 300**, clamped 0..k, with **k = 0.6 for Isaac** (0.9 for tears and shots);
+  - so **0.6 at contact, 0.3 at 150 px, none beyond 300 px**;
+  - **no line-of-sight check: it pulls through rocks;**
+  - it's added as `velocity += speedMultiplier × strength × direction / friction`.
+- **When it's active:**
+  - **235** is always on while the room isn't cleared;
+  - **236** runs a cycle of `StateFrame % 240`: **on for about 150 updates (5 s), off for 90 (3 s)**, and only pulls
+    while its "Sucking" overlay plays.
+- **It never shoots** (the shooting code in this function belongs to type 42).
+- **Bot meaning:**
+  - Isaac's own input accel is 0.6 × k per movement step (`RE_CORE.md`). **Near the Maw the pull equals his full
+    walking acceleration:** within about 100 px he can barely move away.
+  - **Stay beyond 300 px**, or at least far enough that the pull (0.6 × (300 − d)/300) is well under his acceleration.
+  - Watch 236's on/off cycle.
+  - **His own tears get bent toward it (0.9).**
+  - This is likely what killed the furthest run: being pulled into enemies or shots while fighting near it.
+
+### Gurgling (237.0 / 237.1 boss / 237.2 Turdling), in `ai_charger` `0x534300`
+- **Idle:** random axis-aligned walking at 0.6 (the trigger is in `RE_CORE.md`).
+- **The charge:** V1 = 1.3 × axis direction (boss subtype 1: 1.95), fixed. Each update friction × 0.9, then V1 is added
+  again (line 680).
+  - **Steady speed ≈ 12-13 px/update.**
+  - **There's no lane centring for 237** (lines 692-706; other chargers snap to the tile centre).
+- **Tears bend it:** a sideways push (knockback) is never corrected, so the Gurgling keeps charging in a shifted lane.
+  Pushes along its axis are absorbed. (Unresolved: the size of the sideways drift.)
+- **A charge ends** on a wall or rock hit, a stall (6 updates barely moving), or confusion/fear. Then State 3:
+  - 237.0 fires a **ring, mode 9 (vector 7.5, 6): 6 shots at 7.5**;
+  - the Turdling spawns 4 Dips (217.2);
+  - the boss sometimes spawns flies.
+- **The creep trail:** while its speed is above 3 px/update, it spawns **red creep (1000.22)** (Turdling: 1000.94) at
+  sprite scale 1.23. It spawns at most once per update; the gate's rate is unresolved. Lifetime: the creep effect's
+  defaults.
+- **Bot meaning:**
+  - a fast (≈ 12 px/update) straight charge that doesn't recentre;
+  - shooting it from the side nudges it out of line;
+  - **its charge path becomes red creep**, so don't cross its trail;
+  - after it stops, a 6-shot ring.
+
+### Gurdy (36.0), `0x480bf0`
+- **Never moves** (pinned to its spot).
+- **At room start it places Isaac at (Gurdy's x, y = 400)** (lines 83-116).
+- **After each idle animation:**
+  - **summon** if `rand % 3 == 0`, **or Isaac's y ≤ 200**, or there are more than 7 enemies. It summons only while
+    there are fewer than 14 enemies: a Pooter, 2 Attack Flies, or 2 Boils at fixed spots.
+  - Otherwise **a five-spread (mode 5, about 12 px/update), not aimed:**
+    - down (when Isaac is below and more vertical than horizontal);
+    - otherwise left or right, toward Isaac's side (lines 362-408, 297-332).
+- **Bot meaning:**
+  - stay **below y = 200 and level-ish with it**. Directly above, it only summons;
+  - its sprays go in 3 fixed directions, picked by where Isaac is: stand diagonally below it, out of all three fans;
+  - **killing its spawns keeps the count under 7**, which brings back the spray (not summon) pattern.
+
+### Gurdy Jr. (99.0), `0x523bd0` (states from assembly)
+- **Stationary** except for its charge.
+- **The cycle:** every return to State 3 adds 1 to a counter. **It charges on the 3rd return, or always once its HP is
+  below 100.** Otherwise it picks at random from:
+  - State 6, a pause of 36 updates;
+  - State 9, an **8-way ring at speed 10** (12 in one mode), fixed angles;
+  - State 10, a Pooter.
+- **The charge** (State 8): aimed at **Isaac's current position** when it starts (no lead), adding 4 per update over
+  friction 0.8 (≈ **20 px/update** at most, during the launch animation). Then it slides with almost no friction until
+  speed < 2 or 10 slide loops.
+- **Bot meaning:**
+  - **watch the counter (`ProjectileCooldown` +0xba0 == 2 means the next idle charges)**;
+  - below 100 HP every idle charges;
+  - sidestep at launch: the direction is fixed;
+  - the 8-way ring is fixed: stand off its lines.
+
+### The Duke of Flies (67.0) / the Husk (67.1), `0x472210`
+- **Movement:** it **doesn't chase Isaac**. It drifts diagonally and bounces off walls (± sign kept until a wall).
+  Speed per axis ≈ 2 (Husk 4; subtypes 2.5 or 5.5), clamped 40 px inside the room.
+- **States** (each lasts 40 updates; it keeps moving):
+  - **13, release** (at frame 20): **3 Attack Flies** (18.0) **parented to the Duke**, with no cap unless a game flag
+    is set (then 6 − existing). The Husk swaps the 3rd fly for a spider thrown at Isaac.
+  - **14, big spawn** (frame 18): one bigger fly (18 / 80 / 61 by subtype), if there are fewer than 5. The Husk instead
+    fires **10 boss shots aimed at Isaac**.
+  - **8, burst** (frame 17): **its attached flies are blasted outward at 18 and detached**. The Husk also fires a
+    ring (mode 9, vector (8, 8)).
+- **Picking a state:** random per update (1/40 release, 1/70 big spawn, ...), gated by enemy counts.
+- **Why corners trap Isaac:**
+  - the Duke itself ignores him;
+  - its attached flies orbit it about 65 px out (Attack Fly AI);
+  - **the burst throws them outward at 18**, then they chase Isaac at 0.3 px/update² (Attack Fly AI). In a corner the
+    detached flies converge from the open side.
+  - Unresolved (the Attack Fly AI is the driver).
+- **Bot meaning:**
+  - kill flies while they're still attached (they orbit slowly);
+  - expect a burst (State 8) to scatter them fast;
+  - fight in the open, not in a corner.
+
+### Record to confirm (E1)
+- **Maw:** Isaac's velocity change toward it ≈ 0.6 × (300 − d)/300 per update; none beyond 300 px; pulls through rocks;
+  236's on/off timing.
+- **Gurgling:** charge speed ≈ 12-13; sideways drift after a tear hit; red creep along the path while fast.
+- **Gurdy:** summons whenever Isaac's y ≤ 200; the spray direction by Isaac's side; the start position y = 400.
+- **Gurdy Jr.:** a charge every 3rd idle (always below 100 HP); charge peak speed.
+- **Duke:** flies parented until State 8; burst speed 18; release every ~40 updates on average.
