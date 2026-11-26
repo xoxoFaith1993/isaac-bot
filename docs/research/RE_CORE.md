@@ -724,3 +724,78 @@ What a feared NPC does (called with Isaac's position):
 - A feared enemy flees for about 1.4 s after Isaac is beyond 250 px (170 behind cover).
 - A projectile's height vs `PositionOffset.Y`.
 - Isaac's `Velocity` vs his position change per update (the two-steps test).
+
+---
+
+## Batch E2 (2026-11-26): hazards (explosions, TNT, spikes, fireplaces, stone shooters)
+
+Two blind readers per bundle (E2a: explosions and TNT; E2b: spikes, fireplaces, stone shooter), one on Sonnet; all
+agree unless noted.
+
+### Explosions (`Game::BombExplosionEffects` `0x706f90` → the damage pass `0x705fe0`)
+- **Radius:** **75 px** for a normal bomb (90 if 140 < damage < 175, 105 if ≥ 175; Giga 130) × a scale argument,
+  **measured centre to centre plus the target's size** (`radius + size`, line 118).
+  - Optionally a line check (`Room::CheckLine`): a target behind cover takes nothing.
+- **Damage to Isaac:** **1 (half a heart) if the bomb damage is < 85, else 2 (a full heart)** (lines 231-236). It is
+  not the bomb's raw damage. Damage flag 0x10000000 forces 1.
+  - **Isaac's own bombs hurt him**: the only exclusion is the bomb entity itself.
+  - An item-immunity check (`0x7e3ef0`, probably Pyromaniac/Host Hat) can cancel it; the ids weren't visible.
+- **Push:** min(radius + size − distance, 15) away from the centre. For Isaac it's added to half his velocity and
+  capped at 10. It applies before damage, even during i-frames.
+- **Other entities:** take the full bomb damage.
+- **Grid:** rays every 20 px out to the radius break the tiles in line.
+- **TNT** (`GridEntity_TNT::Hurt`): each hit ≥ 1 adds 1 (a 1-in-3 chance of +2) to a 0-4 counter. The blast is
+  triggered elsewhere, at 4.
+- **Bot meaning:**
+  - **stay more than 75 px + Isaac's size from any bomb (yours too)** when it goes off;
+  - a full heart from big blasts;
+  - cover blocks it when the line check is on.
+
+### Spikes (`GridEntity_Spikes::Update` `0x725e10`)
+- **While up, they hurt every update** via `GridEntity::hurt_surroundings(2, flags 0x80, ...)`: **2 = a full heart**
+  (matching the logged 2-damage spike hits). Isaac's i-frames space the repeats.
+- **Retracting spikes (grid type 9):** **60 updates up, 60 down** (2 s each), flipping on a timer. An animation at
+  timer 5 warns about 5 updates before each flip (lines 41-52).
+- **Plain spikes (type 8):** always up.
+- **Bot meaning:**
+  - never path over raised spikes;
+  - retracting spikes are safe for the 60-update down phase; cross early in it, not in its last 5 updates.
+
+### Fireplaces (33.x, `0x6d9000`)
+- **Only red (33.1) and purple (33.3) shoot** (lines 390-464):
+  - when ready (an 84-update cooldown after each shot; 60-89 at spawn), each update a 1-in-5 roll, then:
+  - **Isaac within 160 px** (the squared value goes through the hidden sqrt, so 160 px) **with a clear line**;
+  - then a 1-in-15 roll: the Shoot overlay, then **one shot at speed 5 aimed at the nearest player's current
+    position** (no lead);
+  - **purple's shot homes** (flag bit 0, strength 1.5).
+- **Putting them out:**
+  - normal and red: hits cost health per hit (1-2, or 2-3 for hits > 10); out below 1.5;
+  - **blue and purple: only explosions put them out**;
+  - **white: never**.
+- Contact damage comes from the entity config (class 4 while burning, 0 when out).
+- **Bot meaning:**
+  - red and purple fires snipe within 160 px with line of sight, about every 3-5 s;
+  - put red ones out or stay out of range;
+  - don't waste tears on blue or purple;
+  - white is a permanent obstacle.
+
+### Stone shooters (202, `0x50cb10`)
+- **No player check at all:** they fire on a timer, along their fixed facing (subtype 0 = left, 1 = up, 2 = right,
+  3 = down). One shot (mode 0) at speed 7 × 1.07 ≈ 7.5 at the Shoot event. Then the next one fires as soon as the
+  animation ends.
+- Variants 10/11 alternate a + ring and an X ring (modes 6/7) at speed 10.
+- They're invulnerable, and close their eyes when the room is cleared.
+- **Bot meaning:** a constant stream along one row or column; stay off it.
+
+### Unresolved
+- **The "0.0" damage source:** not found yet. Candidates: an explosion or hazard whose source reference has no entity.
+  Next: find the TakeDamage callers that pass an empty source.
+- The TNT blast's own radius and damage.
+- The spike flag 0x10000000 in room type 13.
+- The stone shooter's real fire rate (its animation length).
+
+### Record to confirm (E2)
+- Bomb damage to Isaac = 1 (or 2 for big bombs) within 75 + his size; none behind cover.
+- Spikes: 2 damage; retracting spikes up and down 60 updates each.
+- Red/purple fires: shots only within 160 px with line of sight; speed 5; purple homes.
+- Stone shooter: fixed direction, about 7.5 speed.
