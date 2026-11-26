@@ -493,3 +493,29 @@ fight and one Haunt fight (the checklist is there).
 **Worth learning from:**
 - The original code beats every secondary source, including a careful hand translation that two readers agreed on.
 - Keep the method, not the addresses: every game update moves them.
+**ChatGPT round 4, a blind read of the same decompiled C (Haunt and Dingle), checked against it here:**
+- **Right, independently:**
+  - the Lil' Haunt range is `dist² < 40000`, **200 px**. It found the community file's dropped zero without being
+    told;
+  - the controller check is `!= -1`;
+  - the 60/90-update timers, 1 in 40, 40 px, 1 in 50, the 5-update lead, speed 10, lasers at 90°/135°/45°, and
+    spiders at the midpoint with up to 50 px of jitter;
+  - Dingle's 15/30-update Idle threshold, its state changes, dash speed 10/15, the 12-15 update pause, the dash caps
+    (Red 4, Black 1, Dingle 3, Dangle 2 dashes), the 1-in-5 poop and Dangle's type 295 spawn.
+- **Wrong** (checked in the C):
+  - **The Haunt's variants are swapped.** The orbiting and chasing code is the Lil' Haunt (variant 10); the side
+    dash and spit/laser code is the Haunt (variant 0).
+  - **It reads y as pointing up.** It calls the spit's `(0, 10)` "upward" and the top-wall pin "the floor". In the
+    game's coordinates y grows downward: the spit goes down, and the Haunt is pinned to the top wall.
+  - **Pink champion timing:** it said "frames 2 and 4". The real code fires every 2nd update between the Shoot and
+    Stop events, alternating sides every 4.
+  - **Dingle's Tired length is the wrong way round.** The C rolls 60-89 updates and halves it for **variant 1
+    (Dangle)**, so Dingle rests 2-3 s and Dangle 1-1.5 s. The roll repeats every update, which it missed.
+  - Dance always leads to the Spit (state 8), never straight back to idle.
+  - Type `0x55` from the Black champion's whistle is the **Spider enemy (85)**, not a projectile.
+- **A fair point it raised:** `ai_haunt` has **no damage-blocking code**. Its `isInvicible` flag is set at spawn and
+  cleared every update. So "the Haunt can't be hurt in phase 1" (from the community file, and accepted in
+  `RE_PILOT.md`'s table) isn't shown by this function. It may live in the damage path. Until a recording shows
+  shots doing no damage in `State` 4 and 16, treat it as unconfirmed.
+- **The point of the exercise:** a careful hand translation, our pilot and a blind second reader each got some things
+  wrong. The original C plus a check of every disagreement settled them all but one, and that one needs a recording.
