@@ -6671,6 +6671,12 @@
      "text": "Below 50% HP: becomes 66.30 plus the horse 66.20; 66.30 summons 2 Knights (41.0).",
      "src": "RE_ENEMIES E3b 67d32e4",
      "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "While the hourglass timer runs, Isaac's tears move at x0.75 (the tear update checks the room's hourglass timer).",
+     "src": "RE F1 head start (E4 note)",
+     "checked": "2 readers"
     }
    ]
   },
@@ -6898,6 +6904,323 @@
      "cat": "body",
      "text": "Conquest clones share damage.",
      "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "244.0": {
+   "name": "Round Worm",
+   "move": {
+    "kind": "pinned",
+    "notes": "Hides and teleports: to the room centre + 60-310 px, only to spots 100-1000 px from Isaac."
+   },
+   "attacks": [
+    {
+     "kind": "aimed",
+     "speed": 10,
+     "count": 1,
+     "lead": 10,
+     "needs_line": true,
+     "when": "aimed at Isaac + 10 x his velocity; needs line of sight; stops at walls"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false,
+    "hidden_untouchable": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "One shot at 10, aimed at Isaac + 10 x his velocity (it leads him); needs line of sight; stops at walls. 6/6 logged hits at 10.0.",
+     "src": "RE_ENEMIES E4 da2babc",
+     "checked": "recording"
+    },
+    {
+     "cat": "body",
+     "text": "Untouchable while hidden (collision 0).",
+     "src": "RE_ENEMIES E4 da2babc",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Teleports to the room centre + 60-310 px, only to spots 100-1000 px from Isaac.",
+     "src": "RE_ENEMIES E4 da2babc",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "218.0": {
+   "name": "Wall Hugger",
+   "move": {
+    "kind": "axis_walk",
+    "speed": 7.5,
+    "notes": "Follows walls and rocks cell by cell at about 7.5 px/update."
+   },
+   "attacks": [
+    {
+     "kind": "contact",
+     "damage": 1
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": true,
+    "flying": false,
+    "harmless_first": 30
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "body",
+     "text": "Invulnerable; no contact damage for its first 30 updates.",
+     "src": "RE_ENEMIES E4 da2babc",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Follows walls and rocks cell by cell at about 7.5 px/update.",
+     "src": "RE_ENEMIES E4 da2babc",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Contact hits do 1 (6/6 logged).",
+     "src": "RE_ENEMIES E4 da2babc",
+     "checked": "recording"
+    }
+   ]
+  },
+  "25.0": {
+   "name": "Boom Fly",
+   "move": {
+    "kind": "bounce",
+    "speed": 6.4,
+    "notes": "No chase: a diagonal bounce at about 4.5 per axis (6.4 total)."
+   },
+   "attacks": [
+    {
+     "kind": "bomb",
+     "blast": 75,
+     "when": "on death: damage 40, radius 75, half a heart to Isaac"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "No chase: a diagonal bounce at about 4.5 per axis.",
+     "src": "RE_ENEMIES E4 da2babc",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Death blast: damage 40, radius 75, half a heart to Isaac. 2/2 logged hits did 1, at 51 and 77 px.",
+     "src": "RE_ENEMIES E4 da2babc",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "Variants: 25.6 invulnerable during Explode, then a blast of radius ~112; 25.2/25.4/25.5 add shot rings; 25.4 also shoots at 10 when Isaac is within 20 px of its row/column and inside 200 px.",
+     "src": "RE_ENEMIES E4 da2babc",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "12.0": {
+   "name": "Horf",
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [
+    {
+     "kind": "aimed",
+     "speed": 7,
+     "count": 1,
+     "cooldown": 28,
+     "needs_line": true,
+     "when": "turret: one aimed shot at 7 (10 hard mode), cooldown 28 (14)"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "Turret: one aimed shot at 7 (10 hard mode), cooldown 28 (14). 2/2 logged hits at 7.0.",
+     "src": "RE_ENEMIES E4 da2babc",
+     "checked": "recording"
+    }
+   ]
+  },
+  "258.0": {
+   "name": "Fat Bat",
+   "move": {
+    "kind": "chase",
+    "speed": 1.8,
+    "notes": "Chases toward Isaac's row or column at about 1.8; dodges sideways from things moving at it within 100 px."
+   },
+   "attacks": [
+    {
+     "kind": "aimed",
+     "speed": 10,
+     "count": 1,
+     "cooldown": 30,
+     "when": "within 40 px of Isaac's row or column: a 1/15 roll per update, cooldown 30"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Chases toward Isaac's row or column at about 1.8; dodges sideways from things moving at it within 100 px.",
+     "src": "RE_ENEMIES E4 da2babc",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "One shot at 10 when within 40 px of Isaac's row or column: a 1/15 roll per update, cooldown 30. 3/3 logged hits at 10.0.",
+     "src": "RE_ENEMIES E4 da2babc",
+     "checked": "recording"
+    }
+   ]
+  },
+  "229.0": {
+   "name": "Tumor",
+   "move": {
+    "kind": "bounce",
+    "speed": 3.0,
+    "notes": "Diagonal bouncer (speed not read: 3 is a placeholder)."
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 6,
+     "speed": 10,
+     "fixed": true,
+     "when": "a 1/100 roll per update"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Diagonal bouncer.",
+     "src": "RE_ENEMIES E4 da2babc",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "229.0: a 6-ring at 10, a 1/100 roll per update. 3/3 logged hits at 10.0.",
+     "src": "RE_ENEMIES E4 da2babc",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "229.1: orbiting shots at 8, released at 10 on Blow.",
+     "src": "RE_ENEMIES E4 da2babc",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "262.0": {
+   "name": "Mega Maw",
+   "move": {
+    "kind": "pinned"
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 9,
+     "speed": 10.5,
+     "fixed": false,
+     "when": "decides every 20 updates (10 below 30% HP): 9 at 10.5, or 5 at 10.5 + 5 at 7.35"
+    },
+    {
+     "kind": "burst",
+     "count": 15,
+     "speed_min": 3.5,
+     "speed_max": 10.5,
+     "lobbed": true,
+     "when": "only when Isaac is more than 40 px below it"
+    },
+    {
+     "kind": "spawn",
+     "what": "29.0",
+     "when": "a Hopper thrown 150 px below it"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Turret; decides every 20 updates (every 10 below 30% HP).",
+     "src": "RE_ENEMIES E4 da2babc",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Rings use FireRing with VelocityMulti 1.05, projectile variant 2: 9 at 10.5, or 5 at 10.5 + 5 at 7.35. All 3 logged 9.2 hits at 10.5.",
+     "src": "RE_ENEMIES E4 0x462df0 (settled 3f8ec0c)",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "The 15-shot burst is plain FireBossProjectiles (variant 0, lobbed, 3.5-10.5), only when Isaac is more than 40 px below it; the logged lobbed hit at 7.7 (height -89) is in range.",
+     "src": "RE_ENEMIES E4 0x462df0 (settled 3f8ec0c)",
+     "checked": "recording"
+    },
+    {
+     "cat": "attack",
+     "text": "Summons a Hopper, thrown 150 px below it.",
+     "src": "RE_ENEMIES E4 da2babc",
      "checked": "2 readers"
     }
    ]
