@@ -608,3 +608,80 @@ every number above.
 - **Settled by C:** the "Open" event name (`DAT_00b82628` is the string "Open").
 - **Settled by C:** the real shot speed, from the ×1.2 tail in `RE_CORE.md`. The readers couldn't see it, so both
   said "7 × 1.07 if applied".
+
+---
+
+## Gapers (10.0 Frowning Gaper, 10.1 Gaper, 10.2 Flaming Gaper), and others sharing `ai_gaper`
+
+`ai_gaper`, `0x50f730` (dispatcher case 0x0). It also runs 208 Fatty, 252, 257 Conjoined Fatty, 284 Cyclopia and 302
+Stoney. Gaper 10.3 is handed to `0x4e0e20` (lines 73-78).
+
+**Calibration: PASS.** The community `Isaac/Content/Actor/Enemy/Gaper.lua` has the same speed table (0.6 / 0.3 /
+0.33 / 0.48 / 0.9 / 0.498 / 0.5478 / 0.72) and the same path marker (900, or 100 for Stoney).
+
+**Movement** (lines 529-576):
+- **It always chases.** There's no wander and no distance trigger: `PathChase(Isaac's position, speed, 900, true)`
+  every update, which goes straight at him within 70 px with a clear line and follows the grid otherwise
+  (`RE_CORE.md`).
+- **Speed factor by variant:**
+  - **10.0: 0.6, rising to 0.72** once its face overlay has played (lines 552-554, 615-620);
+  - **10.1: 0.498**;
+  - **10.2: 0.548**;
+  - Fatty 0.3; Stoney 0.48 or 0.6; 252: 0.9.
+- **Feared:** flees (`0x7ece80`), friction × 0.8.
+
+**Attacks:** none for 10.x. Fatties and 257 have their own attack blocks (lines 268-460). On death, Gaper-family
+entities can spawn or morph into 11.0 / 11.1 (Gusher / Pacer, line 226); the exact condition is in lines 207-267.
+
+**Fields:** `+0xc34` = the current speed factor. No `I1`/`I2`/`V1`/`V2` use for 10.x. **Damage blocking:** none.
+
+### Bot meaning
+- A Gaper heads straight at Isaac whenever there's a clear line within 70 px, otherwise along the grid path: it
+  **never stops chasing**.
+- Its speed factor is under half of Isaac's (`RE_CORE.md`: Isaac's accel is 0.6 × k per step against the
+  pathfinder's 2 × 0.6), so kiting works.
+- 10.0 speeds up (0.72) once angry.
+
+**Review:**
+- **All agree** (two blind readers, one on Sonnet).
+- **Settled by calibration:** the community file matches every speed.
+- **Unresolved:** the exact death-morph condition.
+
+**Record:** Gaper speed per update while chasing (10.0 before and after its overlay, 10.1); that it always chases.
+
+---
+
+## Spiders (85.0 Spider; also 94 Big Spider, 215, 250 Ticking Spider, 869)
+
+`ai_spider`, `0x530540` (dispatcher case 0x39).
+
+**The cycle** (State 4, lines 135-359):
+- **Wait:** it idles until `StateFrame` > 13 (lines 150-153), about **15 updates (0.5 s)** after each dart ends.
+- **Then pick a dart:**
+  - **At Isaac** (lines 155-178) if he's **within a random 100-200 px** (threshold `100 + 100 × rand`, re-rolled each
+    pick) **and there's a clear line**.
+  - **The dart point = Isaac's position + 10 × his velocity: it leads him by 10 updates** (lines 166-169).
+  - Otherwise **a random spot 70-110 px away** that's free and in line (lines 182-221).
+- **Dart:** accelerates at 6.0 per update toward the point (type 869: 4.5) over friction (× 0.6 per update) (lines
+  311-340).
+  - It ends within 14 px of the point, or when slow (speed < 3) with its timer run out (lines 316-331).
+- **Jumpers (215, 250, 869):** 1 in 3 picks becomes a jump (State 6) to that point instead (lines 224-241).
+- **94 Big Spider:** the same movement; splits into 85.0 spiders on death (lines 383-389).
+- With collectible 377 held (and not friendly), spiders go "inert": random darts only (lines 58-104).
+
+**Fields:** `TargetPosition` = the dart point (zero = idle); `StateFrame` = the idle/dart timer.
+**Damage blocking:** none in this function.
+
+### Bot meaning
+- **A spider within 100-200 px with a clear line darts at where Isaac will be in 10 updates.** Running straight makes
+  it intercept you. **Change direction right after it starts a dart**: it doesn't re-aim mid-dart.
+- **It always pauses about 15 updates between darts:** a safe window to step past or shoot it.
+- Beyond 200 px, or behind a rock, it only darts randomly.
+
+**Review:** **all agree** (two blind readers, one on Sonnet): the 10-update lead, the 100-200 range, the 15-update
+pause, 6.0 accel, the 14 px arrival.
+
+**Record:**
+- The dart target vs Isaac's position + 10 × velocity at the pick;
+- no aimed darts beyond 200 px or without line of sight;
+- the pause length between darts.
