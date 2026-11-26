@@ -61,8 +61,8 @@ the author can move an item up.
 | E3b | **Famine** (+ variants) | 63.0 | 1 (live 1.2.49) | first: the low-HP blood-shot fan (seen at 11.9 px/update from ~140 px), its tells, the dash | [x] 67d32e4 |
 | E3b | **Death** (+ variants) | 66.0 | 0 (never met) | next: the hourglass slowdown (what it slows, for how long), scythes, the horse phase | [x] 67d32e4 |
 | E3b | Pestilence, War, Conquest (+ variants) | 64.0, 65.0, 65.1 | 0 | bosses: two readers each | [x] 67d32e4 |
-| E4 | Big Spider, Fatty, Round Worm (shots), Wall Hugger, Boom Fly, Pooter, Horf, Maggot, Hopper | 94, 208, 244, 218, 25, 14, 12, 21, 29.0 | 2-13 each | in that order | [ ] |
-| E4 | Fat Bat, Tumor, Mega Maw (shooters seen in the logs) | 258, 229, 262 | 2-3 shot hits | | [ ] |
+| E4 | Big Spider, Fatty, Round Worm (shots), Wall Hugger, Boom Fly, Pooter, Horf, Maggot, Hopper | 94, 208, 244, 218, 25, 14, 12, 21, 29.0 | 2-13 each | in that order | [x] da2babc |
+| E4 | Fat Bat, Tumor, Mega Maw (shooters seen in the logs) | 258, 229, 262 | 2-3 shot hits | | [x] da2babc |
 | E5 | Mulligan, Hive, Clotty, Sucker, Spitty, Embryo, Leaper, Knight, Mr. Maw, Night Crawler, Para-Bite, Ragling, Kamikaze Leech, Moter, Wall Creep | | 0 logged | the author's list; floors 1-2 regulars | [ ] |
 
 ## Tier 2: Isaac's own side
@@ -94,3 +94,8 @@ the author can move an item up.
   shot from 63 at 11.9 px/update, height -38: fits the centre shot of the low-HP triple (code: 10 x 1.2 = 12), not
   the 10.8 sides. The recorder wasn't on for that fight, so the cadence, the dash, Death's hourglass, the scythes and
   War's ring aren't covered yet. E4 is already running (Mega Maw read).
+- 2026-11-26: E4 done (da2babc; 1 reader, a 2nd where there was new logic). Checked against the hit logs: Round Worm
+  shots 6/6 at 10.0, Horf 2/2 at 7.0, Fat Bat 3/3 at 10.0, Tumor 3/3 at 10.0 (all as the code says). Boom Fly: both
+  hits did 1 (half a heart) at 51 and 77 px from its centre, which fits the 75 + Isaac-size blast. Wall Hugger: 6 contact hits, 1
+  each. **Mega Maw doesn't quite fit:** 3 hits at 10.5 (code: 10) and 1 lobbed shot at 7.7 (code: 7); asked the
+  Ghidra session for the missing multiplier. E5 and F1 are running.
