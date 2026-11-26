@@ -99,3 +99,5 @@ the author can move an item up.
   hits did 1 (half a heart) at 51 and 77 px from its centre, which fits the 75 + Isaac-size blast. Wall Hugger: 6 contact hits, 1
   each. **Mega Maw doesn't quite fit:** 3 hits at 10.5 (code: 10) and 1 lobbed shot at 7.7 (code: 7); asked the
   Ghidra session for the missing multiplier. E5 and F1 are running.
+- 2026-11-26: Mega Maw settled: the ring is FireRing with VelocityMulti 1.05 (10 -> 10.5, 7 -> 7.35, variant 2 =
+  the 9.2 hits); the 7.7 lobbed hit is the 15-shot burst (FireBossProjectiles, 3.5-10.5). Both now fit the recordings.
