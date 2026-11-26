@@ -568,3 +568,11 @@ All match. ChatGPT's blind read (round 5) is next.
   - The recordings give a median of 6.7 and a p90 of 11 px/update (6,281 samples).
   - The bot's own movement learning measured about 7.7.
   - A scaling term is missing. Sent back to the Ghidra session.
+**Ghidra batches A (creep, contact) and B (Gapers, Spiders), checked here** (`RE_CORE.md` 04cbcbf,
+`RE_ENEMIES.md` 14d5f8f + 570128c):
+- **Creep:** all 79 logged creep hits did 1 damage, matching the code's flat 1.0.
+- **Contact damage = the enemy's `collisionDamage`:** consistent where the hit log can tell. The Haunt
+  (collisiondamage 2) has 19 hits of 2.
+- **Gaper:** recorded at 4.8 px/update (not decisive). The Gaper speed table matches the community `Gaper.lua`
+  exactly.
+- **Not recorded yet:** Spiders, flying vs creep, Trite and Monstro contact while airborne.
