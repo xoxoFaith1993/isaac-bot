@@ -1,12 +1,13 @@
-# Isaac Bot: an AI that plays The Binding of Isaac like a streamer
+# Isaac Bot: plan and history
 
-**Goal (Level 3, chosen 2026-11-25):** a bot that plays whole runs of Repentance+ by itself, talks like a streamer
-while it plays, and gets better after every death. It can race a local brain against a cloud brain on the same seed.
+**Current goal:** no damage on floors 1-2, bosses included (so devil deals stay open), with natural, fast-but-safe
+play and quick boss kills. Every behaviour change is measured on a locked benchmark and has to pass its gate
+(`tools/bench.py`, see `docs/HOW_WE_WORK.md`).
 
-**Size:** about 7–10 work sessions in total. Stage 2 (reflexes) is the
-big unknown: if the dodging comes out solid, later stages shrink; if it's weak, Stage 7 grows.
+**Longer term:** whole runs on its own, played better than an average player, and a reusable method for building bots
+for other games.
 
-**The author's bar (2026-11-25): smarter than the average player.** Not "it plays"; it should outplay a normal player.
+The sections below are the working history: what was tried, what was measured, and what's next.
 
 ---
 
