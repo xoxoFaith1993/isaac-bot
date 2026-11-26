@@ -6535,6 +6535,372 @@
      "checked": "2 readers"
     }
    ]
+  },
+  "63.0": {
+   "name": "Famine",
+   "move": {
+    "kind": "charge_line",
+    "speed": 18,
+    "band": 20,
+    "range": 1000,
+    "idle_speed": 2.5,
+    "notes": "Phase 1: dashes along its row when Isaac is within 20 px of it (a 1/5 roll), vx 18 (22.5 hard), one full screen lap: out 200 px off-screen, back in from the other side, stops at its start x. Below 33% HP it chases at about 2.5 px/update, moving only while it can't shoot."
+   },
+   "attacks": [
+    {
+     "kind": "spread",
+     "count": 3,
+     "angle": 16,
+     "speed": 12,
+     "side_speed": 10.8,
+     "range": null,
+     "needs_line": true,
+     "cooldown": 8,
+     "when": "below 33% HP: a triple at Isaac about every 9 updates while it can shoot (range not readable; the 1.2.49 hit came from ~140 px)"
+    },
+    {
+     "kind": "charge",
+     "speed": 18,
+     "trigger": "Isaac within 20 px of its row, 1/5 roll; wraps once round the room"
+    },
+    {
+     "kind": "spawn",
+     "what": "14.0",
+     "when": "1/40 roll: one Pooter 50 px away, only while fewer than 3 enemies"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "Below 33% HP: a triple shot at Isaac (fire mode 2): centre 12 px/update, sides 10.8 at +-16 degrees. The 1.2.49 hit (shot 9.0 from 63, speed 11.9, height -38) fits the centre shot.",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "recording"
+    },
+    {
+     "cat": "timing",
+     "text": "Shot cooldown 8: about one triple every 9 updates while the can-shoot check passes; range not readable.",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "In the low-HP phase it moves only while it can't shoot: a chase of about 2.5 px/update.",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Super/alt variant: 10 boss shots.",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Phase 1 dash: Isaac within 20 px of its row, then a 1/5 roll; vx +-18 (22.5 hard mode); one full lap (out 200 px off-screen, back in the other side, stops at its start x).",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Summons: a 1/40 roll, one Pooter 50 px away, only while fewer than 3 enemies are out.",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "66.0": {
+   "name": "Death",
+   "move": {
+    "kind": "wander",
+    "speed": 1.5,
+    "notes": "Floats about; the threats are the scythes and the hourglass. Below 50% HP becomes 66.30 + the horse 66.20."
+   },
+   "attacks": [
+    {
+     "kind": "spawn",
+     "what": "66.10",
+     "when": "state 13: 2 scythes at spots over 150 px from Isaac; state 14: up to 4 at the room edges on Death's row and column"
+    },
+    {
+     "kind": "slow",
+     "updates": 160,
+     "value": 0.9,
+     "cooldown": 160,
+     "when": "hourglass: 1/180 roll at stateFrame 22; slows every player for 160 updates (0.9: meaning open); no re-cast while its room timer runs (>= 160 updates apart)"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "timing",
+     "text": "Hourglass: 1/180 roll at stateFrame 22; AddSlowing on every player for 160 updates, value 0.9 (what 0.9 means to the engine: open); also sets a room timer (>= 160): no re-cast while it runs.",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "While the timer runs, friendly NPCs and a special class of shots run at half speed; ordinary enemies and enemy shots are NOT slowed. Isaac's tears probably halve (unproven).",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "attack",
+     "text": "Scythes 66.10: state 13 spawns 2 at spots over 150 px from Isaac; state 14 up to 4 at the room edges on Death's row and column.",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Below 50% HP: becomes 66.30 plus the horse 66.20; 66.30 summons 2 Knights (41.0).",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "66.10": {
+   "name": "Death's scythe",
+   "move": {
+    "kind": "chase",
+    "speed": 4.0,
+    "notes": "Waits 80 - 0.1 x its distance updates, then pushes toward Isaac (homing likely, unproven; speed not read: 4 is a placeholder to check against a recording); lives 180 updates; flies over rocks."
+   },
+   "attacks": [
+    {
+     "kind": "contact",
+     "damage": 1
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": true,
+    "health": 15
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "Each scythe waits 80 - 0.1 x dist updates, then pushes toward Isaac (homing likely, unproven); lives 180 updates; health 15; flies over rocks.",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "66.20": {
+   "name": "Death's horse",
+   "move": {
+    "kind": "charge_line",
+    "speed": 18,
+    "band": 2000,
+    "range": 2000,
+    "notes": "Charges along rows at +-18 px/update, wrapping round the room, dropping 0.3 x room height per wrap."
+   },
+   "attacks": [
+    {
+     "kind": "charge",
+     "speed": 18,
+     "trigger": "always: rows, wrapping, 0.3 x room height lower each wrap"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "move",
+     "text": "The horse charges along rows at +-18 px/update, wrapping, dropping 0.3 x room height per wrap.",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "64.0": {
+   "name": "Pestilence",
+   "move": {
+    "kind": "wander",
+    "speed": 1.5,
+    "notes": "Below 50% HP: stationary."
+   },
+   "attacks": [
+    {
+     "kind": "lob",
+     "range": 230,
+     "when": "Isaac within 230 px: one lobbed boss shot"
+    },
+    {
+     "kind": "spawn",
+     "what": "23.0|31.0",
+     "when": "2 Chargers or Spittys; below 50% HP: Attack Flies"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "Isaac within 230 px: one lobbed boss shot. Summons 2 Chargers or Spittys; below 50% HP stationary and summons Attack Flies.",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "65.0": {
+   "name": "War",
+   "move": {
+    "kind": "charge_line",
+    "speed": 18,
+    "band": 20,
+    "range": 2000,
+    "notes": "Dashes along its row when Isaac is on it (+-18, 3 wraps down the room). Jumps: untouchable from stateFrame 21, lands after 138 updates charging from the side away from Isaac. Below 50% HP fights on foot."
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 8,
+     "speed": 10,
+     "fixed": true,
+     "range": 200
+    },
+    {
+     "kind": "charge",
+     "speed": 18,
+     "trigger": "Isaac on its row; 3 wraps down the room"
+    },
+    {
+     "kind": "bomb",
+     "count": 5,
+     "when": "during the jump: 5 troll bombs"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false,
+    "jump_untouchable_from": 21
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "Isaac within 200 px: an 8-way ring at 10 px/update (12 hard mode; subtype 1 uses fire mode 6).",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Dash when Isaac is on its row: +-18, 3 wraps down the room.",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Jump: untouchable from stateFrame 21; drops 5 troll bombs; lands after 138 updates, charging from the side away from Isaac. Below 50% HP War fights on foot.",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    }
+   ]
+  },
+  "65.1": {
+   "name": "Conquest",
+   "move": {
+    "kind": "charge_line",
+    "speed": 18,
+    "band": 20,
+    "range": 2000,
+    "notes": "As War; lands after 188 updates. Clones share damage."
+   },
+   "attacks": [
+    {
+     "kind": "ring",
+     "count": 8,
+     "speed": 10,
+     "fixed": true,
+     "range": 200
+    },
+    {
+     "kind": "charge",
+     "speed": 18,
+     "trigger": "Isaac on its row; 3 wraps down the room"
+    },
+    {
+     "kind": "laser_aimed",
+     "count": 15,
+     "when": "during the jump: 15 light beams, every 5th aimed at Isaac + lead"
+    }
+   ],
+   "body": {
+    "no_damage_states": [],
+    "invulnerable": false,
+    "flying": false,
+    "jump_untouchable_from": 21,
+    "clones_share_damage": true
+   },
+   "terrain": {
+    "creep": null,
+    "pull": null
+   },
+   "facts": [
+    {
+     "cat": "attack",
+     "text": "Isaac within 200 px: an 8-way ring at 10 px/update (12 hard mode; subtype 1 uses fire mode 6).",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "move",
+     "text": "Dash when Isaac is on its row: +-18, 3 wraps down the room.",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "timing",
+     "text": "Jump: untouchable from stateFrame 21; drops 15 light beams (every 5th aimed at Isaac + lead); lands after 188 updates charging from the side away from Isaac.",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    },
+    {
+     "cat": "body",
+     "text": "Conquest clones share damage.",
+     "src": "RE_ENEMIES E3b 67d32e4",
+     "checked": "2 readers"
+    }
+   ]
   }
  }
 }

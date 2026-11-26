@@ -23,7 +23,7 @@ local Options = include("options")
 -- handed to the watchdog so it can build the brain's multiple-choice menu
 local MODS = { Reflex = Reflex, Nav = Nav, Danger = Danger, Options = Options, Rescue = Rescue, json = json }
 
-local VERSION = "1.2.50"
+local VERSION = "1.2.51"
 Reflex.status.mode = "full" -- fight + walk + explore (Stage 3); "combat" = fights only, "off" = hands off
 local TAG = "IBOT|"
 local BOT_SLOT = 2
@@ -399,6 +399,7 @@ local function handle(seq, cmd, payload)
   elseif cmd == "record" then
     -- enemy behaviour recorder on/off ("record|1" / "record|0"); read-only
     Recorder.on = (payload ~= "0")
+    Recorder.manual = true -- the helper decided: no boss-room auto switching from now on
     send("recorder", Recorder.on and "on" or "off")
   elseif cmd == "ents" then
     -- everything in the room the bot might count, for diagnosing (2026-11-25: Gemini's cord balls were counted as
@@ -778,6 +779,15 @@ mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, function()
   lastGrid = nil -- force a fresh map
   pcall(Nav.newRoom)
   pcall(dealRoomLine)
+  -- Record every boss and miniboss fight (2026-11-26: the horsemen batch had one recorded fact out of dozens, because the
+  -- recorder was off; the decompiled facts are checked against recordings). Read-only logging; a "record" command from
+  -- the helper takes over for good.
+  if not Recorder.manual then
+    local rt = Game():GetRoom():GetType()
+    local was = Recorder.on
+    Recorder.on = (rt == RoomType.ROOM_BOSS or rt == RoomType.ROOM_MINIBOSS)
+    if Recorder.on ~= was then send("recorder", Recorder.on and "on (boss room)" or "off") end
+  end
   IsaacBotRoomEnter = Game():GetFrameCount()
 end)
 
