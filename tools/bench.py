@@ -214,7 +214,8 @@ def run(label, suite_name, reps, arms, only):
         sys.exit(f"{label}.jsonl exists: pick a new --label (results are never mixed)")
     out = OUT / f"{label}.jsonl"
     meta = {"label": label, "suite": suite["name"], "suite_hash": suite["hash"], "version": bot_version(),
-            "commit": git_commit(), "speed": game_speed()}
+            "commit": git_commit(), "speed": game_speed(),
+            "total": len(items) * reps * len(arms)}  # fights planned, so a viewer can show progress and time left
     print(f"== bench {label}: suite {suite['name']} ({len(items)} rooms) x {reps} reps x {len(arms)} arm(s), "
           f"bot {meta['version']} @ {meta['commit']}, game speed {meta['speed']}x", flush=True)
     setup_run()
