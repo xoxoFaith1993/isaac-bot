@@ -276,6 +276,11 @@ return {
     patches = { { file = "mover", find = "reach = a.range, card = true, cost = S.m_card_line }", replace = "reach = a.range, card = true, cost = 0 }" },
                 { file = "reflex", find = "if safe and (S.card_attacks or 0) ~= 0 and Mover.inCardLine(", replace = "if false and Mover.inCardLine(" } } },
 
+  { test = "baits a closed Host across a pit instead of waiting far away", why = "positioning brain overrides the Host bait (1.2.53)",
+    patches = { { file = "reflex", find = "    prefDist = S.bait_dist\n    oldSpot = true", replace = "    prefDist = S.bait_dist" } } },
+  { test = "uses the window, steps off the line when the tell plays", why = "positioning brain overrides boss tactics (1.2.53)",
+    patches = { { file = "reflex", find = "    oldSpot = tac ~= nil", replace = "    oldSpot = false" } } },
+
   { test = "doesn't swap its card for a pill", why = "pocket slot check for pills/cards",
     patches = { { file = "nav", find = "(p:GetPill(0) == 0 and p:GetCard(0) == 0) and V.pill_card or 0",
                   replace = "V.pill_card" } } },

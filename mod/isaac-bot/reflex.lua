@@ -125,9 +125,10 @@ Reflex.S = {
   isaac_steps = 2,
   -- Positioning brain (forecast plan step 3, position.lua; A/B: 0 = the old firing-spot planner and the pull to the
   -- middle). Its few numbers: tiles of room that count as a sure way out, the damage goal's worth (in tiles of room),
-  -- how much better a new home must be, the walk's cost per tile.
-  position = 0,
-  card_attacks = 0,     -- 1: card attacks (laser_axis so far) become attack lines in the mover (A/B; 2026-11-26)
+  -- how much better a new home must be, the walk's cost per tile. On since 1.2.53: A/B pos-1.2.52:A vs :B (quick
+  -- suite x2) hits -0.03 [-0.30, +0.22], clears -8% [-20%, +5%]: gate pass (not worse), clears to watch.
+  position = 1,
+  card_attacks = 0,     -- 1: card attacks (laser_axis) become mover lines. A/B pos-1.2.52:C FAILED: clears -11% [-20%, -2%]
   m_card_line = 400,    -- ...and standing in such a line costs this (lining up is the laser's trigger: near a hit)
   pos_every = 15, pos_reach = 90, pos_margin = 6, pos_espeed = 1.0,
   pos_cap = 41, pos_depth = 4, pos_sure = 28, pos_min = 10, pos_lane = 8, pos_keep = 3, pos_travel = 0.25,
@@ -1784,9 +1785,13 @@ function Reflex.update(player)
   end
   local target = plan.target or fallback
   if st.dodgeOnly then target = nil end -- cleared room, only unkillable shooters left: just dodge, don't aim
+  -- true when the old firing-spot planner keeps the job: tuned boss tactics (Dingle's windows and tells) and baiting a
+  -- Host (1.2.53: the positioning brain overrode both; the Host-bait and tell-window tests)
+  local oldSpot = false
   if target and not target.kind and target.IsBoss and target:IsBoss() then
     -- fight bosses from farther out: the boss's own distance from the tactics file when there is one
     local tac = Reflex.tacticsOf(target)
+    oldSpot = tac ~= nil
     local extra = (Reflex.lessonOf(target) or {}).dist or 0 -- the watcher learned to keep farther from this boss
     if Risk.invincible then prefDist = S.pref_dist -- untouchable right now: point-blank, whatever the boss
     elseif tac and tac.pd then
@@ -1801,12 +1806,13 @@ function Reflex.update(player)
   if target and not target.kind and target.IsVulnerableEnemy
      and not (target:IsVulnerableEnemy() and not target:IsInvincible()) then
     prefDist = S.bait_dist
+    oldSpot = true
   end
   local wayPos = plan.target and waypoint(room, player) or nil
   -- Positioning brain (step 3): a home spot from the room map, which replaces the firing spot and the pull to the
   -- middle. Dodging still decides every move (the mover).
   local homeSpot = nil
-  if S.position ~= 0 and not st.dodgeOnly then
+  if S.position ~= 0 and not st.dodgeOnly and not oldSpot then
     local okP, hs, hw = pcall(function()
       local roomIdx = Game():GetLevel():GetCurrentRoomIndex()
       if roomIdx ~= Reflex.posRoom then Position.reset(); Reflex.posRoom = roomIdx end

@@ -13,6 +13,8 @@ the first versions.
 ## 1.2.x: measure everything (11-25 and 11-26)
 
 ### 11-26
+- **1.2.53** Positioning brain on: picks a spot to stand with a way out (benchmark: not worse; clear rate to
+  watch). Card-attack dodging stays off: it cleared fewer rooms (-11%).
 - **1.2.52** Card attacks: a boss's known laser lines are avoided (`card_attacks`, off until its A/B passes).
 - **1.2.51** Horsemen cards; every boss fight is recorded.
 - **1.2.50** Never bombs where the blast could kill him.

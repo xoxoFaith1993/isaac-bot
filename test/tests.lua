@@ -2038,8 +2038,8 @@ end)
 -- the reach (the row beyond 300 px is fine: the card says the laser doesn't fire from there).
 local function ovumRow(on)
   local S = Reflex.S
-  local old = S.card_attacks
-  S.card_attacks = on
+  local old, oldPos = S.card_attacks, S.position
+  S.card_attacks, S.position = on, 0 -- card lines were A/B'd in the old planner (pos-1.2.52:C)
   Mock.room(nil, { clear = false, player = Mock.tile(9, 4) })
   local baby = Mock.enemy(79, 12, Mock.tile(2, 4), { hp = 999, vulnerable = false })
   local gaper = Mock.enemy(EntityType.ENTITY_GAPER, 1, Mock.tile(12, 4), { chase = 0, hp = 999 }) -- in the row too
@@ -2051,7 +2051,7 @@ local function ovumRow(on)
     baby.Position, gaper.Position = Mock.tile(2, 4), Mock.tile(12, 4)
     if math.abs(p.Position.Y - baby.Position.Y) < 30 and math.abs(p.Position.X - baby.Position.X) < 300 then n = n + 1 end
   end
-  S.card_attacks = old
+  S.card_attacks, S.position = old, oldPos
   return n, Reflex.mover.cardLines
 end
 run("card attacks: stays out of the Ovum baby's laser row", function()
