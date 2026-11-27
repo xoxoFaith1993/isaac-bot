@@ -123,6 +123,11 @@ door damage) or a treasure room (no key needed, or few keys left).
 ### A laptop as a second test machine
 Parked (usage cost).
 
+### Isaac's own creep trail from an active item looks harmful to the bot
+Live note 26 (2026-11-26): the bot treats the trail its own item leaves as something to avoid. Parked by the author
+(one specific item, not a priority). To check first: which item it is and which creep variant it spawns, since the
+hurting-creep list (`danger.lua`, `reflex.lua`) only names enemy variants.
+
 ## Situations to watch
 
 ### Surprise bombs
